@@ -10,9 +10,9 @@ class User < ApplicationRecord
   validates :last_name, presence: true, length: { minimum: 1, maximum: 50 }
   validates :email, presence: true, uniqueness: true, length: { maximum: 255 }
 
-  # Associations (will be added in later slices)
-  # has_many :advertiser_memberships, dependent: :destroy
-  # has_many :advertisers, through: :advertiser_memberships
+  # Associations
+  has_many :advertiser_memberships, dependent: :destroy
+  has_many :advertisers, through: :advertiser_memberships
 
   # Custom methods
   def display_name
@@ -23,19 +23,19 @@ class User < ApplicationRecord
     "#{first_name.first}#{last_name.first}".upcase
   end
 
-  # def admin_of?(advertiser)
-  #   membership = advertiser_memberships.find_by(advertiser: advertiser)
-  #   membership&.role&.in?(['owner', 'admin'])
-  # end
+  def admin_of?(advertiser)
+    membership = advertiser_memberships.find_by(advertiser: advertiser)
+    membership&.role&.in?(['owner', 'admin'])
+  end
 
-  # def can_manage_team?(advertiser)
-  #   membership = advertiser_memberships.find_by(advertiser: advertiser)
-  #   membership&.role&.in?(['owner', 'admin'])
-  # end
+  def can_manage_team?(advertiser)
+    membership = advertiser_memberships.find_by(advertiser: advertiser)
+    membership&.role&.in?(['owner', 'admin'])
+  end
 
-  # def has_access_to?(advertiser)
-  #   advertiser_memberships.exists?(advertiser: advertiser, status: 'accepted')
-  # end
+  def has_access_to?(advertiser)
+    advertiser_memberships.exists?(advertiser: advertiser, status: 'accepted')
+  end
 
   # Override Devise's password validation for invitation flow
   def password_required?

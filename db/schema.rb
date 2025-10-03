@@ -10,7 +10,36 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_03_165034) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_03_221912) do
+  create_table "advertiser_memberships", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.integer "advertiser_id", null: false
+    t.string "role", default: "viewer", null: false
+    t.string "status", default: "accepted", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["advertiser_id"], name: "index_advertiser_memberships_on_advertiser_id"
+    t.index ["status"], name: "index_advertiser_memberships_on_status"
+    t.index ["user_id", "advertiser_id"], name: "index_advertiser_memberships_on_user_id_and_advertiser_id", unique: true
+    t.index ["user_id"], name: "index_advertiser_memberships_on_user_id"
+  end
+
+  create_table "advertisers", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "slug", null: false
+    t.string "street_address", null: false
+    t.string "city", null: false
+    t.string "state", null: false
+    t.string "postal_code", null: false
+    t.string "country", default: "US", null: false
+    t.string "website_url", null: false
+    t.text "settings"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_advertisers_on_name"
+    t.index ["slug"], name: "index_advertisers_on_slug", unique: true
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -36,4 +65,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_03_165034) do
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
+
+  add_foreign_key "advertiser_memberships", "advertisers"
+  add_foreign_key "advertiser_memberships", "users"
 end

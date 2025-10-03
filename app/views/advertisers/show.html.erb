@@ -1,0 +1,121 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Navigation Bar -->
+  <nav class="bg-white shadow">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex">
+          <div class="flex-shrink-0 flex items-center">
+            <h1 class="text-xl font-bold text-gray-900"><%= @advertiser.name %></h1>
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <div class="flex items-center space-x-2">
+            <div class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 text-sm font-bold">
+              <%= current_user.initials %>
+            </div>
+            <span class="text-sm text-gray-700"><%= current_user.display_name %></span>
+          </div>
+          <%= button_to "Sign Out", destroy_user_session_path, method: :delete,
+              data: { turbo: false },
+              class: "text-sm font-medium text-gray-700 hover:text-gray-900" %>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <!-- Success Notice -->
+    <% if notice %>
+      <div class="mb-6 bg-green-50 border border-green-200 rounded-md p-4">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <p class="text-sm font-medium text-green-800"><%= notice %></p>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Welcome Section -->
+    <div class="bg-white shadow sm:rounded-lg mb-6">
+      <div class="px-4 py-5 sm:p-6">
+        <div class="sm:flex sm:items-start sm:justify-between">
+          <div>
+            <h3 class="text-lg leading-6 font-medium text-gray-900">
+              Welcome to your Dashboard!
+            </h3>
+            <div class="mt-2 max-w-xl text-sm text-gray-500">
+              <p>You're now the owner of <%= @advertiser.name %>. Here's what you can do:</p>
+            </div>
+          </div>
+          <div class="mt-5 sm:mt-0 sm:ml-6 sm:flex-shrink-0">
+            <span class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
+              <%= @membership.role.titleize %>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Business Info Card -->
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
+      <div class="px-4 py-5 sm:px-6">
+        <h3 class="text-lg leading-6 font-medium text-gray-900">Business Information</h3>
+        <p class="mt-1 max-w-2xl text-sm text-gray-500">Details about your business</p>
+      </div>
+      <div class="border-t border-gray-200">
+        <dl>
+          <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt class="text-sm font-medium text-gray-500">Business Name</dt>
+            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"><%= @advertiser.name %></dd>
+          </div>
+          <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt class="text-sm font-medium text-gray-500">Website</dt>
+            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+              <%= link_to @advertiser.website_url, @advertiser.website_url, target: "_blank", class: "text-indigo-600 hover:text-indigo-500" %>
+            </dd>
+          </div>
+          <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt class="text-sm font-medium text-gray-500">Address</dt>
+            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+              <%= simple_format(@advertiser.address_formatted) %>
+            </dd>
+          </div>
+          <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt class="text-sm font-medium text-gray-500">Business URL</dt>
+            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+              <code class="text-xs bg-gray-100 px-2 py-1 rounded">/advertisers/<%= @advertiser.slug %></code>
+            </dd>
+          </div>
+        </dl>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-white shadow sm:rounded-lg">
+      <div class="px-4 py-5 sm:p-6">
+        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Coming Soon</h3>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div class="border border-gray-200 rounded-lg p-4 opacity-50">
+            <h4 class="text-sm font-medium text-gray-900">Team Management</h4>
+            <p class="mt-1 text-xs text-gray-500">Invite team members (Slice 3)</p>
+          </div>
+          <div class="border border-gray-200 rounded-lg p-4 opacity-50">
+            <h4 class="text-sm font-medium text-gray-900">Campaigns</h4>
+            <p class="mt-1 text-xs text-gray-500">Create marketing campaigns</p>
+          </div>
+          <div class="border border-gray-200 rounded-lg p-4 opacity-50">
+            <h4 class="text-sm font-medium text-gray-900">Contacts</h4>
+            <p class="mt-1 text-xs text-gray-500">Manage your contact list</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

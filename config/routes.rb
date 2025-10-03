@@ -19,4 +19,7 @@ Rails.application.routes.draw do
   get 'check_email', to: 'home#check_email', as: :check_email
   get 'signup/advertiser', to: 'advertisers#new', as: :new_advertiser
   post 'signup/advertiser', to: 'advertisers#create', as: :create_advertiser
+  
+  # Advertiser dashboard
+  get 'advertisers/:slug', to: 'advertisers#show', as: :advertiser_dashboard
 end
