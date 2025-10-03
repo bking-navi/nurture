@@ -16,6 +16,7 @@ Rails.application.routes.draw do
 
   # Custom routes for our flow
   get 'verify_email', to: 'home#verify_email', as: :verify_email
+  get 'check_email', to: 'home#check_email', as: :check_email
   get 'signup/advertiser', to: 'advertisers#new', as: :new_advertiser
   post 'signup/advertiser', to: 'advertisers#create', as: :create_advertiser
 end
