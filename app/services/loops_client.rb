@@ -4,7 +4,8 @@ class LoopsClient
   base_uri 'https://app.loops.so/api/v1'
   
   def initialize
-    @api_key = Rails.application.credentials.dig(:loops, :api_key)
+    # Try ENV first, then fall back to credentials
+    @api_key = ENV['LOOPS_API_KEY'] || Rails.application.credentials.dig(:loops, :api_key)
     raise "Loops API key not configured" unless @api_key
   end
   

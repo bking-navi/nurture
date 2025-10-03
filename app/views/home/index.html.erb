@@ -1,4 +1,52 @@
-<div>
-  <h1 class="font-bold text-4xl">Nurture</h1>
-  <p>Coming soon</p>
+<div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+  <div class="sm:mx-auto sm:w-full sm:max-w-md">
+    <div class="text-center">
+      <h1 class="text-4xl font-extrabold text-gray-900">Nurture</h1>
+      <p class="mt-2 text-lg text-gray-600">Direct mail marketing platform</p>
+      <p class="mt-4 text-sm text-gray-500">Build, send, and track your marketing campaigns with ease</p>
+    </div>
+  </div>
+
+  <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+    <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+      <% if user_signed_in? %>
+        <!-- Logged in view -->
+        <div class="space-y-6">
+          <div class="text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-100 text-indigo-600 text-2xl font-bold mb-4">
+              <%= current_user.initials %>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-900">
+              Welcome back, <%= current_user.first_name %>!
+            </h2>
+            <p class="mt-2 text-sm text-gray-600">
+              <%= current_user.email %>
+            </p>
+          </div>
+
+          <div class="border-t border-gray-200 pt-6">
+            <div class="space-y-4">
+              <%= link_to "My Dashboard", "#", 
+                  class: "w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+              
+              <%= button_to "Sign Out", destroy_user_session_path, method: :delete,
+                  data: { turbo: false },
+                  class: "w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+            </div>
+          </div>
+        </div>
+      <% else %>
+        <!-- Logged out view -->
+        <div class="space-y-4">
+          <%= link_to "Create Account", new_user_registration_path, 
+              data: { turbo: false },
+              class: "w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+          
+          <%= link_to "Sign In", new_user_session_path,
+              data: { turbo: false },
+              class: "w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
 </div>
