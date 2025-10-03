@@ -11,7 +11,14 @@ class Users::ConfirmationsController < Devise::ConfirmationsController
       set_flash_message!(:notice, :confirmed)
       respond_with_navigational(resource) { redirect_to after_confirmation_path_for(resource_name, resource) }
     else
-      respond_with_navigational(resource.errors, status: :unprocessable_entity) { render :new }
+      # Check if the error is because email was already confirmed
+      if resource.errors.of_kind?(:email, :already_confirmed)
+        # Email already confirmed - just redirect them to sign in or advertiser setup
+        set_flash_message!(:notice, :already_confirmed)
+        redirect_to new_user_session_path
+      else
+        respond_with_navigational(resource.errors, status: :unprocessable_entity) { render :new }
+      end
     end
   end
 
