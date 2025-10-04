@@ -48,17 +48,20 @@ class Invitation < ApplicationRecord
     target_user = user || User.find_by(email: email)
     return false unless target_user
     
-    # Create membership
-    membership = advertiser.advertiser_memberships.create!(
-      user: target_user,
-      role: role,
-      status: 'accepted'
-    )
-    
-    # Mark invitation as accepted
-    update!(status: 'accepted')
-    
-    membership
+    # Use a transaction to ensure both operations succeed or fail together
+    ActiveRecord::Base.transaction do
+      # Mark invitation as accepted first
+      update!(status: 'accepted')
+      
+      # Create membership
+      membership = advertiser.advertiser_memberships.create!(
+        user: target_user,
+        role: role,
+        status: 'accepted'
+      )
+      
+      membership
+    end
   end
   
   def decline!

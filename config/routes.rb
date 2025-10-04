@@ -30,6 +30,7 @@ Rails.application.routes.draw do
   post 'advertisers/:advertiser_slug/invitations/:id/resend', to: 'invitations#resend', as: :resend_advertiser_invitation
   delete 'advertisers/:advertiser_slug/invitations/:id', to: 'invitations#destroy', as: :advertiser_invitation
   
-  # Invitation acceptance (will be used in Slice 4)
+  # Invitation acceptance
   get 'invitations/:token/accept', to: 'invitations#accept', as: :accept_invitation
+  post 'invitations/:token/accept', to: 'invitations#process_acceptance', as: :process_invitation
 end
