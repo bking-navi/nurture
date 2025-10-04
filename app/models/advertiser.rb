@@ -2,6 +2,7 @@ class Advertiser < ApplicationRecord
   # Associations
   has_many :advertiser_memberships, dependent: :destroy
   has_many :users, through: :advertiser_memberships
+  has_many :invitations, dependent: :destroy
 
   # Serialize settings as JSON for SQLite (PostgreSQL will use jsonb)
   serialize :settings, coder: JSON

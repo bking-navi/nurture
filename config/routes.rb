@@ -20,6 +20,16 @@ Rails.application.routes.draw do
   get 'signup/advertiser', to: 'advertisers#new', as: :new_advertiser
   post 'signup/advertiser', to: 'advertisers#create', as: :create_advertiser
   
-  # Advertiser dashboard
+  # Advertiser dashboard and team management
   get 'advertisers/:slug', to: 'advertisers#show', as: :advertiser_dashboard
+  get 'advertisers/:advertiser_slug/team', to: 'team#index', as: :advertiser_team
+  
+  # Invitations
+  get 'advertisers/:advertiser_slug/invitations/new', to: 'invitations#new', as: :new_advertiser_invitation
+  post 'advertisers/:advertiser_slug/invitations', to: 'invitations#create', as: :advertiser_invitations
+  post 'advertisers/:advertiser_slug/invitations/:id/resend', to: 'invitations#resend', as: :resend_advertiser_invitation
+  delete 'advertisers/:advertiser_slug/invitations/:id', to: 'invitations#destroy', as: :advertiser_invitation
+  
+  # Invitation acceptance (will be used in Slice 4)
+  get 'invitations/:token/accept', to: 'invitations#accept', as: :accept_invitation
 end

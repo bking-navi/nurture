@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_03_221912) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_03_222546) do
   create_table "advertiser_memberships", force: :cascade do |t|
     t.integer "user_id", null: false
     t.integer "advertiser_id", null: false
@@ -38,6 +38,24 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_03_221912) do
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_advertisers_on_name"
     t.index ["slug"], name: "index_advertisers_on_slug", unique: true
+  end
+
+  create_table "invitations", force: :cascade do |t|
+    t.integer "advertiser_id", null: false
+    t.string "email", null: false
+    t.string "token", null: false
+    t.string "role", default: "viewer", null: false
+    t.string "status", default: "pending", null: false
+    t.integer "invited_by_id", null: false
+    t.datetime "expires_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["advertiser_id", "email", "status"], name: "index_invitations_on_advertiser_id_and_email_and_status"
+    t.index ["advertiser_id"], name: "index_invitations_on_advertiser_id"
+    t.index ["email"], name: "index_invitations_on_email"
+    t.index ["invited_by_id"], name: "index_invitations_on_invited_by_id"
+    t.index ["status"], name: "index_invitations_on_status"
+    t.index ["token"], name: "index_invitations_on_token", unique: true
   end
 
   create_table "users", force: :cascade do |t|
@@ -68,4 +86,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_03_221912) do
 
   add_foreign_key "advertiser_memberships", "advertisers"
   add_foreign_key "advertiser_memberships", "users"
+  add_foreign_key "invitations", "advertisers"
+  add_foreign_key "invitations", "users", column: "invited_by_id"
 end
