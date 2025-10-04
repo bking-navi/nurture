@@ -1,6 +1,8 @@
 class Invitation < ApplicationRecord
+  # Multitenancy: automatically scope all queries to current advertiser
+  include AdvertiserScoped
+  
   # Associations
-  belongs_to :advertiser
   belongs_to :invited_by, class_name: 'User'
   
   # Validations

@@ -5,15 +5,9 @@ class InvitationsController < ApplicationController
   before_action :set_invitation_by_token, only: [:accept, :process_acceptance]
 
   def accept
-    # Check if invitation is expired
-    if @invitation.expired?
-      redirect_to root_path, alert: "This invitation has expired. Please contact the team owner for a new invitation."
-      return
-    end
-
-    # Check if invitation is already accepted
-    unless @invitation.pending?
-      redirect_to root_path, alert: "This invitation has already been used."
+    # Check if invitation is expired or not pending (cancelled/accepted)
+    if @invitation.expired? || !@invitation.pending?
+      render :invalid
       return
     end
 
@@ -24,14 +18,9 @@ class InvitationsController < ApplicationController
   end
 
   def process_acceptance
-    # Check if invitation is expired or already accepted
-    if @invitation.expired?
-      redirect_to root_path, alert: "This invitation has expired."
-      return
-    end
-
-    unless @invitation.pending?
-      redirect_to root_path, alert: "This invitation has already been used."
+    # Check if invitation is expired or not pending (cancelled/accepted)
+    if @invitation.expired? || !@invitation.pending?
+      render :invalid
       return
     end
 
@@ -67,7 +56,12 @@ class InvitationsController < ApplicationController
   end
 
   def resend
-    @invitation = @advertiser.invitations.find(params[:id])
+    @invitation = @advertiser.invitations.find_by(id: params[:id])
+    
+    unless @invitation
+      redirect_to advertiser_team_path(@advertiser.slug)
+      return
+    end
     
     if @invitation.resend!
       redirect_to advertiser_team_path(@advertiser.slug), notice: "Invitation resent to #{@invitation.email}"
@@ -77,7 +71,13 @@ class InvitationsController < ApplicationController
   end
 
   def destroy
-    @invitation = @advertiser.invitations.find(params[:id])
+    @invitation = @advertiser.invitations.find_by(id: params[:id])
+    
+    unless @invitation
+      redirect_to advertiser_team_path(@advertiser.slug)
+      return
+    end
+    
     @invitation.destroy
     
     redirect_to advertiser_team_path(@advertiser.slug), notice: "Invitation cancelled"
@@ -94,10 +94,15 @@ class InvitationsController < ApplicationController
       redirect_to advertisers_path
       return
     end
+    
+    # Set current advertiser context for automatic scoping
+    set_current_advertiser(@advertiser)
   end
 
   def set_invitation_by_token
-    @invitation = Invitation.find_by!(token: params[:token])
+    # Use unscoped because invitation acceptance happens outside of advertiser context
+    # The token itself provides the security - only the invited person has the token
+    @invitation = Invitation.unscoped.find_by!(token: params[:token])
   rescue ActiveRecord::RecordNotFound
     redirect_to root_path, alert: "Invalid invitation link."
   end

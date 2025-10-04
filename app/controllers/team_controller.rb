@@ -75,6 +75,9 @@ class TeamController < ApplicationController
       return
     end
     
+    # Set current advertiser context for automatic scoping
+    set_current_advertiser(@advertiser)
+    
     @membership = current_user.advertiser_memberships.where(advertiser: @advertiser).first!
   end
 
