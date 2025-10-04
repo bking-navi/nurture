@@ -24,7 +24,11 @@ Rails.application.routes.draw do
   # Advertiser management
   get 'advertisers', to: 'advertisers#index', as: :advertisers
   get 'advertisers/:slug', to: 'advertisers#show', as: :advertiser_dashboard
+  
+  # Team management
   get 'advertisers/:advertiser_slug/team', to: 'team#index', as: :advertiser_team
+  patch 'advertisers/:advertiser_slug/team/members/:id/role', to: 'team#update_role', as: :update_member_role
+  delete 'advertisers/:advertiser_slug/team/members/:id', to: 'team#remove_member', as: :remove_team_member
   
   # Invitations
   get 'advertisers/:advertiser_slug/invitations/new', to: 'invitations#new', as: :new_advertiser_invitation

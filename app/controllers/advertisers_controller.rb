@@ -27,8 +27,17 @@ class AdvertisersController < ApplicationController
   end
 
   def show
-    @advertiser = current_user.advertisers.find_by!(slug: params[:slug])
-    @membership = current_user.advertiser_memberships.find_by(advertiser: @advertiser)
+    # Reset associations to avoid caching issues
+    current_user.advertiser_memberships.reset
+    
+    @advertiser = current_user.advertisers.find_by(slug: params[:slug])
+    
+    unless @advertiser
+      redirect_to advertisers_path
+      return
+    end
+    
+    @membership = current_user.advertiser_memberships.where(advertiser: @advertiser).first
   end
 
   private

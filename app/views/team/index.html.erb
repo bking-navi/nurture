@@ -87,15 +87,46 @@
                 </div>
               </div>
               <div class="flex items-center space-x-3">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <%= 
-                  case membership.role
-                  when 'owner' then 'bg-purple-100 text-purple-800'
-                  when 'admin' then 'bg-blue-100 text-blue-800'
-                  when 'manager' then 'bg-green-100 text-green-800'
-                  else 'bg-gray-100 text-gray-800'
-                  end %>">
-                  <%= membership.role.titleize %>
-                </span>
+                <% if @can_manage_team && membership.user != current_user && membership.role != 'owner' %>
+                  <!-- Role dropdown for team managers (excluding owner) -->
+                  <%= form_with url: update_member_role_path(@advertiser.slug, membership), method: :patch, class: "inline-block" do |f| %>
+                    <%= f.select :role, 
+                        options_for_select(
+                          [
+                            ['Admin', 'admin'],
+                            ['Manager', 'manager'],
+                            ['Viewer', 'viewer']
+                          ],
+                          membership.role
+                        ),
+                        {},
+                        {
+                          class: "rounded-md border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500",
+                          onchange: "this.form.requestSubmit()"
+                        } %>
+                  <% end %>
+                  
+                  <!-- Remove button -->
+                  <% unless membership.role == 'owner' || (@membership.role == 'admin' && membership.role == 'admin') %>
+                    <%= button_to remove_team_member_path(@advertiser.slug, membership),
+                        method: :delete,
+                        data: { confirm: "Are you sure you want to remove #{membership.user.display_name} from the team?" },
+                        class: "inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500" do %>
+                      Remove
+                    <% end %>
+                  <% end %>
+                <% else %>
+                  <!-- Static role badge for non-managers, current user, or owner -->
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <%= 
+                    case membership.role
+                    when 'owner' then 'bg-purple-100 text-purple-800'
+                    when 'admin' then 'bg-blue-100 text-blue-800'
+                    when 'manager' then 'bg-green-100 text-green-800'
+                    else 'bg-gray-100 text-gray-800'
+                    end %>">
+                    <%= membership.role.titleize %>
+                  </span>
+                <% end %>
               </div>
             </div>
           </li>

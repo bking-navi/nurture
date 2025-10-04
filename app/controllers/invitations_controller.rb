@@ -86,7 +86,14 @@ class InvitationsController < ApplicationController
   private
 
   def set_advertiser
-    @advertiser = current_user.advertisers.find_by!(slug: params[:advertiser_slug])
+    current_user.advertiser_memberships.reset
+    
+    @advertiser = current_user.advertisers.find_by(slug: params[:advertiser_slug])
+    
+    unless @advertiser
+      redirect_to advertisers_path
+      return
+    end
   end
 
   def set_invitation_by_token
