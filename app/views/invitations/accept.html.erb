@@ -125,7 +125,7 @@
           </div>
 
           <p class="text-xs text-center text-gray-500">
-            Already have an account? <%= link_to "Sign in", new_user_session_path, class: "text-indigo-600 hover:text-indigo-500" %>
+            Already have an account? <%= link_to "Sign in to accept", new_user_session_path(invitation_token: @invitation.token), class: "text-indigo-600 hover:text-indigo-500" %>
           </p>
         <% end %>
       </div>

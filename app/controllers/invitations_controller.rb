@@ -114,6 +114,16 @@ class InvitationsController < ApplicationController
   end
 
   def accept_for_new_user
+    # Check if user already exists with this email
+    existing_user = User.find_by(email: @invitation.email)
+    
+    if existing_user
+      # User exists but is not signed in - redirect to sign in
+      session[:invitation_token] = @invitation.token
+      redirect_to new_user_session_path, alert: "An account with this email already exists. Please sign in to accept the invitation."
+      return
+    end
+    
     # Create new user from invitation
     user_params = params.require(:user).permit(:first_name, :last_name, :password, :password_confirmation)
     

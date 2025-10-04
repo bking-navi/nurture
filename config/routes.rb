@@ -11,7 +11,8 @@ Rails.application.routes.draw do
   # Devise routes with custom controllers
   devise_for :users, controllers: {
     registrations: 'users/registrations',
-    confirmations: 'users/confirmations'
+    confirmations: 'users/confirmations',
+    sessions: 'users/sessions'
   }
 
   # Custom routes for our flow
@@ -20,7 +21,8 @@ Rails.application.routes.draw do
   get 'signup/advertiser', to: 'advertisers#new', as: :new_advertiser
   post 'signup/advertiser', to: 'advertisers#create', as: :create_advertiser
   
-  # Advertiser dashboard and team management
+  # Advertiser management
+  get 'advertisers', to: 'advertisers#index', as: :advertisers
   get 'advertisers/:slug', to: 'advertisers#show', as: :advertiser_dashboard
   get 'advertisers/:advertiser_slug/team', to: 'team#index', as: :advertiser_team
   

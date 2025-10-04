@@ -1,6 +1,10 @@
 class AdvertisersController < ApplicationController
   before_action :authenticate_user!
 
+  def index
+    @advertisers = current_user.advertisers.includes(:advertiser_memberships).order(:name)
+  end
+
   def new
     @advertiser = Advertiser.new
   end
