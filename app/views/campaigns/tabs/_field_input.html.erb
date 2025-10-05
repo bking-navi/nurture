@@ -1,0 +1,83 @@
+<%
+  # Extract field configuration
+  field_name = field['name'] || field[:name]
+  field_type = field['type'] || field[:type]
+  field_label = field['label'] || field[:label]
+  field_placeholder = field['placeholder'] || field[:placeholder]
+  field_required = field['required'] || field[:required] || false
+  field_max_length = field['max_length'] || field[:max_length]
+  field_rows = field['rows'] || field[:rows] || 3
+  
+  # Get current value from campaign.template_data
+  current_value = campaign.template_data&.dig(field_name) || campaign.template_data&.dig(field_name.to_sym) || ''
+%>
+
+<div class="form-field">
+  <%= label_tag "campaign_template_data_#{field_name}", class: "block text-sm font-medium text-gray-700" do %>
+    <%= field_label %>
+    <% if field_required %>
+      <span class="text-red-500">*</span>
+    <% end %>
+  <% end %>
+  
+  <% case field_type %>
+  <% when 'textarea' %>
+    <%= text_area_tag "campaign[template_data][#{field_name}]", 
+          current_value,
+          rows: field_rows,
+          maxlength: field_max_length,
+          placeholder: field_placeholder,
+          required: field_required,
+          data: { preview: true },
+          class: "mt-1 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md" %>
+    <% if field_max_length %>
+      <p class="mt-1 text-xs text-gray-500">
+        <span class="char-count"><%= current_value.length %></span> / <%= field_max_length %> characters
+      </p>
+    <% end %>
+    
+  <% when 'url' %>
+    <%= url_field_tag "campaign[template_data][#{field_name}]", 
+          current_value,
+          placeholder: field_placeholder,
+          required: field_required,
+          data: { preview: true },
+          class: "mt-1 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md" %>
+    <p class="mt-1 text-xs text-gray-500">
+      <%= field_name.include?('logo') ? 'Your company logo will be used by default if left blank' : 'Enter a full URL (https://...)' %>
+    </p>
+    
+  <% else %> <%# text input %>
+    <%= text_field_tag "campaign[template_data][#{field_name}]", 
+          current_value,
+          maxlength: field_max_length,
+          placeholder: field_placeholder,
+          required: field_required,
+          data: { preview: true },
+          class: "mt-1 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md" %>
+    <% if field_max_length %>
+      <p class="mt-1 text-xs text-gray-500">
+        <span class="char-count"><%= current_value.length %></span> / <%= field_max_length %> characters
+      </p>
+    <% end %>
+  <% end %>
+  
+  <% if field_placeholder && !field_max_length && field_type != 'url' %>
+    <p class="mt-1 text-xs text-gray-500"><%= field_placeholder %></p>
+  <% end %>
+</div>
+
+<script>
+// Character counter for this field
+(function() {
+  const field = document.querySelector('[name="campaign[template_data][<%= field_name %>]"]');
+  const counter = field?.parentElement.querySelector('.char-count');
+  
+  if (field && counter) {
+    field.addEventListener('input', function() {
+      counter.textContent = this.value.length;
+    });
+  }
+})();
+</script>
+

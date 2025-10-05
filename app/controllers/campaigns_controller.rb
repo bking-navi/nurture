@@ -2,7 +2,7 @@ class CampaignsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_advertiser
   before_action :verify_campaign_access!
-  before_action :set_campaign, only: [:show, :edit, :update, :destroy, :send_now, :calculate_cost]
+  before_action :set_campaign, only: [:show, :edit, :update, :destroy, :send_now, :calculate_cost, :preview]
   before_action :verify_editable!, only: [:edit, :update, :destroy, :send_now]
   
   def index
@@ -53,6 +53,12 @@ class CampaignsController < ApplicationController
   def edit
     # Get current tab or default to recipients
     @current_tab = params[:tab] || 'recipients'
+    
+    # Load templates and palettes for design tab
+    if @current_tab == 'design'
+      @templates = PostcardTemplate.active.by_sort_order
+      @color_palettes = ColorPalette.available_for(@advertiser)
+    end
   end
   
   def update
@@ -110,6 +116,29 @@ class CampaignsController < ApplicationController
                 notice: 'Campaign is being sent. You will receive an email when complete.'
   end
   
+  def preview
+    # Render HTML preview for the campaign
+    side = params[:side] || 'front'
+    
+    # Sample contact data for preview
+    sample_contact_data = {
+      first_name: "John",
+      last_name: "Doe",
+      full_name: "John Doe",
+      company: "Acme Corp",
+      email: "john@acmecorp.com",
+      phone: "(555) 123-4567"
+    }
+    
+    html = if side == 'front'
+      @campaign.render_front_html(sample_contact_data)
+    else
+      @campaign.render_back_html(sample_contact_data)
+    end
+    
+    render html: html.html_safe, layout: false
+  end
+  
   private
   
   def set_advertiser
@@ -137,7 +166,9 @@ class CampaignsController < ApplicationController
   def campaign_params
     params.require(:campaign).permit(
       :name, :description, :template_id, :template_name, 
-      :template_thumbnail_url, :front_message, :back_message
+      :template_thumbnail_url, :front_message, :back_message,
+      :postcard_template_id, :color_palette_id,
+      template_data: {}
     )
   end
 end
