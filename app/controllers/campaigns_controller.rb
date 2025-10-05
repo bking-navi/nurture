@@ -146,7 +146,7 @@ class CampaignsController < ApplicationController
     # Get template and palette from params (may be different from saved campaign)
     template_id = params[:postcard_template_id] || @campaign.postcard_template_id
     palette_id = params[:color_palette_id] || @campaign.color_palette_id
-    template_data = params[:template_data] || @campaign.template_data || {}
+    template_data = params[:template_data]&.permit! || @campaign.template_data || {}
     
     # Load template and palette
     template = PostcardTemplate.find_by(id: template_id)
