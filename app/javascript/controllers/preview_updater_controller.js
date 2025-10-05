@@ -11,10 +11,14 @@ export default class extends Controller {
   
   connect() {
     this.timeout = null
-    // Update preview on initial load if template is selected
-    if (this.hasPreviewTarget) {
-      this.update()
-    }
+    this.currentSide = 'front'
+    
+    // Wait a bit for turbo frame to load, then update preview
+    setTimeout(() => {
+      if (this.hasPreviewTarget) {
+        this.update()
+      }
+    }, 100)
   }
   
   update() {

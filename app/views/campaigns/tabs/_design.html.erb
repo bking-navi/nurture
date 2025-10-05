@@ -1,14 +1,11 @@
-<div class="max-w-7xl mx-auto" 
-     data-controller="preview-updater"
-     data-preview-updater-advertiser-slug-value="<%= advertiser.slug %>"
-     data-preview-updater-campaign-id-value="<%= campaign.id %>">
+<div class="max-w-7xl mx-auto">
   
   <!-- Template Selection -->
   <%= form_with model: campaign, 
                 url: campaign_path(advertiser.slug, campaign), 
                 method: :patch, 
-                local: false,
-                data: { turbo_frame: "design-content", controller: "auto-submit" } do |f| %>
+                local: true,
+                data: { controller: "auto-submit" } do |f| %>
     <%= hidden_field_tag :tab, 'design' %>
     
     <div class="mb-8">
@@ -66,6 +63,14 @@
     </div>
   <% end %>
   
-  <!-- Design Content (loads via Turbo Frame) -->
-  <%= render "campaigns/tabs/design_content", campaign: campaign, advertiser: advertiser %>
+  <!-- Design Content -->
+  <% if campaign.postcard_template.present? %>
+    <%= form_with model: campaign, 
+                  url: campaign_path(advertiser.slug, campaign), 
+                  method: :patch,
+                  local: true do |f| %>
+      <%= hidden_field_tag :tab, 'design' %>
+      <%= render "campaigns/tabs/design_form", campaign: campaign, advertiser: advertiser, f: f %>
+    <% end %>
+  <% end %>
 </div>

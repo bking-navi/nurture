@@ -74,24 +74,23 @@ class CampaignsController < ApplicationController
   
   def update
     if @campaign.update(campaign_params)
-      # Reload the campaign to get updated associations
-      @campaign.reload
-      
-      # Handle Turbo Frame requests (from design tab)
-      if request.headers['Turbo-Frame'] == 'design-content' && params[:tab] == 'design'
-        @templates = PostcardTemplate.active.by_sort_order
-        @color_palettes = ColorPalette.available_for(@advertiser)
-        @current_tab = 'design'
-        
-        render partial: "campaigns/tabs/design_content", 
-               locals: { campaign: @campaign, advertiser: @advertiser },
-               layout: false
+      # If saving from design tab with save & continue, go to review
+      if params[:tab] == 'design' && params[:commit] == 'Save & Continue'
+        redirect_to edit_campaign_path(@advertiser.slug, @campaign, tab: 'review'), 
+                    notice: 'Design saved!'
       else
         redirect_to edit_campaign_path(@advertiser.slug, @campaign, tab: params[:tab]), 
                     notice: 'Campaign updated.'
       end
     else
       @current_tab = params[:tab] || 'recipients'
+      
+      # Reload templates and palettes if on design tab
+      if @current_tab == 'design'
+        @templates = PostcardTemplate.active.by_sort_order
+        @color_palettes = ColorPalette.available_for(@advertiser)
+      end
+      
       render :edit, status: :unprocessable_entity
     end
   end
