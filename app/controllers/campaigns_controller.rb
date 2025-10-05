@@ -158,7 +158,7 @@ class CampaignsController < ApplicationController
     end
     
     # Build complete data for rendering
-    data = template_data.symbolize_keys
+    data = template_data.to_h.symbolize_keys
     
     # Add advertiser defaults
     data[:logo_url] ||= @advertiser.logo_url if @advertiser.respond_to?(:logo_url)
