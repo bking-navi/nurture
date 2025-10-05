@@ -47,6 +47,7 @@ Rails.application.routes.draw do
         post :send_now
         post :calculate_cost
         get :preview
+        post :preview_live
       end
       
       resources :campaign_contacts, only: [:new, :create, :destroy], path: 'recipients' do

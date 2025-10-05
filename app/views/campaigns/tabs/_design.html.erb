@@ -195,18 +195,7 @@
             </div>
             
             <div id="preview-container" class="bg-white rounded border-2 border-gray-300 aspect-[6/9] overflow-hidden">
-              <% if campaign.postcard_template.present? %>
-                <iframe id="preview-iframe" class="w-full h-full border-0" style="transform: scale(0.5); transform-origin: top left; width: 200%; height: 200%;"></iframe>
-              <% else %>
-                <div class="flex items-center justify-center h-full text-gray-400">
-                  <div class="text-center">
-                    <svg class="mx-auto h-12 w-12 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <p class="mt-2 text-sm">Select a template to preview</p>
-                  </div>
-                </div>
-              <% end %>
+              <iframe id="preview-iframe" class="w-full h-full border-0" style="transform: scale(0.5); transform-origin: top left; width: 200%; height: 200%;" srcdoc="<div style='padding: 40px; text-align: center; color: #999; font-family: sans-serif;'><% if campaign.postcard_template.present? %>Loading preview...<% else %>Select a template to see preview<% end %></div>"></iframe>
             </div>
             
             <p class="mt-2 text-xs text-gray-500 text-center">Preview shows front side by default</p>
@@ -225,7 +214,7 @@
 </div>
 
 <script>
-// Simple vanilla JS for template interactivity
+// Live preview with real-time updates
 document.addEventListener('DOMContentLoaded', function() {
   const form = document.getElementById('design-form');
   if (!form) return;
@@ -240,6 +229,13 @@ document.addEventListener('DOMContentLoaded', function() {
   
   let currentTemplate = null;
   let currentSide = 'front';
+  let previewTimeout = null;
+  
+  // Get campaign info from URL
+  const pathParts = window.location.pathname.split('/');
+  const campaignId = pathParts[pathParts.indexOf('campaigns') + 1];
+  const advertiserSlug = pathParts[pathParts.indexOf('advertisers') + 1];
+  const previewUrl = `/advertisers/${advertiserSlug}/campaigns/${campaignId}/preview_live`;
   
   // Template selection handler
   document.querySelectorAll('input[name="campaign[postcard_template_id]"]').forEach(radio => {
@@ -255,17 +251,14 @@ document.addEventListener('DOMContentLoaded', function() {
       if (colorPaletteSection) colorPaletteSection.style.display = 'block';
       if (customizeSection) customizeSection.style.display = 'block';
       
-      // Generate form fields dynamically
-      generateFormFields(templateData);
-      
-      // Update preview
-      updatePreview();
+      // Update preview immediately
+      updatePreviewLive();
     });
   });
   
   // Color palette change handler
   document.querySelectorAll('input[name="campaign[color_palette_id]"]').forEach(radio => {
-    radio.addEventListener('change', updatePreview);
+    radio.addEventListener('change', updatePreviewLive);
   });
   
   // Preview side toggle
@@ -276,7 +269,7 @@ document.addEventListener('DOMContentLoaded', function() {
       previewFrontBtn.classList.remove('bg-gray-200', 'text-gray-700');
       previewBackBtn.classList.add('bg-gray-200', 'text-gray-700');
       previewBackBtn.classList.remove('bg-indigo-100', 'text-indigo-700');
-      updatePreview();
+      updatePreviewLive();
     });
   }
   
@@ -287,45 +280,105 @@ document.addEventListener('DOMContentLoaded', function() {
       previewBackBtn.classList.remove('bg-gray-200', 'text-gray-700');
       previewFrontBtn.classList.add('bg-gray-200', 'text-gray-700');
       previewFrontBtn.classList.remove('bg-indigo-100', 'text-indigo-700');
-      updatePreview();
+      updatePreviewLive();
     });
   }
   
-  function generateFormFields(templateData) {
-    // For now, fields are pre-rendered by Rails
-    // In future, could make this fully dynamic via JS
-    console.log('Template selected:', templateData);
+  // Collect all form data
+  function getFormData() {
+    const formData = new FormData(form);
+    const data = {
+      side: currentSide
+    };
+    
+    // Get template and palette IDs
+    data.postcard_template_id = formData.get('campaign[postcard_template_id]');
+    data.color_palette_id = formData.get('campaign[color_palette_id]');
+    
+    // Get all template_data fields
+    data.template_data = {};
+    for (let [key, value] of formData.entries()) {
+      if (key.startsWith('campaign[template_data]')) {
+        // Extract field name from campaign[template_data][field_name]
+        const match = key.match(/campaign\[template_data\]\[(.+)\]/);
+        if (match) {
+          data.template_data[match[1]] = value;
+        }
+      }
+    }
+    
+    return data;
   }
   
-  function updatePreview() {
+  // Update preview with live data (debounced)
+  function updatePreviewLive() {
     if (!previewIframe) return;
     
     const selectedTemplateId = document.querySelector('input[name="campaign[postcard_template_id]"]:checked')?.value;
-    const selectedPaletteId = document.querySelector('input[name="campaign[color_palette_id]"]:checked')?.value;
     
     if (!selectedTemplateId) {
-      console.log('No template selected yet');
+      previewIframe.srcdoc = '<div style="padding: 40px; text-align: center; color: #999; font-family: sans-serif;">Select a template to see preview</div>';
       return;
     }
     
-    // Get current campaign ID from URL
-    const pathParts = window.location.pathname.split('/');
-    const campaignId = pathParts[pathParts.indexOf('campaigns') + 1];
-    const advertiserSlug = pathParts[pathParts.indexOf('advertisers') + 1];
+    // Clear existing timeout
+    if (previewTimeout) {
+      clearTimeout(previewTimeout);
+    }
     
-    // Build preview URL
-    const previewUrl = `/advertisers/${advertiserSlug}/campaigns/${campaignId}/preview?side=${currentSide}`;
-    
-    // Load preview in iframe
-    previewIframe.src = previewUrl;
-    console.log('Preview updated for side:', currentSide, 'URL:', previewUrl);
+    // Debounce preview updates (300ms delay)
+    previewTimeout = setTimeout(function() {
+      const formData = getFormData();
+      
+      // Convert to URLSearchParams for POST
+      const params = new URLSearchParams();
+      params.append('side', formData.side);
+      if (formData.postcard_template_id) {
+        params.append('postcard_template_id', formData.postcard_template_id);
+      }
+      if (formData.color_palette_id) {
+        params.append('color_palette_id', formData.color_palette_id);
+      }
+      
+      // Add template_data fields
+      for (let [key, value] of Object.entries(formData.template_data)) {
+        params.append(`template_data[${key}]`, value);
+      }
+      
+      // Get CSRF token
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+      
+      // Fetch preview HTML
+      fetch(previewUrl, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-Token': csrfToken,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: params.toString()
+      })
+      .then(response => response.text())
+      .then(html => {
+        // Update iframe with new HTML
+        previewIframe.srcdoc = html;
+      })
+      .catch(error => {
+        console.error('Preview update failed:', error);
+        previewIframe.srcdoc = '<div style="padding: 40px; text-align: center; color: #e53e3e; font-family: sans-serif;">Preview failed to load</div>';
+      });
+    }, 300); // 300ms debounce
   }
   
   // Form field change handlers for live preview
   form.addEventListener('input', function(e) {
     if (e.target.matches('[data-preview]')) {
-      updatePreview();
+      updatePreviewLive();
     }
   });
+  
+  // Initial preview load if template is already selected
+  if (document.querySelector('input[name="campaign[postcard_template_id]"]:checked')) {
+    updatePreviewLive();
+  }
 });
 </script>

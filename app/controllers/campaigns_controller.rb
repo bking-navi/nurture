@@ -2,7 +2,7 @@ class CampaignsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_advertiser
   before_action :verify_campaign_access!
-  before_action :set_campaign, only: [:show, :edit, :update, :destroy, :send_now, :calculate_cost, :preview]
+  before_action :set_campaign, only: [:show, :edit, :update, :destroy, :send_now, :calculate_cost, :preview, :preview_live]
   before_action :verify_editable!, only: [:edit, :update, :destroy, :send_now]
   
   def index
@@ -117,7 +117,7 @@ class CampaignsController < ApplicationController
   end
   
   def preview
-    # Render HTML preview for the campaign
+    # Render HTML preview for the campaign (static, for initial load)
     side = params[:side] || 'front'
     
     # Sample contact data for preview
@@ -134,6 +134,60 @@ class CampaignsController < ApplicationController
       @campaign.render_front_html(sample_contact_data)
     else
       @campaign.render_back_html(sample_contact_data)
+    end
+    
+    render html: html.html_safe, layout: false
+  end
+  
+  def preview_live
+    # Render live preview with current form data
+    side = params[:side] || 'front'
+    
+    # Get template and palette from params (may be different from saved campaign)
+    template_id = params[:postcard_template_id] || @campaign.postcard_template_id
+    palette_id = params[:color_palette_id] || @campaign.color_palette_id
+    template_data = params[:template_data] || @campaign.template_data || {}
+    
+    # Load template and palette
+    template = PostcardTemplate.find_by(id: template_id)
+    palette = ColorPalette.find_by(id: palette_id)
+    
+    unless template
+      render html: "<div style='padding: 40px; text-align: center; color: #999;'>Select a template to see preview</div>".html_safe, layout: false
+      return
+    end
+    
+    # Build complete data for rendering
+    data = template_data.symbolize_keys
+    
+    # Add advertiser defaults
+    data[:logo_url] ||= @advertiser.logo_url if @advertiser.respond_to?(:logo_url)
+    data[:company_name] ||= @advertiser.name
+    data[:website] ||= @advertiser.website_url
+    data[:phone] ||= @advertiser.phone if @advertiser.respond_to?(:phone)
+    
+    # Add color palette colors
+    if palette
+      palette.colors.each do |key, value|
+        data["color_#{key}".to_sym] ||= value
+      end
+    end
+    
+    # Add sample contact data for personalization
+    data.merge!(
+      first_name: "John",
+      last_name: "Doe",
+      full_name: "John Doe",
+      company: "Acme Corp",
+      email: "john@acmecorp.com",
+      phone: "(555) 123-4567"
+    )
+    
+    # Render the appropriate side
+    html = if side == 'front'
+      template.render_front(data)
+    else
+      template.render_back(data)
     end
     
     render html: html.html_safe, layout: false
