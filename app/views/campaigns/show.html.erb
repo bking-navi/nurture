@@ -42,6 +42,10 @@
 
     <!-- Failed Send Warning -->
     <% if @campaign.failed_count > 0 %>
+      <% 
+        failed_contacts = @campaign.campaign_contacts.where(status: :failed)
+        address_errors = failed_contacts.where("send_error LIKE ?", "%Address%").count
+      %>
       <div class="mb-6 rounded-md bg-red-50 p-4">
         <div class="flex">
           <div class="flex-shrink-0">
@@ -54,7 +58,16 @@
               <%= @campaign.failed_count %> postcard<%= 's' if @campaign.failed_count != 1 %> failed to send
             </h3>
             <div class="mt-2 text-sm text-red-700">
-              <p>Review the failed postcards below and use the "Retry" button to attempt sending again.</p>
+              <% if address_errors > 0 %>
+                <p class="font-medium">
+                  <%= address_errors %> failed due to <strong>undeliverable address<%= 's' if address_errors != 1 %></strong>
+                </p>
+                <p class="mt-1">
+                  📬 These addresses failed USPS verification. Verify that street addresses, cities, states, and ZIP codes are correct.
+                </p>
+              <% else %>
+                <p>Review the failed postcards below and use the "Retry" button to attempt sending again.</p>
+              <% end %>
             </div>
           </div>
         </div>
@@ -199,7 +212,23 @@
                   </div>
                   
                   <% if contact.send_error.present? %>
-                    <p class="mt-2 text-sm text-red-600">Error: <%= contact.send_error %></p>
+                    <div class="mt-2 p-2 bg-red-50 border border-red-200 rounded">
+                      <div class="flex">
+                        <div class="flex-shrink-0">
+                          <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                          </svg>
+                        </div>
+                        <div class="ml-2">
+                          <p class="text-sm text-red-700 font-medium"><%= contact.send_error %></p>
+                          <% if contact.send_error.include?('Address') %>
+                            <p class="mt-1 text-xs text-red-600">
+                              💡 Tip: Verify the street address, city, state, and ZIP code are correct and match USPS records.
+                            </p>
+                          <% end %>
+                        </div>
+                      </div>
+                    </div>
                   <% end %>
                 </div>
                 

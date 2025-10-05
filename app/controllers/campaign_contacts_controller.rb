@@ -100,8 +100,8 @@ class CampaignContactsController < ApplicationController
       redirect_to campaign_path(@advertiser.slug, @campaign),
                   notice: "Postcard retry successful!"
     rescue => e
-      # Truncate error message if too long to avoid session overflow
-      error_msg = e.message.truncate(200)
+      # Parse Lob error to get user-friendly message
+      error_msg = parse_lob_error(e)
       
       @contact.update!(
         status: :failed,
@@ -147,6 +147,47 @@ class CampaignContactsController < ApplicationController
   end
   
   private
+  
+  def parse_lob_error(error)
+    # Extract meaningful error message from Lob API response
+    error_string = error.message
+    
+    # Try to parse JSON error from Lob API
+    if error_string =~ /Response body: ({.*})/m
+      begin
+        json_match = error_string.match(/Response body: ({.*})/m)
+        error_data = JSON.parse(json_match[1]) if json_match
+        
+        if error_data && error_data['error']
+          lob_message = error_data['error']['message']
+          error_code = error_data['error']['code']
+          
+          # Make address-related errors very clear
+          case error_code
+          when 'failed_deliverability_strictness'
+            return "❌ Address Undeliverable: This address failed USPS verification and cannot receive mail. Please verify the address is correct."
+          when 'invalid_address'
+            return "❌ Invalid Address: This address format is invalid. Please check street, city, state, and ZIP code."
+          when 'address_length_exceeds_limit'
+            return "❌ Address Too Long: One or more address fields exceed the maximum length."
+          else
+            # Return the Lob message for other errors
+            return lob_message
+          end
+        end
+      rescue JSON::ParserError
+        # Fall through to default message
+      end
+    end
+    
+    # Fallback: try to extract just the error message
+    if error_string.include?('address')
+      "Address validation failed. Please verify the recipient's address is correct."
+    else
+      # Return a shortened version of the error
+      error_string.split("\n").first || error_string[0..200]
+    end
+  end
   
   def set_advertiser
     @advertiser = current_user.advertisers.find_by!(slug: params[:advertiser_slug])

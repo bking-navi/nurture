@@ -56,13 +56,16 @@ class SendCampaignJob < ApplicationJob
         Rails.logger.info "Sent postcard #{postcard.id} for contact #{contact.id}"
         
       rescue => e
+        # Extract user-friendly error message from Lob API response
+        error_message = parse_lob_error(e)
+        
         contact.update!(
           status: :failed,
-          send_error: e.message
+          send_error: error_message
         )
         failed_count += 1
         
-        Rails.logger.error "Failed to send postcard for contact #{contact.id}: #{e.message}"
+        Rails.logger.error "Failed to send postcard for contact #{contact.id}: #{error_message}"
       end
       
       # Rate limiting: be conservative with Lob API
@@ -108,6 +111,47 @@ class SendCampaignJob < ApplicationJob
   end
   
   private
+  
+  def parse_lob_error(error)
+    # Extract meaningful error message from Lob API response
+    error_string = error.message
+    
+    # Try to parse JSON error from Lob API
+    if error_string =~ /Response body: ({.*})/m
+      begin
+        json_match = error_string.match(/Response body: ({.*})/m)
+        error_data = JSON.parse(json_match[1]) if json_match
+        
+        if error_data && error_data['error']
+          lob_message = error_data['error']['message']
+          error_code = error_data['error']['code']
+          
+          # Make address-related errors very clear
+          case error_code
+          when 'failed_deliverability_strictness'
+            return "❌ Address Undeliverable: This address failed USPS verification and cannot receive mail. Please verify the address is correct."
+          when 'invalid_address'
+            return "❌ Invalid Address: This address format is invalid. Please check street, city, state, and ZIP code."
+          when 'address_length_exceeds_limit'
+            return "❌ Address Too Long: One or more address fields exceed the maximum length."
+          else
+            # Return the Lob message for other errors
+            return "#{lob_message}"
+          end
+        end
+      rescue JSON::ParserError
+        # Fall through to default message
+      end
+    end
+    
+    # Fallback: try to extract just the error message
+    if error_string.include?('address')
+      "Address validation failed. Please verify the recipient's address is correct."
+    else
+      # Return a shortened version of the error
+      error_string.split("\n").first || error_string[0..200]
+    end
+  end
   
   def parse_delivery_date(date_string)
     return nil if date_string.blank?
