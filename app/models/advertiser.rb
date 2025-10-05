@@ -4,6 +4,7 @@ class Advertiser < ApplicationRecord
   has_many :users, through: :advertiser_memberships
   has_many :invitations, dependent: :destroy
   has_many :campaigns, dependent: :destroy
+  has_many :color_palettes, dependent: :destroy
 
   # Serialize settings as JSON for SQLite (PostgreSQL will use jsonb)
   serialize :settings, coder: JSON
@@ -69,5 +70,11 @@ class Advertiser < ApplicationRecord
   
   def normalize_state
     self.state = state&.upcase
+  end
+  
+  def logo_url
+    # TODO: Implement logo upload with Active Storage
+    # For now, return a placeholder or settings value
+    settings&.dig('logo_url')
   end
 end

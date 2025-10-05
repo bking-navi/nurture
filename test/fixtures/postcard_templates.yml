@@ -1,0 +1,35 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  name: MyString
+  slug: MyString
+  description: MyText
+  category: MyString
+  thumbnail_url: MyString
+  preview_url: MyString
+  front_html: MyText
+  back_html: MyText
+  front_css: MyText
+  back_css: MyText
+  front_fields: MyText
+  back_fields: MyText
+  default_values: MyText
+  active: false
+  sort_order: 1
+
+two:
+  name: MyString
+  slug: MyString
+  description: MyText
+  category: MyString
+  thumbnail_url: MyString
+  preview_url: MyString
+  front_html: MyText
+  back_html: MyText
+  front_css: MyText
+  back_css: MyText
+  front_fields: MyText
+  back_fields: MyText
+  default_values: MyText
+  active: false
+  sort_order: 1

@@ -10,7 +10,35 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_05_122138) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_05_125014) do
+  create_table "active_storage_attachments", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "record_type", null: false
+    t.bigint "record_id", null: false
+    t.bigint "blob_id", null: false
+    t.datetime "created_at", null: false
+    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
+    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+  end
+
+  create_table "active_storage_blobs", force: :cascade do |t|
+    t.string "key", null: false
+    t.string "filename", null: false
+    t.string "content_type"
+    t.text "metadata"
+    t.string "service_name", null: false
+    t.bigint "byte_size", null: false
+    t.string "checksum"
+    t.datetime "created_at", null: false
+    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+  end
+
+  create_table "active_storage_variant_records", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.string "variation_digest", null: false
+    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
   create_table "advertiser_memberships", force: :cascade do |t|
     t.integer "user_id", null: false
     t.integer "advertiser_id", null: false
@@ -95,10 +123,28 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_05_122138) do
     t.datetime "completed_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "postcard_template_id"
+    t.text "template_data"
+    t.integer "color_palette_id"
     t.index ["advertiser_id", "created_at"], name: "index_campaigns_on_advertiser_id_and_created_at"
     t.index ["advertiser_id", "status"], name: "index_campaigns_on_advertiser_id_and_status"
     t.index ["advertiser_id"], name: "index_campaigns_on_advertiser_id"
+    t.index ["color_palette_id"], name: "index_campaigns_on_color_palette_id"
     t.index ["created_by_user_id"], name: "index_campaigns_on_created_by_user_id"
+    t.index ["postcard_template_id"], name: "index_campaigns_on_postcard_template_id"
+  end
+
+  create_table "color_palettes", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "slug", null: false
+    t.text "colors", null: false
+    t.integer "advertiser_id"
+    t.boolean "is_default", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["advertiser_id"], name: "index_color_palettes_on_advertiser_id"
+    t.index ["is_default"], name: "index_color_palettes_on_is_default"
+    t.index ["slug"], name: "index_color_palettes_on_slug"
   end
 
   create_table "invitations", force: :cascade do |t|
@@ -117,6 +163,30 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_05_122138) do
     t.index ["invited_by_id"], name: "index_invitations_on_invited_by_id"
     t.index ["status"], name: "index_invitations_on_status"
     t.index ["token"], name: "index_invitations_on_token", unique: true
+  end
+
+  create_table "postcard_templates", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "slug", null: false
+    t.text "description"
+    t.string "category", null: false
+    t.string "thumbnail_url"
+    t.string "preview_url"
+    t.text "front_html", null: false
+    t.text "back_html", null: false
+    t.text "front_css"
+    t.text "back_css"
+    t.text "front_fields"
+    t.text "back_fields"
+    t.text "default_values"
+    t.boolean "active", default: true, null: false
+    t.integer "sort_order", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["active"], name: "index_postcard_templates_on_active"
+    t.index ["category"], name: "index_postcard_templates_on_category"
+    t.index ["slug"], name: "index_postcard_templates_on_slug", unique: true
+    t.index ["sort_order"], name: "index_postcard_templates_on_sort_order"
   end
 
   create_table "users", force: :cascade do |t|
@@ -145,11 +215,16 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_05_122138) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "advertiser_memberships", "advertisers"
   add_foreign_key "advertiser_memberships", "users"
   add_foreign_key "campaign_contacts", "campaigns"
   add_foreign_key "campaigns", "advertisers"
+  add_foreign_key "campaigns", "color_palettes", on_delete: :nullify
+  add_foreign_key "campaigns", "postcard_templates", on_delete: :nullify
   add_foreign_key "campaigns", "users", column: "created_by_user_id"
+  add_foreign_key "color_palettes", "advertisers", on_delete: :cascade
   add_foreign_key "invitations", "advertisers"
   add_foreign_key "invitations", "users", column: "invited_by_id"
 end

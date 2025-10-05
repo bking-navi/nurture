@@ -12,6 +12,29 @@ class LobClient
     def create_postcard(campaign_contact:, campaign:, from_address:)
       postcards_api = Lob::PostcardsApi.new(api_client)
       
+      # Build contact-specific data for template rendering
+      contact_data = {
+        first_name: campaign_contact.first_name,
+        last_name: campaign_contact.last_name,
+        full_name: campaign_contact.full_name,
+        company: campaign_contact.company,
+        email: campaign_contact.email,
+        phone: campaign_contact.phone
+      }
+      
+      # Render HTML using campaign templates or fallback to simple messages
+      front_html = if campaign.using_template?
+        campaign.render_front_html(contact_data)
+      else
+        "<html><body><h1>#{campaign.front_message || 'Hello!'}</h1></body></html>"
+      end
+      
+      back_html = if campaign.using_template?
+        campaign.render_back_html(contact_data)
+      else
+        "<html><body><p>#{campaign.back_message || 'Thank you!'}</p></body></html>"
+      end
+      
       postcard_editable = Lob::PostcardEditable.new(
         description: "Campaign: #{campaign.name} - #{campaign_contact.full_name}",
         to: format_address_editable(
@@ -25,8 +48,8 @@ class LobClient
           address_country: campaign_contact.address_country
         ),
         from: from_address,
-        front: "<html><body><h1>#{campaign.front_message || 'Hello!'}</h1></body></html>",
-        back: "<html><body><p>#{campaign.back_message || 'Thank you!'}</p></body></html>",
+        front: front_html,
+        back: back_html,
         merge_variables: build_merge_variables(campaign, campaign_contact),
         size: "6x9",
         mail_type: "usps_first_class",

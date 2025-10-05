@@ -1,10 +1,13 @@
 class Campaign < ApplicationRecord
   belongs_to :advertiser
   belongs_to :created_by_user, class_name: 'User'
+  belongs_to :postcard_template, optional: true
+  belongs_to :color_palette, optional: true
   has_many :campaign_contacts, dependent: :destroy
   
   # Serialize JSON fields for SQLite compatibility
   serialize :merge_variables, coder: JSON
+  serialize :template_data, coder: JSON
   
   enum :status, {
     draft: 0,
@@ -96,6 +99,44 @@ class Campaign < ApplicationRecord
     
     completed = sent_count + failed_count
     (completed.to_f / recipient_count * 100).round
+  end
+  
+  # Template rendering methods
+  def using_template?
+    postcard_template_id.present?
+  end
+  
+  def template_data_with_defaults
+    data = (template_data || {}).symbolize_keys
+    
+    # Add advertiser defaults
+    data[:logo_url] ||= advertiser.logo_url if advertiser.respond_to?(:logo_url)
+    data[:company_name] ||= advertiser.name
+    data[:website] ||= advertiser.website_url
+    data[:phone] ||= advertiser.phone if advertiser.respond_to?(:phone)
+    
+    # Add color palette colors
+    if color_palette
+      color_palette.colors.each do |key, value|
+        data["color_#{key}".to_sym] ||= value
+      end
+    end
+    
+    data
+  end
+  
+  def render_front_html(contact_data = {})
+    return front_message if !using_template?
+    
+    data = template_data_with_defaults.merge(contact_data.symbolize_keys)
+    postcard_template.render_front(data)
+  end
+  
+  def render_back_html(contact_data = {})
+    return back_message if !using_template?
+    
+    data = template_data_with_defaults.merge(contact_data.symbolize_keys)
+    postcard_template.render_back(data)
   end
 end
 
