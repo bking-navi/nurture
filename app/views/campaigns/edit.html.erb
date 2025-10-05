@@ -1,0 +1,84 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Navigation Bar -->
+  <nav class="bg-white shadow">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex items-center space-x-8">
+          <div class="flex-shrink-0">
+            <h1 class="text-xl font-bold text-gray-900"><%= @advertiser.name %></h1>
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <%= link_to "← Back to Campaigns", campaigns_path(@advertiser.slug), class: "text-sm font-medium text-gray-700 hover:text-gray-900" %>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="mb-6">
+      <h2 class="text-2xl font-bold text-gray-900"><%= @campaign.name %></h2>
+      <div class="mt-1 flex items-center space-x-2">
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+          Draft
+        </span>
+        <span class="text-sm text-gray-500">•</span>
+        <span class="text-sm text-gray-500"><%= @campaign.recipient_count %> recipients</span>
+        <% if @campaign.estimated_cost_cents > 0 %>
+          <span class="text-sm text-gray-500">•</span>
+          <span class="text-sm text-gray-500">Est. <%= number_to_currency(@campaign.estimated_cost_dollars) %></span>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="bg-white shadow sm:rounded-lg mb-6">
+      <div class="border-b border-gray-200">
+        <nav class="-mb-px flex space-x-8 px-6" aria-label="Tabs">
+          <%= link_to edit_campaign_path(@advertiser.slug, @campaign, tab: 'recipients'), 
+              class: "#{@current_tab == 'recipients' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" do %>
+            Recipients
+          <% end %>
+          <%= link_to edit_campaign_path(@advertiser.slug, @campaign, tab: 'design'), 
+              class: "#{@current_tab == 'design' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" do %>
+            Design
+          <% end %>
+          <%= link_to edit_campaign_path(@advertiser.slug, @campaign, tab: 'review'), 
+              class: "#{@current_tab == 'review' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" do %>
+            Review & Send
+          <% end %>
+        </nav>
+      </div>
+
+      <!-- Tab Content -->
+      <div class="p-6">
+        <% if @current_tab == 'recipients' %>
+          <%= render 'campaigns/tabs/recipients', campaign: @campaign, advertiser: @advertiser %>
+        <% elsif @current_tab == 'design' %>
+          <%= render 'campaigns/tabs/design', campaign: @campaign, advertiser: @advertiser %>
+        <% elsif @current_tab == 'review' %>
+          <%= render 'campaigns/tabs/review', campaign: @campaign, advertiser: @advertiser %>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center justify-between bg-white shadow sm:rounded-lg p-4">
+      <div>
+        <%= button_to "Delete Campaign", campaign_path(@advertiser.slug, @campaign), 
+            method: :delete, 
+            data: { turbo_confirm: "Are you sure? This cannot be undone." }, 
+            class: "inline-flex items-center px-4 py-2 border border-red-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50" %>
+      </div>
+      <div class="flex space-x-3">
+        <%= link_to "Save Draft", campaigns_path(@advertiser.slug), class: "inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+        <% if @current_tab != 'review' %>
+          <%= link_to "Continue →", edit_campaign_path(@advertiser.slug, @campaign, tab: @current_tab == 'recipients' ? 'design' : 'review'), class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700" %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+

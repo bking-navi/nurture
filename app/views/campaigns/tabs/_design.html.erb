@@ -1,0 +1,80 @@
+<div class="space-y-6">
+  <%= form_with model: campaign, url: campaign_path(advertiser.slug, campaign), method: :patch, local: true do |f| %>
+    <%= hidden_field_tag :tab, 'design' %>
+    
+    <div>
+      <h3 class="text-lg font-medium text-gray-900 mb-4">Select Template</h3>
+      <p class="text-sm text-gray-500 mb-4">For MVP, we're using a single template. More templates coming soon!</p>
+      
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <!-- Template Option - using Lob's default template ID -->
+        <div class="relative rounded-lg border <%= campaign.template_id.present? ? 'border-indigo-500 ring-2 ring-indigo-500' : 'border-gray-300' %> bg-white px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-indigo-400 cursor-pointer">
+          <div class="flex-shrink-0">
+            <div class="h-20 w-20 bg-gradient-to-br from-indigo-400 to-purple-500 rounded flex items-center justify-center text-white font-bold text-2xl">
+              6x9
+            </div>
+          </div>
+          <div class="flex-1 min-w-0">
+            <span class="absolute inset-0" aria-hidden="true"></span>
+            <p class="text-sm font-medium text-gray-900">Standard Postcard</p>
+            <p class="text-sm text-gray-500 truncate">6x9 inches</p>
+          </div>
+          <% if campaign.template_id.present? %>
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+            </div>
+          <% end %>
+        </div>
+      </div>
+      
+      <%= f.hidden_field :template_id, value: 'tmpl_default' %>
+      <%= f.hidden_field :template_name, value: 'Standard Postcard' %>
+    </div>
+    
+    <div>
+      <h3 class="text-lg font-medium text-gray-900 mb-4">Customize Messages (Optional)</h3>
+      
+      <div class="space-y-4">
+        <div>
+          <%= f.label :front_message, "Front Message", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.text_area :front_message, rows: 3, class: "mt-1 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md", placeholder: "Optional custom message for the front of the postcard..." %>
+          <p class="mt-2 text-sm text-gray-500">This will appear on the front of your postcard</p>
+        </div>
+        
+        <div>
+          <%= f.label :back_message, "Back Message", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.text_area :back_message, rows: 4, class: "mt-1 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md", placeholder: "Optional custom message for the back of the postcard..." %>
+          <p class="mt-2 text-sm text-gray-500">This will appear on the back of your postcard</p>
+        </div>
+      </div>
+      
+      <div class="mt-4 bg-blue-50 border border-blue-200 rounded-md p-4">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-blue-800">Personalization Variables</h3>
+            <div class="mt-2 text-sm text-blue-700">
+              <p>You can use these variables in your messages:</p>
+              <ul class="list-disc pl-5 mt-1">
+                <li><code class="bg-blue-100 px-1 rounded">{{first_name}}</code> - Recipient's first name</li>
+                <li><code class="bg-blue-100 px-1 rounded">{{last_name}}</code> - Recipient's last name</li>
+                <li><code class="bg-blue-100 px-1 rounded">{{full_name}}</code> - Recipient's full name</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="flex items-center justify-end space-x-3">
+      <%= f.submit "Save Changes", class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700" %>
+    </div>
+  <% end %>
+</div>
+

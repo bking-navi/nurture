@@ -3,6 +3,7 @@ class Advertiser < ApplicationRecord
   has_many :advertiser_memberships, dependent: :destroy
   has_many :users, through: :advertiser_memberships
   has_many :invitations, dependent: :destroy
+  has_many :campaigns, dependent: :destroy
 
   # Serialize settings as JSON for SQLite (PostgreSQL will use jsonb)
   serialize :settings, coder: JSON
@@ -12,10 +13,13 @@ class Advertiser < ApplicationRecord
   validates :slug, presence: true, uniqueness: true, format: { with: /\A[a-z0-9\-]+\z/, message: "only allows lowercase letters, numbers, and hyphens" }
   validates :street_address, presence: true
   validates :city, presence: true
-  validates :state, presence: true
+  validates :state, presence: true, format: { with: /\A[A-Z]{2}\z/, message: "must be 2-letter state code (e.g., CA, NY, TX)" }
   validates :postal_code, presence: true
   validates :country, presence: true
   validates :website_url, presence: true, format: { with: URI::DEFAULT_PARSER.make_regexp(%w[http https]), message: "must be a valid URL" }
+  
+  # Normalize state to uppercase before validation
+  before_validation :normalize_state
 
   # Callbacks
   before_validation :generate_slug, if: -> { slug.blank? && name.present? }
@@ -61,5 +65,9 @@ class Advertiser < ApplicationRecord
       email_from_name: name,
       email_reply_to: ""
     }
+  end
+  
+  def normalize_state
+    self.state = state&.upcase
   end
 end

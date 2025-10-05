@@ -13,6 +13,7 @@ class User < ApplicationRecord
   # Associations
   has_many :advertiser_memberships, dependent: :destroy
   has_many :advertisers, through: :advertiser_memberships
+  has_many :created_campaigns, class_name: 'Campaign', foreign_key: 'created_by_user_id', dependent: :nullify
 
   # Custom methods
   def display_name
@@ -35,6 +36,11 @@ class User < ApplicationRecord
 
   def has_access_to?(advertiser)
     advertiser_memberships.exists?(advertiser: advertiser, status: 'accepted')
+  end
+  
+  def can_manage_campaigns?(advertiser)
+    membership = advertiser_memberships.find_by(advertiser: advertiser)
+    membership&.role&.in?(['owner', 'admin', 'manager'])
   end
 
   # Override Devise's password validation for invitation flow

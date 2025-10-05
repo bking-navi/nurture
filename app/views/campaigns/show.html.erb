@@ -1,0 +1,237 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Navigation Bar -->
+  <nav class="bg-white shadow">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex items-center space-x-8">
+          <div class="flex-shrink-0">
+            <h1 class="text-xl font-bold text-gray-900"><%= @advertiser.name %></h1>
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <%= link_to "← Back to Campaigns", campaigns_path(@advertiser.slug), class: "text-sm font-medium text-gray-700 hover:text-gray-900" %>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="mb-6">
+      <h2 class="text-2xl font-bold text-gray-900"><%= @campaign.name %></h2>
+      <div class="mt-2 flex items-center space-x-3">
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <%= 
+          case @campaign.status
+          when 'draft' then 'bg-gray-100 text-gray-800'
+          when 'completed' then 'bg-green-100 text-green-800'
+          when 'completed_with_errors' then 'bg-yellow-100 text-yellow-800'
+          when 'processing' then 'bg-blue-100 text-blue-800'
+          when 'failed' then 'bg-red-100 text-red-800'
+          when 'cancelled' then 'bg-gray-100 text-gray-800'
+          else 'bg-gray-100 text-gray-800'
+          end
+        %>">
+          <%= @campaign.status == 'completed_with_errors' ? 'Completed (with errors)' : @campaign.status.titleize %>
+        </span>
+        <% if @campaign.sent_at %>
+          <span class="text-sm text-gray-500">Sent <%= time_ago_in_words(@campaign.sent_at) %> ago</span>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Failed Send Warning -->
+    <% if @campaign.failed_count > 0 %>
+      <div class="mb-6 rounded-md bg-red-50 p-4">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-red-800">
+              <%= @campaign.failed_count %> postcard<%= 's' if @campaign.failed_count != 1 %> failed to send
+            </h3>
+            <div class="mt-2 text-sm text-red-700">
+              <p>Review the failed postcards below and use the "Retry" button to attempt sending again.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+      <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="p-5">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <svg class="h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 19v-8.93a2 2 0 01.89-1.664l7-4.666a2 2 0 012.22 0l7 4.666A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-1.14.76a2 2 0 01-2.22 0l-1.14-.76" />
+              </svg>
+            </div>
+            <div class="ml-5 w-0 flex-1">
+              <dl>
+                <dt class="text-sm font-medium text-gray-500 truncate">Total Postcards</dt>
+                <dd class="text-lg font-semibold text-gray-900"><%= @campaign.recipient_count %></dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="p-5">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <svg class="h-6 w-6 text-green-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="ml-5 w-0 flex-1">
+              <dl>
+                <dt class="text-sm font-medium text-gray-500 truncate">Delivered</dt>
+                <dd class="text-lg font-semibold text-green-600"><%= @campaign.delivered_count %></dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="p-5">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <svg class="h-6 w-6 text-yellow-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <div class="ml-5 w-0 flex-1">
+              <dl>
+                <dt class="text-sm font-medium text-gray-500 truncate">In Transit</dt>
+                <dd class="text-lg font-semibold text-yellow-600"><%= @campaign.sent_count - @campaign.delivered_count %></dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="p-5">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <svg class="h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="ml-5 w-0 flex-1">
+              <dl>
+                <dt class="text-sm font-medium text-gray-500 truncate">Total Cost</dt>
+                <dd class="text-lg font-semibold text-gray-900"><%= number_to_currency(@campaign.actual_cost_dollars) %></dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recipients List -->
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+      <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+        <h3 class="text-lg leading-6 font-medium text-gray-900">Recipients</h3>
+        <p class="mt-1 max-w-2xl text-sm text-gray-500">
+          Delivery status for each postcard
+        </p>
+      </div>
+      
+      <div class="divide-y divide-gray-200">
+        <% if @campaign_contacts.any? %>
+          <% @campaign_contacts.each do |contact| %>
+            <div class="px-4 py-4 sm:px-6 hover:bg-gray-50">
+              <div class="flex items-center justify-between">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center space-x-3">
+                    <p class="text-sm font-medium text-gray-900 truncate">
+                      <%= contact.full_name %>
+                    </p>
+                    <% if contact.delivered? %>
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        Delivered
+                      </span>
+                    <% elsif contact.in_transit? %>
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                        In Transit
+                      </span>
+                    <% elsif contact.sent? %>
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        Sent
+                      </span>
+                    <% elsif contact.failed? %>
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        Failed
+                      </span>
+                    <% elsif contact.returned? %>
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        Returned
+                      </span>
+                    <% else %>
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        <%= contact.status.titleize %>
+                      </span>
+                    <% end %>
+                  </div>
+                  
+                  <p class="mt-1 text-sm text-gray-500">
+                    <%= contact.address_formatted.gsub("\n", ", ") %>
+                  </p>
+                  
+                  <div class="mt-2 flex items-center text-sm text-gray-500 space-x-4">
+                    <% if contact.delivered_at %>
+                      <span>Delivered <%= time_ago_in_words(contact.delivered_at) %> ago</span>
+                    <% elsif contact.expected_delivery_date %>
+                      <span>Expected: <%= contact.expected_delivery_date.strftime("%b %d, %Y") %></span>
+                    <% end %>
+                    
+                    <% if contact.tracking_url.present? %>
+                      <%= link_to "Track", contact.tracking_url, target: "_blank", class: "text-indigo-600 hover:text-indigo-900" %>
+                    <% end %>
+                  </div>
+                  
+                  <% if contact.send_error.present? %>
+                    <p class="mt-2 text-sm text-red-600">Error: <%= contact.send_error %></p>
+                  <% end %>
+                </div>
+                
+                <div class="flex-shrink-0 flex items-center space-x-4">
+                  <% if contact.failed? %>
+                    <%= button_to "Retry", retry_campaign_campaign_contact_path(@advertiser.slug, @campaign, contact), 
+                                  method: :post,
+                                  class: "inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500",
+                                  data: { confirm: "Retry sending this postcard?" } %>
+                  <% end %>
+                  
+                  <p class="text-sm font-medium text-gray-900">
+                    <%= number_to_currency(contact.cost_dollars) %>
+                  </p>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="px-4 py-12 text-center">
+            <p class="text-sm text-gray-500">No recipients found</p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <% if @campaign_contacts.total_pages > 1 %>
+      <div class="mt-6 bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 rounded-lg shadow">
+        <%= paginate @campaign_contacts %>
+      </div>
+    <% end %>
+  </div>
+</div>
+

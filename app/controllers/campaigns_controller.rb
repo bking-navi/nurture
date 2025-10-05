@@ -1,0 +1,144 @@
+class CampaignsController < ApplicationController
+  before_action :authenticate_user!
+  before_action :set_advertiser
+  before_action :verify_campaign_access!
+  before_action :set_campaign, only: [:show, :edit, :update, :destroy, :send_now, :calculate_cost]
+  before_action :verify_editable!, only: [:edit, :update, :destroy, :send_now]
+  
+  def index
+    @campaigns = @advertiser.campaigns.recent
+    
+    # Filter by status if provided
+    if params[:status].present?
+      case params[:status]
+      when 'completed'
+        # Show both completed and completed_with_errors
+        @campaigns = @campaigns.where(status: [:completed, :completed_with_errors])
+      when 'sent'
+        # Legacy support - redirect to completed filter
+        @campaigns = @campaigns.where(status: [:completed, :completed_with_errors])
+      else
+        # Exact status match
+        @campaigns = @campaigns.where(status: params[:status]) if Campaign.statuses.key?(params[:status])
+      end
+    end
+    
+    @campaigns = @campaigns.page(params[:page]).per(20)
+  end
+  
+  def show
+    @campaign_contacts = @campaign.campaign_contacts
+                                  .order(created_at: :desc)
+                                  .page(params[:page])
+                                  .per(50)
+  end
+  
+  def new
+    @campaign = @advertiser.campaigns.build
+  end
+  
+  def create
+    @campaign = @advertiser.campaigns.build(campaign_params)
+    @campaign.created_by_user = current_user
+    @campaign.status = :draft
+    
+    if @campaign.save
+      redirect_to edit_campaign_path(@advertiser.slug, @campaign), 
+                  notice: 'Campaign created. Add recipients to continue.'
+    else
+      render :new, status: :unprocessable_entity
+    end
+  end
+  
+  def edit
+    # Get current tab or default to recipients
+    @current_tab = params[:tab] || 'recipients'
+  end
+  
+  def update
+    if @campaign.update(campaign_params)
+      redirect_to edit_campaign_path(@advertiser.slug, @campaign, tab: params[:tab]), 
+                  notice: 'Campaign updated.'
+    else
+      @current_tab = params[:tab] || 'recipients'
+      render :edit, status: :unprocessable_entity
+    end
+  end
+  
+  def destroy
+    unless @campaign.deletable?
+      redirect_to campaigns_path(@advertiser.slug), 
+                  alert: 'Cannot delete campaign that has been sent.'
+      return
+    end
+    
+    @campaign.destroy
+    redirect_to campaigns_path(@advertiser.slug), 
+                notice: 'Campaign deleted.'
+  end
+  
+  def calculate_cost
+    @campaign.calculate_estimated_cost!
+    
+    respond_to do |format|
+      format.html do
+        redirect_to edit_campaign_path(@advertiser.slug, @campaign, tab: 'review'),
+                    notice: "Estimated cost: #{helpers.number_to_currency(@campaign.estimated_cost_dollars)}"
+      end
+      format.json do
+        render json: { 
+          estimated_cost_cents: @campaign.estimated_cost_cents,
+          estimated_cost_dollars: @campaign.estimated_cost_dollars,
+          recipient_count: @campaign.recipient_count
+        }
+      end
+    end
+  end
+  
+  def send_now
+    unless @campaign.sendable?
+      redirect_to edit_campaign_path(@advertiser.slug, @campaign),
+                  alert: 'Campaign not ready to send. Add recipients and select a template.'
+      return
+    end
+    
+    # Calculate final cost
+    @campaign.calculate_estimated_cost!
+    
+    @campaign.send_now!
+    redirect_to campaign_path(@advertiser.slug, @campaign),
+                notice: 'Campaign is being sent. You will receive an email when complete.'
+  end
+  
+  private
+  
+  def set_advertiser
+    @advertiser = current_user.advertisers.find_by!(slug: params[:advertiser_slug])
+  end
+  
+  def verify_campaign_access!
+    unless current_user.can_manage_campaigns?(@advertiser)
+      redirect_to advertiser_dashboard_path(@advertiser.slug), 
+                  alert: 'You do not have permission to manage campaigns.'
+    end
+  end
+  
+  def set_campaign
+    @campaign = @advertiser.campaigns.find(params[:id])
+  end
+  
+  def verify_editable!
+    return if @campaign.editable?
+    
+    redirect_to campaign_path(@advertiser.slug, @campaign),
+                alert: 'Campaign cannot be edited after sending.'
+  end
+  
+  def campaign_params
+    params.require(:campaign).permit(
+      :name, :description, :template_id, :template_name, 
+      :template_thumbnail_url, :front_message, :back_message
+    )
+  end
+end
+

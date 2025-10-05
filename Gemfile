@@ -26,6 +26,12 @@ gem "bcrypt", "~> 3.1.7"
 # HTTP requests for Loops.so API
 gem "httparty"
 
+# Lob.com API for direct mail postcards
+gem "lob", "~> 6.0"
+
+# Pagination
+gem "kaminari"
+
 # Rate limiting
 gem "rack-attack"
 

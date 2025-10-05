@@ -39,4 +39,25 @@ Rails.application.routes.draw do
   # Invitation acceptance
   get 'invitations/:token/accept', to: 'invitations#accept', as: :accept_invitation
   post 'invitations/:token/accept', to: 'invitations#process_acceptance', as: :process_invitation
+  
+  # Campaigns
+  scope 'advertisers/:advertiser_slug' do
+    resources :campaigns do
+      member do
+        post :send_now
+        post :calculate_cost
+      end
+      
+      resources :campaign_contacts, only: [:new, :create, :destroy], path: 'recipients' do
+        member do
+          post :retry
+        end
+        
+        collection do
+          post :import_csv
+          get :download_sample
+        end
+      end
+    end
+  end
 end

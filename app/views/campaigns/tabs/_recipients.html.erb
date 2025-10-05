@@ -1,0 +1,160 @@
+<div class="space-y-6">
+  <!-- Upload/Add Options -->
+  <div class="flex space-x-4">
+    <button type="button" onclick="document.getElementById('csv-upload-section').classList.toggle('hidden')" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+      <svg class="-ml-1 mr-2 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+      </svg>
+      Upload CSV
+    </button>
+    <button type="button" onclick="document.getElementById('manual-add-section').classList.toggle('hidden')" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+      <svg class="-ml-1 mr-2 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      Add Manually
+    </button>
+    <%= link_to "Download Sample CSV", download_sample_campaign_campaign_contacts_path(advertiser.slug, campaign), class: "inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+  </div>
+
+  <!-- CSV Upload Section -->
+  <div id="csv-upload-section" class="hidden border-2 border-dashed border-gray-300 rounded-lg p-6">
+    <h3 class="text-lg font-medium text-gray-900 mb-4">Upload CSV File</h3>
+    <%= form_with url: import_csv_campaign_campaign_contacts_path(advertiser.slug, campaign), multipart: true, local: true do |f| %>
+      <div class="space-y-4">
+        <div>
+          <%= f.label :csv_file, "CSV File", class: "block text-sm font-medium text-gray-700" %>
+          <div class="mt-1">
+            <%= f.file_field :csv_file, accept: ".csv", class: "block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" %>
+          </div>
+          <p class="mt-2 text-sm text-gray-500">
+            Required columns: first_name, last_name, address_line1, city, state, zip
+          </p>
+        </div>
+        <div>
+          <%= f.submit "Import Recipients", class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700" %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Manual Add Section -->
+  <div id="manual-add-section" class="hidden border border-gray-300 rounded-lg p-6">
+    <h3 class="text-lg font-medium text-gray-900 mb-4">Add Recipient</h3>
+    <%= form_with model: CampaignContact.new, url: campaign_campaign_contacts_path(advertiser.slug, campaign), local: true do |f| %>
+      <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+        <div class="sm:col-span-3">
+          <%= f.label :first_name, "First Name", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.text_field :first_name, class: "mt-1 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md" %>
+        </div>
+        
+        <div class="sm:col-span-3">
+          <%= f.label :last_name, "Last Name", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.text_field :last_name, class: "mt-1 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md" %>
+        </div>
+        
+        <div class="sm:col-span-6">
+          <%= f.label :company, "Company (optional)", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.text_field :company, class: "mt-1 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md" %>
+        </div>
+        
+        <div class="sm:col-span-6">
+          <%= f.label :address_line1, "Address Line 1", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.text_field :address_line1, class: "mt-1 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md" %>
+        </div>
+        
+        <div class="sm:col-span-6">
+          <%= f.label :address_line2, "Address Line 2 (optional)", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.text_field :address_line2, class: "mt-1 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md" %>
+        </div>
+        
+        <div class="sm:col-span-2">
+          <%= f.label :address_city, "City", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.text_field :address_city, class: "mt-1 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md" %>
+        </div>
+        
+        <div class="sm:col-span-2">
+          <%= f.label :address_state, "State", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.text_field :address_state, placeholder: "CA", maxlength: 2, class: "mt-1 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md" %>
+        </div>
+        
+        <div class="sm:col-span-2">
+          <%= f.label :address_zip, "ZIP Code", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.text_field :address_zip, class: "mt-1 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md" %>
+        </div>
+        
+        <div class="sm:col-span-3">
+          <%= f.label :email, "Email (optional)", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.email_field :email, class: "mt-1 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md" %>
+        </div>
+        
+        <div class="sm:col-span-3">
+          <%= f.label :phone, "Phone (optional)", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.text_field :phone, class: "mt-1 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md" %>
+        </div>
+      </div>
+      
+      <div class="mt-6 flex items-center space-x-3">
+        <%= f.submit "Add Recipient", class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700" %>
+        <button type="button" onclick="document.getElementById('manual-add-section').classList.add('hidden')" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+          Cancel
+        </button>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Recipients List -->
+  <div>
+    <h3 class="text-lg font-medium text-gray-900 mb-4">
+      Recipients (<%= campaign.recipient_count %>)
+    </h3>
+    
+    <% if campaign.campaign_contacts.any? %>
+      <div class="bg-white shadow overflow-hidden sm:rounded-md">
+        <ul class="divide-y divide-gray-200">
+          <% campaign.campaign_contacts.order(created_at: :desc).limit(50).each do |contact| %>
+            <li class="px-4 py-4 hover:bg-gray-50">
+              <div class="flex items-center justify-between">
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-gray-900 truncate">
+                    <%= contact.full_name %>
+                    <% if contact.company.present? %>
+                      <span class="text-gray-500">(<%= contact.company %>)</span>
+                    <% end %>
+                  </p>
+                  <p class="mt-1 text-sm text-gray-500">
+                    <%= contact.address_line1 %><%= ", #{contact.address_line2}" if contact.address_line2.present? %>, 
+                    <%= contact.address_city %>, <%= contact.address_state %> <%= contact.address_zip %>
+                  </p>
+                  <% if contact.email.present? %>
+                    <p class="mt-1 text-sm text-gray-500"><%= contact.email %></p>
+                  <% end %>
+                </div>
+                <div>
+                  <%= button_to "Remove", campaign_campaign_contact_path(advertiser.slug, campaign, contact), 
+                      method: :delete, 
+                      data: { turbo_confirm: "Remove this recipient?" }, 
+                      class: "inline-flex items-center px-3 py-2 border border-red-300 shadow-sm text-sm leading-4 font-medium rounded-md text-red-700 bg-white hover:bg-red-50" %>
+                </div>
+              </div>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+      
+      <% if campaign.recipient_count > 50 %>
+        <p class="mt-4 text-sm text-gray-500 text-center">
+          Showing first 50 of <%= campaign.recipient_count %> recipients
+        </p>
+      <% end %>
+    <% else %>
+      <div class="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">No recipients yet</h3>
+        <p class="mt-1 text-sm text-gray-500">Get started by adding recipients manually or uploading a CSV.</p>
+      </div>
+    <% end %>
+  </div>
+</div>
+

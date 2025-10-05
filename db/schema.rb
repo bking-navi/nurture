@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_03_222546) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_05_122138) do
   create_table "advertiser_memberships", force: :cascade do |t|
     t.integer "user_id", null: false
     t.integer "advertiser_id", null: false
@@ -38,6 +38,67 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_03_222546) do
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_advertisers_on_name"
     t.index ["slug"], name: "index_advertisers_on_slug", unique: true
+  end
+
+  create_table "campaign_contacts", force: :cascade do |t|
+    t.integer "campaign_id", null: false
+    t.string "first_name", null: false
+    t.string "last_name", null: false
+    t.string "company"
+    t.string "address_line1", null: false
+    t.string "address_line2"
+    t.string "address_city", null: false
+    t.string "address_state", null: false
+    t.string "address_zip", null: false
+    t.string "address_country", default: "US"
+    t.string "email"
+    t.string "phone"
+    t.text "metadata"
+    t.string "lob_postcard_id"
+    t.integer "status", default: 0, null: false
+    t.integer "estimated_cost_cents", default: 0
+    t.integer "actual_cost_cents", default: 0
+    t.string "tracking_number"
+    t.string "tracking_url"
+    t.date "expected_delivery_date"
+    t.datetime "delivered_at"
+    t.text "send_error"
+    t.text "lob_response"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["campaign_id", "created_at"], name: "index_campaign_contacts_on_campaign_id_and_created_at"
+    t.index ["campaign_id", "status"], name: "index_campaign_contacts_on_campaign_id_and_status"
+    t.index ["campaign_id"], name: "index_campaign_contacts_on_campaign_id"
+    t.index ["lob_postcard_id"], name: "index_campaign_contacts_on_lob_postcard_id", unique: true
+  end
+
+  create_table "campaigns", force: :cascade do |t|
+    t.integer "advertiser_id", null: false
+    t.integer "created_by_user_id", null: false
+    t.string "name", null: false
+    t.text "description"
+    t.integer "status", default: 0, null: false
+    t.string "template_id"
+    t.string "template_name"
+    t.string "template_thumbnail_url"
+    t.text "front_message"
+    t.text "back_message"
+    t.text "merge_variables"
+    t.integer "estimated_cost_cents", default: 0
+    t.integer "actual_cost_cents", default: 0
+    t.integer "recipient_count", default: 0
+    t.integer "sent_count", default: 0
+    t.integer "failed_count", default: 0
+    t.integer "delivered_count", default: 0
+    t.datetime "scheduled_at"
+    t.datetime "sent_at"
+    t.datetime "completed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["advertiser_id", "created_at"], name: "index_campaigns_on_advertiser_id_and_created_at"
+    t.index ["advertiser_id", "status"], name: "index_campaigns_on_advertiser_id_and_status"
+    t.index ["advertiser_id"], name: "index_campaigns_on_advertiser_id"
+    t.index ["created_by_user_id"], name: "index_campaigns_on_created_by_user_id"
   end
 
   create_table "invitations", force: :cascade do |t|
@@ -86,6 +147,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_03_222546) do
 
   add_foreign_key "advertiser_memberships", "advertisers"
   add_foreign_key "advertiser_memberships", "users"
+  add_foreign_key "campaign_contacts", "campaigns"
+  add_foreign_key "campaigns", "advertisers"
+  add_foreign_key "campaigns", "users", column: "created_by_user_id"
   add_foreign_key "invitations", "advertisers"
   add_foreign_key "invitations", "users", column: "invited_by_id"
 end
