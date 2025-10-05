@@ -7,9 +7,13 @@
   field_required = field['required'] || field[:required] || false
   field_max_length = field['max_length'] || field[:max_length]
   field_rows = field['rows'] || field[:rows] || 3
+  update_preview = defined?(update_preview) ? update_preview : false
   
   # Get current value from campaign.template_data
   current_value = campaign.template_data&.dig(field_name) || campaign.template_data&.dig(field_name.to_sym) || ''
+  
+  # Build data attributes for preview updates
+  data_attrs = update_preview ? { action: "input->preview-updater#update" } : {}
 %>
 
 <div class="form-field">
@@ -28,7 +32,7 @@
           maxlength: field_max_length,
           placeholder: field_placeholder,
           required: field_required,
-          data: { preview: true },
+          data: data_attrs,
           class: "mt-1 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md" %>
     <% if field_max_length %>
       <p class="mt-1 text-xs text-gray-500">
@@ -41,7 +45,7 @@
           current_value,
           placeholder: field_placeholder,
           required: field_required,
-          data: { preview: true },
+          data: data_attrs,
           class: "mt-1 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md" %>
     <p class="mt-1 text-xs text-gray-500">
       <%= field_name.include?('logo') ? 'Your company logo will be used by default if left blank' : 'Enter a full URL (https://...)' %>
@@ -53,7 +57,7 @@
           maxlength: field_max_length,
           placeholder: field_placeholder,
           required: field_required,
-          data: { preview: true },
+          data: data_attrs,
           class: "mt-1 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md" %>
     <% if field_max_length %>
       <p class="mt-1 text-xs text-gray-500">

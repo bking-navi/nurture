@@ -58,13 +58,38 @@ class CampaignsController < ApplicationController
     if @current_tab == 'design'
       @templates = PostcardTemplate.active.by_sort_order
       @color_palettes = ColorPalette.available_for(@advertiser)
+      
+      # Preselect first template and default palette if none selected
+      if @campaign.postcard_template_id.blank? && @templates.any?
+        @campaign.postcard_template_id = @templates.first.id
+      end
+      
+      if @campaign.color_palette_id.blank? && @color_palettes.any?
+        # Try to find default palette, or use first one
+        default_palette = @color_palettes.find_by(is_default: true) || @color_palettes.first
+        @campaign.color_palette_id = default_palette.id
+      end
     end
   end
   
   def update
     if @campaign.update(campaign_params)
-      redirect_to edit_campaign_path(@advertiser.slug, @campaign, tab: params[:tab]), 
-                  notice: 'Campaign updated.'
+      # Reload the campaign to get updated associations
+      @campaign.reload
+      
+      # Handle Turbo Frame requests (from design tab)
+      if request.headers['Turbo-Frame'] == 'design-content' && params[:tab] == 'design'
+        @templates = PostcardTemplate.active.by_sort_order
+        @color_palettes = ColorPalette.available_for(@advertiser)
+        @current_tab = 'design'
+        
+        render partial: "campaigns/tabs/design_content", 
+               locals: { campaign: @campaign, advertiser: @advertiser },
+               layout: false
+      else
+        redirect_to edit_campaign_path(@advertiser.slug, @campaign, tab: params[:tab]), 
+                    notice: 'Campaign updated.'
+      end
     else
       @current_tab = params[:tab] || 'recipients'
       render :edit, status: :unprocessable_entity

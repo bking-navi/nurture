@@ -1,34 +1,41 @@
-<div class="space-y-8" id="campaign-design">
-  <%= form_with model: campaign, url: campaign_path(advertiser.slug, campaign), method: :patch, local: true, id: "design-form" do |f| %>
+<div class="max-w-7xl mx-auto" 
+     data-controller="preview-updater"
+     data-preview-updater-advertiser-slug-value="<%= advertiser.slug %>"
+     data-preview-updater-campaign-id-value="<%= campaign.id %>">
+  
+  <!-- Template Selection -->
+  <%= form_with model: campaign, 
+                url: campaign_path(advertiser.slug, campaign), 
+                method: :patch, 
+                local: false,
+                data: { turbo_frame: "design-content", controller: "auto-submit" } do |f| %>
     <%= hidden_field_tag :tab, 'design' %>
     
-    <!-- Step 1: Template Selection -->
-    <div class="bg-white shadow rounded-lg p-6">
-      <h3 class="text-lg font-semibold text-gray-900 mb-2">1. Choose Your Template</h3>
-      <p class="text-sm text-gray-600 mb-6">Select a professionally designed template for your postcard campaign.</p>
+    <div class="mb-8">
+      <h3 class="text-lg font-medium text-gray-900 mb-4">Choose Your Template</h3>
+      <p class="text-sm text-gray-600 mb-6">Select a professionally designed postcard template</p>
       
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <% @templates.each do |template| %>
           <label class="relative cursor-pointer group">
-            <%= f.radio_button :postcard_template_id, template.id, 
+            <%= f.radio_button :postcard_template_id, 
+                  template.id,
+                  checked: campaign.postcard_template_id == template.id,
                   class: "peer sr-only",
-                  data: { 
-                    action: "change->design#templateChanged",
-                    fields: template.all_field_configs.to_json,
-                    defaults: template.default_values.to_json
-                  } %>
-            <div class="border-2 rounded-lg p-4 transition-all peer-checked:border-indigo-500 peer-checked:ring-2 peer-checked:ring-indigo-500 hover:border-indigo-300 bg-white">
-              <!-- Template Thumbnail/Preview -->
-              <div class="aspect-[6/9] bg-gradient-to-br <%= 
+                  data: { action: "change->auto-submit#submit" } %>
+            
+            <div class="border-2 rounded-lg overflow-hidden transition-all peer-checked:border-indigo-500 peer-checked:ring-2 peer-checked:ring-indigo-500 hover:border-gray-400">
+              <!-- Template preview card -->
+              <div class="aspect-[6/9] <%= 
                 case template.category
-                when 'offer' then 'from-red-100 to-orange-100'
-                when 'product' then 'from-blue-100 to-cyan-100'
-                when 'event' then 'from-purple-100 to-pink-100'
-                when 'welcome' then 'from-green-100 to-teal-100'
-                when 'seasonal' then 'from-amber-100 to-yellow-100'
-                else 'from-gray-100 to-gray-200'
+                when 'offer' then 'bg-gradient-to-br from-red-100 to-orange-100'
+                when 'product' then 'bg-gradient-to-br from-blue-100 to-cyan-100'
+                when 'event' then 'bg-gradient-to-br from-purple-100 to-pink-100'
+                when 'welcome' then 'bg-gradient-to-br from-green-100 to-teal-100'
+                when 'seasonal' then 'bg-gradient-to-br from-amber-100 to-yellow-100'
+                else 'bg-gradient-to-br from-gray-100 to-gray-200'
                 end
-              %> rounded-lg mb-3 flex items-center justify-center text-4xl font-bold text-gray-400">
+              %> flex items-center justify-center text-4xl">
                 <%= 
                   case template.category
                   when 'offer' then '🔥'
@@ -41,344 +48,24 @@
                 %>
               </div>
               
-              <!-- Template Info -->
-              <div class="space-y-1">
-                <div class="flex items-center justify-between">
-                  <h4 class="text-sm font-semibold text-gray-900"><%= template.name %></h4>
-                  <span class="hidden peer-checked:inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800">
-                    Selected
-                  </span>
-                </div>
-                <p class="text-xs text-gray-600"><%= template.description %></p>
-                <span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
-                  <%= template.category_label %>
-                </span>
-              </div>
-            </div>
-          </label>
-        <% end %>
-      </div>
-      
-      <% if campaign.postcard_template_id.blank? %>
-        <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-          <div class="flex">
-            <div class="flex-shrink-0">
-              <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-              </svg>
-            </div>
-            <div class="ml-3">
-              <p class="text-sm text-blue-700">Select a template to get started</p>
-            </div>
-          </div>
-        </div>
-      <% end %>
-    </div>
-    
-    <!-- Step 2: Color Palette Selection -->
-    <div class="bg-white shadow rounded-lg p-6" id="color-palette-section" style="<%= 'display: none;' if campaign.postcard_template_id.blank? %>">
-      <h3 class="text-lg font-semibold text-gray-900 mb-2">2. Choose Your Colors</h3>
-      <p class="text-sm text-gray-600 mb-6">Select a color palette that matches your brand.</p>
-      
-      <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-        <% @color_palettes.each do |palette| %>
-          <label class="relative cursor-pointer group">
-            <%= f.radio_button :color_palette_id, palette.id, 
-                  class: "peer sr-only",
-                  data: { action: "change->design#paletteChanged" } %>
-            <div class="border-2 rounded-lg p-3 transition-all peer-checked:border-indigo-500 peer-checked:ring-2 peer-checked:ring-indigo-500 hover:border-indigo-300 bg-white">
-              <!-- Color Swatches -->
-              <div class="grid grid-cols-4 gap-1 mb-3">
-                <% [:primary, :secondary, :accent, :cta_bg].each do |color_key| %>
-                  <div class="aspect-square rounded" style="background-color: <%= palette.color(color_key) %>;"></div>
-                <% end %>
+              <div class="p-3 bg-white border-t">
+                <div class="text-sm font-medium text-gray-900"><%= template.name %></div>
+                <div class="text-xs text-gray-500 mt-0.5"><%= template.category_label %></div>
               </div>
               
-              <!-- Palette Name -->
-              <div class="text-center">
-                <h4 class="text-xs font-semibold text-gray-900"><%= palette.name %></h4>
-                <% if palette.is_default %>
-                  <span class="inline-block mt-1 px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                    Popular
-                  </span>
-                <% end %>
-              </div>
-              
-              <!-- Checkmark -->
-              <div class="hidden peer-checked:flex absolute top-2 right-2 items-center justify-center w-5 h-5 bg-indigo-600 rounded-full">
-                <svg class="w-3 h-3 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+              <!-- Selected indicator -->
+              <div class="hidden peer-checked:flex absolute top-2 right-2 items-center justify-center w-6 h-6 bg-indigo-600 rounded-full">
+                <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                 </svg>
               </div>
             </div>
           </label>
         <% end %>
       </div>
-    </div>
-    
-    <!-- Step 3: Customize Content -->
-    <div class="bg-white shadow rounded-lg p-6" id="customize-section" style="<%= 'display: none;' if campaign.postcard_template_id.blank? %>">
-      <h3 class="text-lg font-semibold text-gray-900 mb-2">3. Customize Your Content</h3>
-      <p class="text-sm text-gray-600 mb-6">Fill in your postcard details. Your company info will be added automatically.</p>
-      
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Left Column: Form Fields -->
-        <div class="space-y-6">
-          <!-- Front Side Fields -->
-          <div id="front-fields">
-            <h4 class="text-md font-medium text-gray-900 mb-4 flex items-center">
-              <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 text-sm font-semibold mr-2">F</span>
-              Front Side
-            </h4>
-            <div class="space-y-4" id="front-fields-container">
-              <!-- Dynamic fields will be inserted here via JavaScript -->
-              <% if campaign.postcard_template.present? %>
-                <% campaign.postcard_template.front_field_configs.each do |field| %>
-                  <%= render partial: 'campaigns/tabs/field_input', locals: { field: field, campaign: campaign, f: f } %>
-                <% end %>
-              <% end %>
-            </div>
-          </div>
-          
-          <!-- Back Side Fields -->
-          <div id="back-fields">
-            <h4 class="text-md font-medium text-gray-900 mb-4 flex items-center">
-              <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-purple-100 text-purple-600 text-sm font-semibold mr-2">B</span>
-              Back Side
-            </h4>
-            <div class="space-y-4" id="back-fields-container">
-              <!-- Dynamic fields will be inserted here via JavaScript -->
-              <% if campaign.postcard_template.present? %>
-                <% campaign.postcard_template.back_field_configs.each do |field| %>
-                  <%= render partial: 'campaigns/tabs/field_input', locals: { field: field, campaign: campaign, f: f } %>
-                <% end %>
-              <% end %>
-            </div>
-          </div>
-          
-          <!-- Merge Variables Info -->
-          <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
-            <div class="flex">
-              <div class="flex-shrink-0">
-                <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                </svg>
-              </div>
-              <div class="ml-3">
-                <h3 class="text-sm font-medium text-blue-800">Personalization Tips</h3>
-                <div class="mt-2 text-sm text-blue-700">
-                  <p class="mb-1">Use these variables to personalize each postcard:</p>
-                  <ul class="list-disc pl-5 space-y-1">
-                    <li><code class="bg-blue-100 px-1 rounded font-mono text-xs">{{first_name}}</code> → Recipient's first name</li>
-                    <li><code class="bg-blue-100 px-1 rounded font-mono text-xs">{{last_name}}</code> → Recipient's last name</li>
-                    <li><code class="bg-blue-100 px-1 rounded font-mono text-xs">{{company}}</code> → Recipient's company</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Right Column: Live Preview -->
-        <div class="lg:sticky lg:top-4 h-fit">
-          <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-            <div class="flex items-center justify-between mb-3">
-              <h4 class="text-sm font-semibold text-gray-900">Live Preview</h4>
-              <div class="flex items-center space-x-2">
-                <button type="button" id="preview-front-btn" class="px-3 py-1 text-xs font-medium rounded bg-indigo-100 text-indigo-700 hover:bg-indigo-200">
-                  Front
-                </button>
-                <button type="button" id="preview-back-btn" class="px-3 py-1 text-xs font-medium rounded bg-gray-200 text-gray-700 hover:bg-gray-300">
-                  Back
-                </button>
-              </div>
-            </div>
-            
-            <div id="preview-container" class="bg-white rounded border-2 border-gray-300 aspect-[6/9] overflow-hidden">
-              <iframe id="preview-iframe" class="w-full h-full border-0" style="transform: scale(0.5); transform-origin: top left; width: 200%; height: 200%;" srcdoc="<div style='padding: 40px; text-align: center; color: #999; font-family: sans-serif;'><% if campaign.postcard_template.present? %>Loading preview...<% else %>Select a template to see preview<% end %></div>"></iframe>
-            </div>
-            
-            <p class="mt-2 text-xs text-gray-500 text-center">Preview shows front side by default</p>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Save Button -->
-    <div class="flex items-center justify-end space-x-3">
-      <%= link_to "Cancel", edit_campaign_path(advertiser.slug, campaign, tab: 'recipients'), 
-            class: "inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
-      <%= f.submit "Save Design", class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700" %>
     </div>
   <% end %>
+  
+  <!-- Design Content (loads via Turbo Frame) -->
+  <%= render "campaigns/tabs/design_content", campaign: campaign, advertiser: advertiser %>
 </div>
-
-<script>
-// Live preview with real-time updates
-document.addEventListener('DOMContentLoaded', function() {
-  const form = document.getElementById('design-form');
-  if (!form) return;
-  
-  const colorPaletteSection = document.getElementById('color-palette-section');
-  const customizeSection = document.getElementById('customize-section');
-  const frontFieldsContainer = document.getElementById('front-fields-container');
-  const backFieldsContainer = document.getElementById('back-fields-container');
-  const previewIframe = document.getElementById('preview-iframe');
-  const previewFrontBtn = document.getElementById('preview-front-btn');
-  const previewBackBtn = document.getElementById('preview-back-btn');
-  
-  let currentTemplate = null;
-  let currentSide = 'front';
-  let previewTimeout = null;
-  
-  // Get campaign info from URL
-  const pathParts = window.location.pathname.split('/');
-  const campaignId = pathParts[pathParts.indexOf('campaigns') + 1];
-  const advertiserSlug = pathParts[pathParts.indexOf('advertisers') + 1];
-  const previewUrl = `/advertisers/${advertiserSlug}/campaigns/${campaignId}/preview_live`;
-  
-  // Template selection handler
-  document.querySelectorAll('input[name="campaign[postcard_template_id]"]').forEach(radio => {
-    radio.addEventListener('change', function(e) {
-      const templateData = {
-        fields: JSON.parse(this.dataset.fields || '[]'),
-        defaults: JSON.parse(this.dataset.defaults || '{}')
-      };
-      
-      currentTemplate = templateData;
-      
-      // Show other sections
-      if (colorPaletteSection) colorPaletteSection.style.display = 'block';
-      if (customizeSection) customizeSection.style.display = 'block';
-      
-      // Update preview immediately
-      updatePreviewLive();
-    });
-  });
-  
-  // Color palette change handler
-  document.querySelectorAll('input[name="campaign[color_palette_id]"]').forEach(radio => {
-    radio.addEventListener('change', updatePreviewLive);
-  });
-  
-  // Preview side toggle
-  if (previewFrontBtn) {
-    previewFrontBtn.addEventListener('click', function() {
-      currentSide = 'front';
-      previewFrontBtn.classList.add('bg-indigo-100', 'text-indigo-700');
-      previewFrontBtn.classList.remove('bg-gray-200', 'text-gray-700');
-      previewBackBtn.classList.add('bg-gray-200', 'text-gray-700');
-      previewBackBtn.classList.remove('bg-indigo-100', 'text-indigo-700');
-      updatePreviewLive();
-    });
-  }
-  
-  if (previewBackBtn) {
-    previewBackBtn.addEventListener('click', function() {
-      currentSide = 'back';
-      previewBackBtn.classList.add('bg-indigo-100', 'text-indigo-700');
-      previewBackBtn.classList.remove('bg-gray-200', 'text-gray-700');
-      previewFrontBtn.classList.add('bg-gray-200', 'text-gray-700');
-      previewFrontBtn.classList.remove('bg-indigo-100', 'text-indigo-700');
-      updatePreviewLive();
-    });
-  }
-  
-  // Collect all form data
-  function getFormData() {
-    const formData = new FormData(form);
-    const data = {
-      side: currentSide
-    };
-    
-    // Get template and palette IDs
-    data.postcard_template_id = formData.get('campaign[postcard_template_id]');
-    data.color_palette_id = formData.get('campaign[color_palette_id]');
-    
-    // Get all template_data fields
-    data.template_data = {};
-    for (let [key, value] of formData.entries()) {
-      if (key.startsWith('campaign[template_data]')) {
-        // Extract field name from campaign[template_data][field_name]
-        const match = key.match(/campaign\[template_data\]\[(.+)\]/);
-        if (match) {
-          data.template_data[match[1]] = value;
-        }
-      }
-    }
-    
-    return data;
-  }
-  
-  // Update preview with live data (debounced)
-  function updatePreviewLive() {
-    if (!previewIframe) return;
-    
-    const selectedTemplateId = document.querySelector('input[name="campaign[postcard_template_id]"]:checked')?.value;
-    
-    if (!selectedTemplateId) {
-      previewIframe.srcdoc = '<div style="padding: 40px; text-align: center; color: #999; font-family: sans-serif;">Select a template to see preview</div>';
-      return;
-    }
-    
-    // Clear existing timeout
-    if (previewTimeout) {
-      clearTimeout(previewTimeout);
-    }
-    
-    // Debounce preview updates (300ms delay)
-    previewTimeout = setTimeout(function() {
-      const formData = getFormData();
-      
-      // Convert to URLSearchParams for POST
-      const params = new URLSearchParams();
-      params.append('side', formData.side);
-      if (formData.postcard_template_id) {
-        params.append('postcard_template_id', formData.postcard_template_id);
-      }
-      if (formData.color_palette_id) {
-        params.append('color_palette_id', formData.color_palette_id);
-      }
-      
-      // Add template_data fields
-      for (let [key, value] of Object.entries(formData.template_data)) {
-        params.append(`template_data[${key}]`, value);
-      }
-      
-      // Get CSRF token
-      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-      
-      // Fetch preview HTML
-      fetch(previewUrl, {
-        method: 'POST',
-        headers: {
-          'X-CSRF-Token': csrfToken,
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: params.toString()
-      })
-      .then(response => response.text())
-      .then(html => {
-        // Update iframe with new HTML
-        previewIframe.srcdoc = html;
-      })
-      .catch(error => {
-        console.error('Preview update failed:', error);
-        previewIframe.srcdoc = '<div style="padding: 40px; text-align: center; color: #e53e3e; font-family: sans-serif;">Preview failed to load</div>';
-      });
-    }, 300); // 300ms debounce
-  }
-  
-  // Form field change handlers for live preview
-  form.addEventListener('input', function(e) {
-    if (e.target.matches('[data-preview]')) {
-      updatePreviewLive();
-    }
-  });
-  
-  // Initial preview load if template is already selected
-  if (document.querySelector('input[name="campaign[postcard_template_id]"]:checked')) {
-    updatePreviewLive();
-  }
-});
-</script>

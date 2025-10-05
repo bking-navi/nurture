@@ -1,0 +1,13 @@
+<%= turbo_frame_tag "design-content" do %>
+  <% if campaign.postcard_template.present? %>
+    <%= form_with model: campaign, 
+                  url: campaign_path(advertiser.slug, campaign), 
+                  method: :patch,
+                  local: false,
+                  data: { turbo_frame: "_top" } do |f| %>
+      <%= hidden_field_tag :tab, 'design' %>
+      <%= render "campaigns/tabs/design_form", campaign: campaign, advertiser: advertiser, f: f %>
+    <% end %>
+  <% end %>
+<% end %>
+
