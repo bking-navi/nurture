@@ -51,7 +51,17 @@ class Campaign < ApplicationRecord
   
   # State checks
   def sendable?
-    draft? && recipient_count > 0 && template_id.present?
+    draft? && recipient_count > 0 && has_design?
+  end
+  
+  def has_design?
+    # Campaign has design if it has either:
+    # 1. New custom template system (postcard_template_id)
+    # 2. Old simple system (template_id or front_message/back_message)
+    postcard_template_id.present? || 
+    template_id.present? || 
+    front_message.present? || 
+    back_message.present?
   end
   
   def deletable?
