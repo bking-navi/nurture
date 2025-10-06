@@ -148,6 +148,110 @@ class CampaignContactsController < ApplicationController
               type: "text/csv"
   end
   
+  def preview_shopify
+    shopify_store = @advertiser.shopify_stores.find(params[:shopify_store_id])
+    
+    # Build query for contacts - only US addresses with complete data
+    contacts = shopify_store.contacts
+                           .where("default_address->>'address1' IS NOT NULL")
+                           .where("default_address->>'city' IS NOT NULL")
+                           .where("default_address->>'state' IS NOT NULL")
+                           .where("default_address->>'zip' IS NOT NULL")
+                           .where("default_address->>'country_code' IN ('US', 'USA') OR default_address->>'country' IN ('US', 'USA', 'United States')")
+    
+    # Apply location filters
+    if params[:city].present?
+      contacts = contacts.where("default_address->>'city' ILIKE ?", params[:city])
+    end
+    
+    if params[:state].present?
+      contacts = contacts.where("default_address->>'state' ILIKE ?", params[:state])
+    end
+    
+    if params[:zip].present?
+      contacts = contacts.where("default_address->>'zip' = ?", params[:zip])
+    end
+    
+    count = contacts.count
+    
+    # Build location summary
+    location_parts = []
+    location_parts << params[:city] if params[:city].present?
+    location_parts << params[:state] if params[:state].present?
+    location_parts << params[:zip] if params[:zip].present?
+    locations = location_parts.any? ? "in #{location_parts.join(', ')}" : "from all locations"
+    
+    render json: { 
+      count: count,
+      locations: locations
+    }
+  end
+  
+  def import_shopify
+    shopify_store = @advertiser.shopify_stores.find(params[:shopify_store_id])
+    
+    # Build query for contacts - only US addresses with complete data  
+    contacts = shopify_store.contacts
+                           .where("default_address->>'address1' IS NOT NULL")
+                           .where("default_address->>'city' IS NOT NULL")
+                           .where("default_address->>'state' IS NOT NULL")
+                           .where("default_address->>'zip' IS NOT NULL")
+                           .where("default_address->>'country_code' IN ('US', 'USA') OR default_address->>'country' IN ('US', 'USA', 'United States')")
+    
+    # Apply same location filters as preview
+    if params[:city].present?
+      contacts = contacts.where("default_address->>'city' ILIKE ?", params[:city])
+    end
+    
+    if params[:state].present?
+      contacts = contacts.where("default_address->>'state' ILIKE ?", params[:state])
+    end
+    
+    if params[:zip].present?
+      contacts = contacts.where("default_address->>'zip' = ?", params[:zip])
+    end
+    
+    imported_count = 0
+    skipped_count = 0
+    errors = []
+    
+    contacts.find_each do |contact|
+      address = contact.default_address
+      
+      # Create CampaignContact (filtering already done in query)
+      campaign_contact = @campaign.campaign_contacts.build(
+        contact: contact,
+        first_name: contact.first_name,
+        last_name: contact.last_name,
+        email: contact.email,
+        phone: contact.phone,
+        address_line1: address['address1'],
+        address_line2: address['address2'],
+        address_city: address['city'],
+        address_state: address['state'],
+        address_zip: address['zip']
+      )
+      
+      if campaign_contact.save
+        imported_count += 1
+      else
+        errors << "#{contact.full_name}: #{campaign_contact.errors.full_messages.join(', ')}"
+      end
+    end
+    
+    # Update campaign counts
+    @campaign.update_counts!
+    
+    if imported_count > 0
+      message = "Successfully imported #{imported_count} US contact#{'s' unless imported_count == 1} from Shopify"
+      redirect_to edit_campaign_path(@advertiser.slug, @campaign, tab: 'recipients'),
+                  notice: message
+    else
+      redirect_to edit_campaign_path(@advertiser.slug, @campaign, tab: 'recipients'),
+                  alert: "No US contacts found matching your criteria. Note: Only US addresses are supported."
+    end
+  end
+  
   private
   
   def parse_lob_error(error)

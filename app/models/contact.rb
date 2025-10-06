@@ -47,6 +47,10 @@ class Contact < ApplicationRecord
     end
   end
 
+  def full_name
+    "#{first_name} #{last_name}".strip.presence || 'Unknown'
+  end
+
   def from_shopify?
     source_type == 'ShopifyStore'
   end

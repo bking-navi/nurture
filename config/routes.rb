@@ -81,6 +81,8 @@ Rails.application.routes.draw do
         collection do
           post :import_csv
           get :download_sample
+          get :preview_shopify
+          post :import_shopify
         end
       end
     end
