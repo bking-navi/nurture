@@ -199,7 +199,7 @@
                     <% end %>
                     
                     <% if contact.tracking_url.present? %>
-                      <%= link_to "Track", contact.tracking_url, target: "_blank", class: "text-indigo-600 hover:text-indigo-900" %>
+                      <%= link_to "Track", contact.tracking_url, target: "_blank", class: "text-gray-950 hover:text-indigo-900" %>
                     <% end %>
                   </div>
                   
@@ -228,7 +228,7 @@
                   <% if contact.failed? %>
                     <%= button_to "Retry", retry_campaign_campaign_contact_path(@advertiser.slug, @campaign, contact), 
                                   method: :post,
-                                  class: "inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500",
+                                  class: "inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-gray-950 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700",
                                   data: { confirm: "Retry sending this postcard?" } %>
                   <% end %>
                   

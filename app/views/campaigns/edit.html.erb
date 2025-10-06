@@ -57,7 +57,7 @@
         
         <%= link_to "Save Draft", campaigns_path(@advertiser.slug), class: "inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
         <% if @current_tab != 'review' %>
-          <%= link_to "Continue →", edit_campaign_path(@advertiser.slug, @campaign, tab: @current_tab == 'recipients' ? 'design' : 'review'), class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700" %>
+          <%= link_to "Continue →", edit_campaign_path(@advertiser.slug, @campaign, tab: @current_tab == 'recipients' ? 'design' : 'review'), class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gray-950 hover:bg-gray-900" %>
         <% end %>
       </div>
     </div>
@@ -67,15 +67,15 @@
       <div class="border-b border-gray-200">
         <nav class="-mb-px flex space-x-8 px-6" aria-label="Tabs">
           <%= link_to edit_campaign_path(@advertiser.slug, @campaign, tab: 'recipients'), 
-              class: "#{@current_tab == 'recipients' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" do %>
+              class: "#{@current_tab == 'recipients' ? 'border-gray-700 text-gray-950' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" do %>
             Recipients
           <% end %>
           <%= link_to edit_campaign_path(@advertiser.slug, @campaign, tab: 'design'), 
-              class: "#{@current_tab == 'design' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" do %>
+              class: "#{@current_tab == 'design' ? 'border-gray-700 text-gray-950' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" do %>
             Design
           <% end %>
           <%= link_to edit_campaign_path(@advertiser.slug, @campaign, tab: 'review'), 
-              class: "#{@current_tab == 'review' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" do %>
+              class: "#{@current_tab == 'review' ? 'border-gray-700 text-gray-950' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" do %>
             Review & Send
           <% end %>
         </nav>

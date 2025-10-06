@@ -58,7 +58,7 @@
       </div>
     <% else %>
       <div class="text-center py-4">
-        <%= button_to "Calculate Cost", calculate_cost_campaign_path(advertiser.slug, campaign), method: :post, class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700" %>
+        <%= button_to "Calculate Cost", calculate_cost_campaign_path(advertiser.slug, campaign), method: :post, class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gray-950 hover:bg-gray-900" %>
         <p class="mt-2 text-sm text-gray-500">Click to estimate your campaign cost</p>
       </div>
     <% end %>
@@ -103,7 +103,7 @@
         <%= button_to "Send Campaign Now", send_now_campaign_path(advertiser.slug, campaign), 
             method: :post,
             data: { turbo_confirm: "Send #{campaign.recipient_count} postcards for #{number_to_currency(campaign.estimated_cost_dollars)}? This action cannot be undone." },
-            class: "w-full inline-flex justify-center items-center px-6 py-3 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+            class: "w-full inline-flex justify-center items-center px-6 py-3 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-gray-950 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700" %>
       </div>
     <% else %>
       <div class="mt-6">

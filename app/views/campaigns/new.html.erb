@@ -47,20 +47,20 @@
           <div class="space-y-6">
             <div>
               <%= f.label :name, "Campaign Name", class: "block text-sm font-medium text-gray-700 mb-2" %>
-              <%= f.text_field :name, class: "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm", placeholder: "e.g., Summer Sale 2024" %>
+              <%= f.text_field :name, class: "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-gray-700 focus:border-gray-700 text-sm", placeholder: "e.g., Summer Sale 2024" %>
               <p class="mt-2 text-sm text-gray-500">Choose a descriptive name for your campaign</p>
             </div>
 
             <div>
               <%= f.label :description, "Description (optional)", class: "block text-sm font-medium text-gray-700 mb-2" %>
-              <%= f.text_area :description, rows: 3, class: "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm", placeholder: "Internal notes about this campaign..." %>
+              <%= f.text_area :description, rows: 3, class: "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-gray-700 focus:border-gray-700 text-sm", placeholder: "Internal notes about this campaign..." %>
               <p class="mt-2 text-sm text-gray-500">Add notes to help your team understand this campaign</p>
             </div>
           </div>
 
           <div class="mt-6 flex items-center justify-end space-x-3">
-            <%= link_to "Cancel", campaigns_path(@advertiser.slug), class: "inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
-            <%= f.submit "Create Campaign", class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+            <%= link_to "Cancel", campaigns_path(@advertiser.slug), class: "inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700" %>
+            <%= f.submit "Create Campaign", class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gray-950 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700" %>
           </div>
         <% end %>
       </div>

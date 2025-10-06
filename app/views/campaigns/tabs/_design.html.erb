@@ -28,7 +28,7 @@
                   <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
                 <div class="flex text-sm text-gray-600">
-                  <label class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500">
+                  <label class="relative cursor-pointer bg-white rounded-md font-medium text-gray-950 hover:text-gray-700">
                     <span>Upload a file</span>
                     <%= f.file_field :front_pdf, accept: "application/pdf", class: "sr-only", onchange: "showFileName(this, 'front-file-name')" %>
                   </label>
@@ -71,7 +71,7 @@
                   <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
                 <div class="flex text-sm text-gray-600">
-                  <label class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500">
+                  <label class="relative cursor-pointer bg-white rounded-md font-medium text-gray-950 hover:text-gray-700">
                     <span>Upload a file</span>
                     <%= f.file_field :back_pdf, accept: "application/pdf", class: "sr-only", onchange: "showFileName(this, 'back-file-name')" %>
                   </label>
@@ -106,7 +106,7 @@
           <div class="text-sm text-gray-500">
             <span class="font-medium">Requirements:</span> PDF format, 6x9 inches, 300 DPI
           </div>
-          <%= f.submit "Upload Files", class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700" %>
+          <%= f.submit "Upload Files", class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gray-950 hover:bg-gray-900" %>
         </div>
       </div>
     <% end %>
@@ -163,7 +163,7 @@
                     class: "peer sr-only",
                     data: { action: "change->auto-submit#submit" } %>
               
-              <div class="border-2 rounded-lg overflow-hidden transition-all peer-checked:border-indigo-500 peer-checked:ring-2 peer-checked:ring-indigo-500 hover:border-gray-400">
+              <div class="border-2 rounded-lg overflow-hidden transition-all peer-checked:border-gray-700 peer-checked:ring-2 peer-checked:ring-gray-700 hover:border-gray-400">
                 <!-- Template preview card -->
                 <div class="aspect-[6/9] <%= 
                   case template.category
@@ -193,7 +193,7 @@
                 </div>
                 
                 <!-- Selected indicator -->
-                <div class="hidden peer-checked:flex absolute top-2 right-2 items-center justify-center w-6 h-6 bg-indigo-600 rounded-full">
+                <div class="hidden peer-checked:flex absolute top-2 right-2 items-center justify-center w-6 h-6 bg-gray-950 rounded-full">
                   <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                   </svg>

@@ -2,7 +2,7 @@
   <div class="max-w-md w-full space-y-8">
     <!-- Invitation Info -->
     <div class="text-center">
-      <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-indigo-100 text-indigo-600 mb-4">
+      <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-indigo-100 text-gray-950 mb-4">
         <svg class="w-10 h-10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
         </svg>
@@ -37,7 +37,7 @@
           
           <%= form_with url: process_invitation_path(@invitation.token), method: :post, local: true do %>
             <%= button_tag type: "submit",
-                class: "w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" do %>
+                class: "w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-950 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700" do %>
               <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
               </svg>
@@ -46,7 +46,7 @@
           <% end %>
 
           <p class="text-xs text-gray-500">
-            Not you? <%= link_to "Sign out", destroy_user_session_path, method: :delete, data: { turbo: false }, class: "text-indigo-600 hover:text-indigo-500" %> first
+            Not you? <%= link_to "Sign out", destroy_user_session_path, method: :delete, data: { turbo: false }, class: "text-gray-950 hover:text-gray-700" %> first
           </p>
         </div>
       </div>
@@ -92,13 +92,13 @@
               <%= text_field_tag 'user[first_name]', @user&.first_name,
                   autofocus: true,
                   required: true,
-                  class: 'mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm' %>
+                  class: 'mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-700 focus:border-gray-700 sm:text-sm' %>
             </div>
             <div>
               <%= label_tag 'user[last_name]', 'Last Name', class: 'block text-sm font-medium text-gray-700' %>
               <%= text_field_tag 'user[last_name]', @user&.last_name,
                   required: true,
-                  class: 'mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm' %>
+                  class: 'mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-700 focus:border-gray-700 sm:text-sm' %>
             </div>
           </div>
 
@@ -106,7 +106,7 @@
             <%= label_tag 'user[password]', 'Password', class: 'block text-sm font-medium text-gray-700' %>
             <%= password_field_tag 'user[password]', nil,
                 required: true,
-                class: 'mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm' %>
+                class: 'mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-700 focus:border-gray-700 sm:text-sm' %>
             <p class="mt-1 text-xs text-gray-500">Minimum 12 characters</p>
           </div>
 
@@ -114,18 +114,18 @@
             <%= label_tag 'user[password_confirmation]', 'Confirm Password', class: 'block text-sm font-medium text-gray-700' %>
             <%= password_field_tag 'user[password_confirmation]', nil,
                 required: true,
-                class: 'mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm' %>
+                class: 'mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-700 focus:border-gray-700 sm:text-sm' %>
           </div>
 
           <div>
             <%= button_tag type: "submit",
-                class: "w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" do %>
+                class: "w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-950 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700" do %>
               Create Account & Join Team
             <% end %>
           </div>
 
           <p class="text-xs text-center text-gray-500">
-            Already have an account? <%= link_to "Sign in to accept", new_user_session_path(invitation_token: @invitation.token), class: "text-indigo-600 hover:text-indigo-500" %>
+            Already have an account? <%= link_to "Sign in to accept", new_user_session_path(invitation_token: @invitation.token), class: "text-gray-950 hover:text-gray-700" %>
           </p>
         <% end %>
       </div>
