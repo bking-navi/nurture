@@ -65,6 +65,13 @@ Rails.application.routes.draw do
   
   # Campaigns
   scope 'advertisers/:advertiser_slug' do
+    # Audience/Contacts
+    get 'audience', to: 'contacts#index', as: :audience
+    get 'audience/new', to: 'contacts#new', as: :new_contact
+    post 'audience', to: 'contacts#create'
+    post 'audience/import_csv', to: 'contacts#import_csv', as: :import_contacts_csv
+    get 'audience/download_sample', to: 'contacts#download_sample', as: :download_contacts_sample
+    
     resources :campaigns do
       member do
         post :send_now
