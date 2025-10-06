@@ -79,6 +79,13 @@ Rails.application.routes.draw do
       end
     end
     
+    # Creative Library
+    resources :creatives, path: 'creative-library' do
+      collection do
+        get :search
+      end
+    end
+    
     resources :campaigns do
       member do
         post :send_now

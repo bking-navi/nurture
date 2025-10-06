@@ -1,0 +1,116 @@
+<div class="px-4 sm:px-6 lg:px-8 py-8 max-w-4xl mx-auto">
+  <div class="mb-6">
+    <div class="flex items-center justify-between mb-2">
+      <h1 class="text-3xl font-bold text-gray-900">Upload Creative</h1>
+      <%= link_to "← Back to Library", creatives_path(@advertiser.slug), class: "text-sm text-gray-600 hover:text-gray-900" %>
+    </div>
+    <p class="text-gray-600">Upload a postcard design to your creative library for reuse across campaigns.</p>
+  </div>
+
+  <%= form_with model: @creative, url: creatives_path(@advertiser.slug), local: true, class: "space-y-6" do |f| %>
+    <% if @creative.errors.any? %>
+      <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-red-800">
+              <%= pluralize(@creative.errors.count, "error") %> prevented this creative from being saved:
+            </h3>
+            <div class="mt-2 text-sm text-red-700">
+              <ul class="list-disc list-inside space-y-1">
+                <% @creative.errors.full_messages.each do |message| %>
+                  <li><%= message %></li>
+                <% end %>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Basic Info -->
+    <div class="bg-white shadow sm:rounded-lg p-6">
+      <h2 class="text-lg font-medium text-gray-900 mb-4">Basic Information</h2>
+      
+      <div class="space-y-4">
+        <div>
+          <%= f.label :name, "Creative Name", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= f.text_field :name, placeholder: "e.g., Spring Sale 2024", class: "mt-1 block w-full shadow-sm focus:ring-gray-700 focus:border-gray-700 sm:text-sm border-gray-300 rounded-md", required: true %>
+          <p class="mt-1 text-sm text-gray-500">A descriptive name to help you find this creative later</p>
+        </div>
+
+        <div>
+          <%= f.label :description, "Description (optional)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= f.text_area :description, rows: 3, placeholder: "Optional notes about this creative...", class: "mt-1 block w-full shadow-sm focus:ring-gray-700 focus:border-gray-700 sm:text-sm border-gray-300 rounded-md" %>
+        </div>
+
+        <div>
+          <%= f.label :postcard_template_id, "Postcard Size", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= f.collection_select :postcard_template_id, @postcard_templates, :id, :name, { prompt: "Select size..." }, class: "mt-1 block w-full shadow-sm focus:ring-gray-700 focus:border-gray-700 sm:text-sm border-gray-300 rounded-md", required: true %>
+        </div>
+      </div>
+    </div>
+
+    <!-- PDF Upload -->
+    <div class="bg-white shadow sm:rounded-lg p-6">
+      <h2 class="text-lg font-medium text-gray-900 mb-4">Upload PDFs</h2>
+      
+      <div class="space-y-4">
+        <div>
+          <%= f.label :front_pdf, "Front PDF", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= f.file_field :front_pdf, accept: "application/pdf", class: "mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-gray-700 file:text-white hover:file:bg-gray-600", required: true %>
+          <p class="mt-1 text-sm text-gray-500">Required. Must be a PDF file matching the selected postcard size.</p>
+        </div>
+
+        <div>
+          <%= f.label :back_pdf, "Back PDF (optional)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= f.file_field :back_pdf, accept: "application/pdf", class: "mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-gray-700 file:text-white hover:file:bg-gray-600" %>
+          <p class="mt-1 text-sm text-gray-500">Optional. If not provided, the template's default back design will be used.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tags -->
+    <div class="bg-white shadow sm:rounded-lg p-6">
+      <h2 class="text-lg font-medium text-gray-900 mb-4">Tags</h2>
+      <div>
+        <%= f.label :tags, "Tags (comma separated)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= f.text_field :tags, value: @creative.tags&.join(', '), placeholder: "e.g., spring, sale, holiday, vip", class: "mt-1 block w-full shadow-sm focus:ring-gray-700 focus:border-gray-700 sm:text-sm border-gray-300 rounded-md" %>
+        <p class="mt-1 text-sm text-gray-500">Add tags to organize and search your creatives. Separate with commas.</p>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center justify-end space-x-3 pt-4 border-t">
+      <%= link_to "Cancel", creatives_path(@advertiser.slug), class: "px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500" %>
+      <%= f.submit "Save to Library", class: "px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500" %>
+    </div>
+  <% end %>
+</div>
+
+<script>
+// Parse comma-separated tags on submit
+document.querySelector('form').addEventListener('submit', function(e) {
+  const tagsInput = document.querySelector('input[name="creative[tags]"]');
+  if (tagsInput && tagsInput.value) {
+    // Split by comma, trim whitespace, filter empty
+    const tags = tagsInput.value.split(',').map(t => t.trim()).filter(t => t);
+    
+    // Replace the text field with hidden fields for array submission
+    tagsInput.type = 'hidden';
+    tagsInput.removeAttribute('name');
+    
+    tags.forEach((tag, index) => {
+      const hidden = document.createElement('input');
+      hidden.type = 'hidden';
+      hidden.name = 'creative[tags][]';
+      hidden.value = tag;
+      tagsInput.parentNode.appendChild(hidden);
+    });
+  }
+});
+</script>
