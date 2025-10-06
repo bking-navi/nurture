@@ -1,22 +1,13 @@
+<% content_for :breadcrumb do %>
+  <%= link_to integrations_path(@advertiser.slug), class: "hover:text-neutral-900 transition-colors" do %>
+    Integrations
+  <% end %>
+  <span class="mx-1.5 text-neutral-400">/</span>
+  <span class="text-neutral-900">Shopify</span>
+<% end %>
+
 <div class="p-6">
   <div class="max-w-4xl mx-auto">
-    
-    <!-- Breadcrumb -->
-    <nav class="flex mb-6 text-sm" aria-label="Breadcrumb">
-      <ol class="inline-flex items-center space-x-1">
-        <li class="inline-flex items-center">
-          <%= link_to "Integrations", integrations_path(@advertiser.slug), class: "text-neutral-500 hover:text-neutral-700" %>
-        </li>
-        <li>
-          <div class="flex items-center">
-            <svg class="w-3 h-3 text-neutral-400 mx-1" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-            </svg>
-            <span class="text-neutral-700 font-medium">Shopify</span>
-          </div>
-        </li>
-      </ol>
-    </nav>
 
     <!-- Overview Card -->
     <div class="bg-white rounded-lg shadow-sm border border-neutral-200 p-6 mb-6">
