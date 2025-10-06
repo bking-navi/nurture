@@ -1,20 +1,12 @@
-<div class="min-h-screen bg-gray-50">
-  <!-- Navigation Bar -->
-  <nav class="bg-white shadow">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between h-16">
-        <div class="flex items-center space-x-8">
-          <div class="flex-shrink-0">
-            <h1 class="text-xl font-bold text-gray-900"><%= @advertiser.name %></h1>
-          </div>
-        </div>
-        <div class="flex items-center space-x-4">
-          <%= link_to "← Back to Campaigns", campaigns_path(@advertiser.slug), class: "text-sm font-medium text-gray-700 hover:text-gray-900" %>
-        </div>
-      </div>
-    </div>
-  </nav>
+<% content_for :breadcrumb do %>
+  <%= link_to campaigns_path(@advertiser.slug), class: "hover:text-neutral-900 transition-colors" do %>
+    Campaigns
+  <% end %>
+  <span class="mx-1.5 text-neutral-400">/</span>
+  <span class="text-neutral-900">New Campaign</span>
+<% end %>
 
+<div class="min-h-screen bg-gray-50">
   <!-- Main Content -->
   <div class="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
     <div class="md:flex md:items-center md:justify-between mb-6">
