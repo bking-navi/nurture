@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Run database migrations
+bundle exec rails db:migrate
+
 # Start Solid Queue worker in background
 bundle exec rake solid_queue:start &
 
