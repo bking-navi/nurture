@@ -1,99 +1,103 @@
-<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-  <div class="max-w-2xl w-full space-y-8">
-    <div class="text-center">
-      <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-100 text-indigo-600 text-2xl font-bold mb-4">
-        <%= current_user.initials %>
-      </div>
-      
-      <h2 class="text-3xl font-extrabold text-gray-900">
-        Create Your Business
-      </h2>
-      
-      <p class="mt-2 text-sm text-gray-600">
-        Set up your business profile to start managing marketing campaigns
-      </p>
-    </div>
-
-    <div class="bg-white shadow sm:rounded-lg">
-      <%= form_with model: @advertiser, url: create_advertiser_path, method: :post, local: true, class: "p-6 sm:p-10 space-y-6" do |f| %>
-        <%= render "devise/shared/error_messages", resource: @advertiser %>
-
-        <!-- Business Name -->
-        <div>
-          <%= f.label :name, "Business Name", class: "block text-sm font-medium text-gray-700" %>
-          <%= f.text_field :name, 
-              autofocus: true,
-              placeholder: "e.g., Acme Corporation",
-              class: "mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" %>
-          <p class="mt-1 text-xs text-gray-500">This will be visible to your team and customers</p>
-        </div>
-
-        <!-- Website URL -->
-        <div>
-          <%= f.label :website_url, "Website URL", class: "block text-sm font-medium text-gray-700" %>
-          <%= f.url_field :website_url, 
-              placeholder: "https://www.example.com",
-              class: "mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" %>
-          <p class="mt-1 text-xs text-gray-500">Include http:// or https://</p>
-        </div>
-
-        <!-- Address Section -->
-        <div class="border-t border-gray-200 pt-6">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Business Address</h3>
-          
-          <div class="space-y-4">
-            <!-- Street Address -->
-            <div>
-              <%= f.label :street_address, "Street Address", class: "block text-sm font-medium text-gray-700" %>
-              <%= f.text_field :street_address, 
-                  placeholder: "123 Main Street",
-                  class: "mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" %>
-            </div>
-
-            <!-- City, State, Postal Code -->
-            <div class="grid grid-cols-6 gap-4">
-              <div class="col-span-6 sm:col-span-3">
-                <%= f.label :city, class: "block text-sm font-medium text-gray-700" %>
-                <%= f.text_field :city, 
-                    placeholder: "New York",
-                    class: "mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" %>
-              </div>
-
-              <div class="col-span-6 sm:col-span-2">
-                <%= f.label :state, class: "block text-sm font-medium text-gray-700" %>
-                <%= f.text_field :state, 
-                    placeholder: "NY",
-                    maxlength: 2,
-                    class: "mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" %>
-              </div>
-
-              <div class="col-span-6 sm:col-span-1">
-                <%= f.label :postal_code, "ZIP", class: "block text-sm font-medium text-gray-700" %>
-                <%= f.text_field :postal_code, 
-                    placeholder: "10001",
-                    class: "mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" %>
-              </div>
-            </div>
-
-            <!-- Country -->
-            <div>
-              <%= f.label :country, class: "block text-sm font-medium text-gray-700" %>
-              <%= f.select :country, 
-                  [['United States', 'US'], ['Canada', 'CA'], ['United Kingdom', 'GB'], ['Australia', 'AU']],
-                  { selected: 'US' },
-                  class: "mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" %>
-            </div>
+<div class="h-screen flex items-center justify-center px-4 py-20 sm:px-8 lg:px-20">
+  <div class="bg-white rounded-lg w-full h-full flex flex-col lg:flex-row relative overflow-hidden">
+    <!-- Left Column - Business Setup Form -->
+    <div class="w-full lg:w-1/2 p-8 sm:p-12 lg:p-16 flex flex-col overflow-y-auto">
+      <div class="max-w-md mx-auto w-full my-auto">
+        <!-- User Avatar -->
+        <div class="flex justify-start mb-6">
+          <div class="flex items-center justify-center w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 text-lg font-bold">
+            <%= current_user.initials %>
           </div>
         </div>
 
-        <!-- Submit Button -->
-        <div class="flex items-center justify-between pt-6 border-t border-gray-200">
-          <%= link_to "Cancel", root_path, class: "text-sm font-medium text-gray-700 hover:text-gray-500" %>
-          
-          <%= f.submit "Create Business",
-              class: "ml-3 inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
-        </div>
-      <% end %>
+        <!-- Title -->
+        <h1 class="font-inter text-[30px] font-bold leading-9 text-neutral-700 mb-3">
+          Get your access—today!
+        </h1>
+        
+        <p class="font-inter text-base text-neutral-500 mb-8 leading-6">
+          You're one step closer to harnessing the power of Nurture's digitally-powered direct mail. Tell us about your business, and we'll get you set up with an account after we ensure you're a good fit.
+        </p>
+
+        <%= form_with model: @advertiser, url: create_advertiser_path, method: :post, local: true, class: "space-y-6" do |f| %>
+          <%= render "devise/shared/error_messages", resource: @advertiser %>
+
+          <!-- Company Name -->
+          <div class="flex flex-col gap-1">
+            <%= f.label :name, "Company Name", class: "font-inter font-medium text-base leading-6 text-neutral-700" %>
+            <div class="pt-1">
+              <%= f.text_field :name, 
+                  autofocus: true,
+                  placeholder: "ACME Corp.",
+                  class: "w-full px-3 py-2 bg-white border border-neutral-300 rounded-md font-inter text-base leading-6 text-neutral-700 placeholder:text-[#a1a1a1] focus:outline-none focus:ring-2 focus:ring-[#ff6900] focus:border-transparent" %>
+            </div>
+          </div>
+
+          <!-- Website URL -->
+          <div class="flex flex-col gap-1">
+            <%= f.label :website_url, "Website URL", class: "font-inter font-medium text-base leading-6 text-neutral-700" %>
+            <div class="pt-1">
+              <%= f.url_field :website_url, 
+                  placeholder: "acmecorp.com",
+                  class: "w-full px-3 py-2 bg-white border border-neutral-300 rounded-md font-inter text-base leading-6 text-neutral-700 placeholder:text-[#a1a1a1] focus:outline-none focus:ring-2 focus:ring-[#ff6900] focus:border-transparent" %>
+            </div>
+          </div>
+
+          <!-- Mailing Address Section -->
+          <div class="flex flex-col gap-1">
+            <%= f.label :street_address, "Mailing Address", class: "font-inter font-medium text-base leading-6 text-neutral-700" %>
+            
+            <div class="pt-1 border border-neutral-300 rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-[#ff6900] focus-within:border-transparent">
+              <!-- Street Address -->
+              <%= f.text_field :street_address, 
+                  placeholder: "123 Main Street",
+                  class: "w-full px-3 py-2 bg-white border-0 border-b border-neutral-200 font-inter text-base leading-6 text-neutral-700 placeholder:text-[#a1a1a1] focus:outline-none focus:ring-0 focus:border-neutral-200" %>
+
+              <!-- City, State, ZIP in one row -->
+              <div class="flex border-b border-neutral-200">
+                <%= f.text_field :city, 
+                    placeholder: "Cincinnati",
+                    class: "flex-1 px-3 py-2 bg-white border-0 border-r border-neutral-200 font-inter text-base leading-6 text-neutral-700 placeholder:text-[#a1a1a1] focus:outline-none focus:ring-0" %>
+                
+                <%= f.text_field :state, 
+                    placeholder: "OH",
+                    maxlength: 2,
+                    class: "w-20 px-3 py-2 bg-white border-0 border-r border-neutral-200 font-inter text-base leading-6 text-neutral-700 placeholder:text-[#a1a1a1] focus:outline-none focus:ring-0" %>
+                
+                <%= f.text_field :postal_code, 
+                    placeholder: "45202",
+                    class: "w-28 px-3 py-2 bg-white border-0 font-inter text-base leading-6 text-neutral-700 placeholder:text-[#a1a1a1] focus:outline-none focus:ring-0" %>
+              </div>
+
+              <!-- Country -->
+              <%= f.select :country, 
+                  [['United States', 'US'], ['Canada', 'CA'], ['United Kingdom', 'GB'], ['Australia', 'AU']],
+                  { selected: 'US' },
+                  class: "w-full px-3 py-2 bg-white border-0 font-inter text-base leading-6 text-neutral-700 focus:outline-none focus:ring-0 appearance-none" %>
+            </div>
+          </div>
+
+          <!-- Create Business Button -->
+          <div class="pt-2">
+            <%= f.submit "Request Access",
+                class: "w-full bg-[#ff6900] hover:bg-[#e55f00] text-white font-inter font-medium text-base leading-6 px-3 py-2 rounded-md transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ff6900]" %>
+          </div>
+
+          <!-- Privacy Notice -->
+          <p class="text-xs text-center text-neutral-500 font-inter leading-4 pt-4">
+            By submitting this form, you indicate that you have read and agreed to Nurture's 
+            <a href="#" class="underline hover:text-neutral-700">Privacy Policy</a>.
+          </p>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Right Column - Gradient Background -->
+    <div class="hidden lg:block lg:w-1/2 relative">
+      <div class="absolute inset-0 m-10 rounded-xl overflow-hidden bg-gradient-to-br from-[#4a4a82] via-[#7d5a7d] to-[#ff6900] opacity-90">
+        <!-- Decorative gradient overlay -->
+        <div class="absolute inset-0 bg-gradient-to-br from-[#3d4d7a] via-[#8d6a6d] to-[#ff8533] opacity-60"></div>
+      </div>
     </div>
   </div>
 </div>

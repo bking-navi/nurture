@@ -1,62 +1,99 @@
-<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-  <div class="max-w-md w-full space-y-8">
-    <div>
-      <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-        Create your account
-      </h2>
-      <p class="mt-2 text-center text-sm text-gray-600">
-        Join Nurture to start building your marketing campaigns
-      </p>
+<div class="h-screen flex items-center justify-center px-4 py-20 sm:px-8 lg:px-20">
+  <div class="bg-white rounded-lg w-full h-full flex flex-col lg:flex-row relative overflow-hidden">
+    <!-- Left Column - Registration Form -->
+    <div class="w-full lg:w-1/2 p-8 sm:p-12 lg:p-16 flex flex-col justify-center overflow-y-auto">
+      <div class="max-w-md mx-auto w-full">
+        <h1 class="font-inter text-[30px] font-bold leading-9 text-neutral-700 mb-8">
+          Create your account
+        </h1>
+        
+        <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { class: "space-y-2" }) do |f| %>
+          <%= render "devise/shared/error_messages", resource: resource %>
+
+          <!-- Name Fields -->
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1">
+              <%= f.label :first_name, "First Name", class: "font-inter font-medium text-base leading-6 text-neutral-700" %>
+              <div class="pt-1">
+                <%= f.text_field :first_name, autofocus: true, autocomplete: "given-name", 
+                    placeholder: "John",
+                    class: "w-full px-3 py-2 bg-white border border-neutral-300 rounded-md font-inter text-base leading-6 text-neutral-700 placeholder:text-[#a1a1a1] focus:outline-none focus:ring-2 focus:ring-[#ff6900] focus:border-transparent" %>
+              </div>
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <%= f.label :last_name, "Last Name", class: "font-inter font-medium text-base leading-6 text-neutral-700" %>
+              <div class="pt-1">
+                <%= f.text_field :last_name, autocomplete: "family-name", 
+                    placeholder: "Doe",
+                    class: "w-full px-3 py-2 bg-white border border-neutral-300 rounded-md font-inter text-base leading-6 text-neutral-700 placeholder:text-[#a1a1a1] focus:outline-none focus:ring-2 focus:ring-[#ff6900] focus:border-transparent" %>
+              </div>
+            </div>
+          </div>
+
+          <!-- Email Field -->
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center justify-between">
+              <%= f.label :email, "Email Address", class: "font-inter font-medium text-base leading-6 text-neutral-700" %>
+            </div>
+            <div class="pt-1">
+              <%= f.email_field :email, autocomplete: "email", 
+                  placeholder: "taylor@acmecorp.com",
+                  class: "w-full px-3 py-2 bg-white border border-neutral-300 rounded-md font-inter text-base leading-6 text-neutral-700 placeholder:text-[#a1a1a1] focus:outline-none focus:ring-2 focus:ring-[#ff6900] focus:border-transparent" %>
+            </div>
+          </div>
+
+          <!-- Password Field -->
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center justify-between">
+              <%= f.label :password, "Password", class: "font-inter font-medium text-base leading-6 text-neutral-700" %>
+            </div>
+            <div class="pt-1">
+              <%= f.password_field :password, autocomplete: "new-password", 
+                  placeholder: "••••••••",
+                  class: "w-full px-3 py-2 bg-white border border-neutral-300 rounded-md font-inter text-base leading-6 text-neutral-700 placeholder:text-[#a1a1a1] focus:outline-none focus:ring-2 focus:ring-[#ff6900] focus:border-transparent" %>
+            </div>
+            <% if @minimum_password_length %>
+              <p class="text-xs text-neutral-500">Minimum <%= @minimum_password_length %> characters with uppercase, lowercase, and number</p>
+            <% end %>
+          </div>
+
+          <!-- Password Confirmation Field -->
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center justify-between">
+              <%= f.label :password_confirmation, "Confirm Password", class: "font-inter font-medium text-base leading-6 text-neutral-700" %>
+            </div>
+            <div class="pt-1">
+              <%= f.password_field :password_confirmation, autocomplete: "new-password", 
+                  placeholder: "••••••••",
+                  class: "w-full px-3 py-2 bg-white border border-neutral-300 rounded-md font-inter text-base leading-6 text-neutral-700 placeholder:text-[#a1a1a1] focus:outline-none focus:ring-2 focus:ring-[#ff6900] focus:border-transparent" %>
+            </div>
+          </div>
+
+          <!-- Create Account Button -->
+          <div class="mt-6">
+            <%= f.submit "Create Account", 
+                class: "w-full bg-[#ff6900] hover:bg-[#e55f00] text-white font-inter font-medium text-base leading-6 px-3 py-2 rounded-md transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ff6900]" %>
+          </div>
+
+          <!-- Sign In Link -->
+          <div class="text-center mt-4">
+            <p class="font-inter font-medium text-base leading-6">
+              <span class="text-neutral-700">Already have an account?</span>
+              <%= link_to "Sign in", new_user_session_path, 
+                  class: "text-[#ff6900] hover:text-[#e55f00] underline decoration-solid underline-offset-2 ml-1" %>
+            </p>
+          </div>
+        <% end %>
+      </div>
     </div>
-    
-    <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { class: "mt-8 space-y-6" }) do |f| %>
-      <%= render "devise/shared/error_messages", resource: resource %>
 
-      <div class="space-y-4">
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <%= f.label :first_name, class: "block text-sm font-medium text-gray-700" %>
-            <%= f.text_field :first_name, autofocus: true, autocomplete: "given-name", 
-                class: "mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" %>
-          </div>
-          <div>
-            <%= f.label :last_name, class: "block text-sm font-medium text-gray-700" %>
-            <%= f.text_field :last_name, autocomplete: "family-name", 
-                class: "mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" %>
-          </div>
-        </div>
-
-        <div>
-          <%= f.label :email, class: "block text-sm font-medium text-gray-700" %>
-          <%= f.email_field :email, autocomplete: "email", 
-              class: "mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" %>
-        </div>
-
-        <div>
-          <%= f.label :password, class: "block text-sm font-medium text-gray-700" %>
-          <% if @minimum_password_length %>
-            <p class="text-xs text-gray-500">Minimum <%= @minimum_password_length %> characters with uppercase, lowercase, and number</p>
-          <% end %>
-          <%= f.password_field :password, autocomplete: "new-password", 
-              class: "mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" %>
-        </div>
-
-        <div>
-          <%= f.label :password_confirmation, class: "block text-sm font-medium text-gray-700" %>
-          <%= f.password_field :password_confirmation, autocomplete: "new-password", 
-              class: "mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" %>
-        </div>
+    <!-- Right Column - Gradient Background -->
+    <div class="hidden lg:block lg:w-1/2 relative">
+      <div class="absolute inset-0 m-10 rounded-xl overflow-hidden bg-gradient-to-br from-[#4a4a82] via-[#7d5a7d] to-[#ff6900] opacity-90">
+        <!-- Decorative gradient overlay -->
+        <div class="absolute inset-0 bg-gradient-to-br from-[#3d4d7a] via-[#8d6a6d] to-[#ff8533] opacity-60"></div>
       </div>
-
-      <div>
-        <%= f.submit "Create Account", 
-            class: "group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
-      </div>
-
-      <div class="text-center">
-        <%= link_to "Already have an account? Sign in", new_user_session_path, 
-            class: "font-medium text-indigo-600 hover:text-indigo-500" %>
-      </div>
-    <% end %>
+    </div>
   </div>
 </div>

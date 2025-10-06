@@ -1,4 +1,6 @@
 class Users::SessionsController < Devise::SessionsController
+  layout "auth"
+
   # GET /resource/sign_in
   def new
     # Store invitation token if provided

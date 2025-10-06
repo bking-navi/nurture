@@ -1,4 +1,6 @@
 class HomeController < ApplicationController
+  layout "auth", only: [:check_email, :verify_email]
+
   def index
     # If user is signed in and has an advertiser, redirect to their dashboard
     if user_signed_in? && current_user.advertisers.any?
