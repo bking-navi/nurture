@@ -17,7 +17,8 @@ scopes = "read_customers,read_orders,read_products,read_inventory"
 [auth]
 redirect_urls = [
   "http://localhost:3000/auth/shopify/callback",
-  "https://navistone.dev/auth/shopify/callback"
+  "https://navistone.dev/auth/shopify/callback",
+  "https://www.navistone.dev/auth/shopify/callback"
 ]
 
 [webhooks]
