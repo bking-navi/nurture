@@ -28,10 +28,33 @@
       
       <!-- Actions -->
       <div class="flex items-center space-x-3">
-        <%= button_to "Delete Campaign", campaign_path(@advertiser.slug, @campaign), 
-            method: :delete, 
-            data: { turbo_confirm: "Are you sure? This cannot be undone." }, 
-            class: "inline-flex items-center px-4 py-2 border border-red-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50" %>
+        <!-- Kebab Menu -->
+        <div class="relative" data-controller="dropdown">
+          <button type="button" 
+                  data-action="click->dropdown#toggle click@window->dropdown#hide"
+                  class="inline-flex items-center p-2 border border-gray-300 shadow-sm rounded-md text-gray-400 bg-white hover:bg-gray-50">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
+            </svg>
+          </button>
+          
+          <!-- Dropdown Menu -->
+          <div data-dropdown-target="menu" 
+               class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+            <div class="py-1">
+              <%= button_to campaign_path(@advertiser.slug, @campaign), 
+                  method: :delete, 
+                  data: { turbo_confirm: "Are you sure? This cannot be undone." }, 
+                  class: "w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50 flex items-center gap-2" do %>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+                Delete Campaign
+              <% end %>
+            </div>
+          </div>
+        </div>
+        
         <%= link_to "Save Draft", campaigns_path(@advertiser.slug), class: "inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
         <% if @current_tab != 'review' %>
           <%= link_to "Continue →", edit_campaign_path(@advertiser.slug, @campaign, tab: @current_tab == 'recipients' ? 'design' : 'review'), class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700" %>
