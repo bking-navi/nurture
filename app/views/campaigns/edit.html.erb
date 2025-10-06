@@ -9,18 +9,32 @@
 <div class="min-h-screen bg-gray-50">
   <!-- Main Content -->
   <div class="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-    <!-- Header -->
-    <div class="mb-6">
-      <h2 class="text-2xl font-bold text-gray-900"><%= @campaign.name %></h2>
-      <div class="mt-1 flex items-center space-x-2">
-        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-          Draft
-        </span>
-        <span class="text-sm text-gray-500">•</span>
-        <span class="text-sm text-gray-500"><%= @campaign.recipient_count %> recipients</span>
-        <% if @campaign.estimated_cost_cents > 0 %>
+    <!-- Header with Actions -->
+    <div class="mb-6 flex items-start justify-between">
+      <div class="flex-1">
+        <h2 class="text-2xl font-bold text-gray-900"><%= @campaign.name %></h2>
+        <div class="mt-1 flex items-center space-x-2">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+            Draft
+          </span>
           <span class="text-sm text-gray-500">•</span>
-          <span class="text-sm text-gray-500">Est. <%= number_to_currency(@campaign.estimated_cost_dollars) %></span>
+          <span class="text-sm text-gray-500"><%= @campaign.recipient_count %> recipients</span>
+          <% if @campaign.estimated_cost_cents > 0 %>
+            <span class="text-sm text-gray-500">•</span>
+            <span class="text-sm text-gray-500">Est. <%= number_to_currency(@campaign.estimated_cost_dollars) %></span>
+          <% end %>
+        </div>
+      </div>
+      
+      <!-- Actions -->
+      <div class="flex items-center space-x-3">
+        <%= button_to "Delete Campaign", campaign_path(@advertiser.slug, @campaign), 
+            method: :delete, 
+            data: { turbo_confirm: "Are you sure? This cannot be undone." }, 
+            class: "inline-flex items-center px-4 py-2 border border-red-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50" %>
+        <%= link_to "Save Draft", campaigns_path(@advertiser.slug), class: "inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+        <% if @current_tab != 'review' %>
+          <%= link_to "Continue →", edit_campaign_path(@advertiser.slug, @campaign, tab: @current_tab == 'recipients' ? 'design' : 'review'), class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700" %>
         <% end %>
       </div>
     </div>
@@ -52,22 +66,6 @@
           <%= render 'campaigns/tabs/design', campaign: @campaign, advertiser: @advertiser %>
         <% elsif @current_tab == 'review' %>
           <%= render 'campaigns/tabs/review', campaign: @campaign, advertiser: @advertiser %>
-        <% end %>
-      </div>
-    </div>
-
-    <!-- Actions -->
-    <div class="flex items-center justify-between bg-white shadow sm:rounded-lg p-4">
-      <div>
-        <%= button_to "Delete Campaign", campaign_path(@advertiser.slug, @campaign), 
-            method: :delete, 
-            data: { turbo_confirm: "Are you sure? This cannot be undone." }, 
-            class: "inline-flex items-center px-4 py-2 border border-red-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50" %>
-      </div>
-      <div class="flex space-x-3">
-        <%= link_to "Save Draft", campaigns_path(@advertiser.slug), class: "inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
-        <% if @current_tab != 'review' %>
-          <%= link_to "Continue →", edit_campaign_path(@advertiser.slug, @campaign, tab: @current_tab == 'recipients' ? 'design' : 'review'), class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700" %>
         <% end %>
       </div>
     </div>
