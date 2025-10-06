@@ -1,36 +1,4 @@
-<div class="min-h-screen bg-gray-50">
-  <!-- Navigation Bar -->
-  <nav class="bg-white shadow">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between h-16">
-        <div class="flex items-center space-x-8">
-          <div class="flex-shrink-0">
-            <h1 class="text-xl font-bold text-gray-900"><%= @advertiser.name %></h1>
-          </div>
-          <div class="flex space-x-4">
-            <%= link_to "My Advertisers", advertisers_path, class: "text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium" %>
-            <%= link_to "Dashboard", advertiser_dashboard_path(@advertiser.slug), class: "text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium" %>
-            <%= link_to "Team", advertiser_team_path(@advertiser.slug), class: "text-indigo-600 border-b-2 border-indigo-600 px-3 py-2 text-sm font-medium" %>
-          </div>
-        </div>
-        <div class="flex items-center space-x-4">
-          <div class="flex items-center space-x-2">
-            <div class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 text-sm font-bold">
-              <%= current_user.initials %>
-            </div>
-            <span class="text-sm text-gray-700"><%= current_user.display_name %></span>
-          </div>
-          <%= button_to "Sign Out", destroy_user_session_path, method: :delete,
-              data: { turbo: false },
-              class: "text-sm font-medium text-gray-700 hover:text-gray-900" %>
-        </div>
-      </div>
-    </div>
-  </nav>
-
-  <!-- Main Content -->
-  <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-    <!-- Success/Error Messages -->
+<!-- Success/Error Messages -->
     <% if notice %>
       <div class="mb-6 bg-green-50 border border-green-200 rounded-md p-4">
         <p class="text-sm text-green-800"><%= notice %></p>
@@ -42,15 +10,15 @@
       </div>
     <% end %>
 
-    <!-- Header with Invite Button -->
-    <div class="mb-6 sm:flex sm:items-center sm:justify-between">
+<!-- Header with Invite Button -->
+<div class="mb-6 sm:flex sm:items-center sm:justify-between">
       <div>
         <h2 class="text-2xl font-bold text-gray-900">Team Members</h2>
         <p class="mt-1 text-sm text-gray-500">Manage your team and invite new members</p>
       </div>
       <% if @can_manage_team %>
         <div class="mt-4 sm:mt-0">
-          <%= link_to new_advertiser_invitation_path(@advertiser.slug), 
+          <%= link_to settings_team_new_invitation_path(@advertiser.slug), 
               class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" do %>
             <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
               <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
@@ -89,7 +57,7 @@
               <div class="flex items-center space-x-3">
                 <% if @can_manage_team && membership.user != current_user && membership.role != 'owner' %>
                   <!-- Role dropdown for team managers (excluding owner) -->
-                  <%= form_with url: update_member_role_path(@advertiser.slug, membership), method: :patch, class: "inline-block" do |f| %>
+                  <%= form_with url: settings_update_member_role_path(@advertiser.slug, membership), method: :patch, class: "inline-block" do |f| %>
                     <%= f.select :role, 
                         options_for_select(
                           [
@@ -108,7 +76,7 @@
                   
                   <!-- Remove button -->
                   <% unless membership.role == 'owner' || (@membership.role == 'admin' && membership.role == 'admin') %>
-                    <%= button_to remove_team_member_path(@advertiser.slug, membership),
+                    <%= button_to settings_remove_team_member_path(@advertiser.slug, membership),
                         method: :delete,
                         data: { confirm: "Are you sure you want to remove #{membership.user.display_name} from the team?" },
                         class: "inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500" do %>
@@ -157,10 +125,10 @@
                     <%= invitation.role.titleize %>
                   </span>
                   <% if @can_manage_team %>
-                    <%= button_to "Resend", resend_advertiser_invitation_path(@advertiser.slug, invitation), 
+                    <%= button_to "Resend", settings_team_resend_invitation_path(@advertiser.slug, invitation), 
                         method: :post,
                         class: "text-sm text-indigo-600 hover:text-indigo-900" %>
-                    <%= button_to "Cancel", advertiser_invitation_path(@advertiser.slug, invitation), 
+                    <%= button_to "Cancel", settings_team_invitation_path(@advertiser.slug, invitation), 
                         method: :delete,
                         data: { confirm: "Are you sure you want to cancel this invitation?" },
                         class: "text-sm text-red-600 hover:text-red-900" %>
@@ -172,5 +140,3 @@
         </ul>
       </div>
     <% end %>
-  </div>
-</div>

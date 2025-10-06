@@ -1,8 +1,10 @@
-class InvitationsController < ApplicationController
+class Settings::Team::InvitationsController < ApplicationController
   before_action :authenticate_user!, except: [:accept, :process_acceptance]
   before_action :set_advertiser, except: [:accept, :process_acceptance]
   before_action :authorize_team_management!, except: [:accept, :process_acceptance]
   before_action :set_invitation_by_token, only: [:accept, :process_acceptance]
+  
+  layout :resolve_layout
 
   def accept
     # Check if invitation is expired or not pending (cancelled/accepted)
@@ -45,10 +47,10 @@ class InvitationsController < ApplicationController
       # Send invitation email
       begin
         @invitation.send_invitation_email
-        redirect_to advertiser_team_path(@advertiser.slug), notice: "Invitation sent to #{@invitation.email}"
+        redirect_to settings_team_path(@advertiser.slug), notice: "Invitation sent to #{@invitation.email}"
       rescue => e
         Rails.logger.error "Failed to send invitation email: #{e.message}"
-        redirect_to advertiser_team_path(@advertiser.slug), alert: "Invitation created but email failed to send. Please try resending."
+        redirect_to settings_team_path(@advertiser.slug), alert: "Invitation created but email failed to send. Please try resending."
       end
     else
       render :new, status: :unprocessable_entity
@@ -59,14 +61,14 @@ class InvitationsController < ApplicationController
     @invitation = @advertiser.invitations.find_by(id: params[:id])
     
     unless @invitation
-      redirect_to advertiser_team_path(@advertiser.slug)
+      redirect_to settings_team_path(@advertiser.slug)
       return
     end
     
     if @invitation.resend!
-      redirect_to advertiser_team_path(@advertiser.slug), notice: "Invitation resent to #{@invitation.email}"
+      redirect_to settings_team_path(@advertiser.slug), notice: "Invitation resent to #{@invitation.email}"
     else
-      redirect_to advertiser_team_path(@advertiser.slug), alert: "Failed to resend invitation"
+      redirect_to settings_team_path(@advertiser.slug), alert: "Failed to resend invitation"
     end
   end
 
@@ -74,13 +76,13 @@ class InvitationsController < ApplicationController
     @invitation = @advertiser.invitations.find_by(id: params[:id])
     
     unless @invitation
-      redirect_to advertiser_team_path(@advertiser.slug)
+      redirect_to settings_team_path(@advertiser.slug)
       return
     end
     
     @invitation.destroy
     
-    redirect_to advertiser_team_path(@advertiser.slug), notice: "Invitation cancelled"
+    redirect_to settings_team_path(@advertiser.slug), notice: "Invitation cancelled"
   end
 
   private
@@ -109,7 +111,7 @@ class InvitationsController < ApplicationController
 
   def authorize_team_management!
     unless current_user.can_manage_team?(@advertiser)
-      redirect_to advertiser_dashboard_path(@advertiser.slug), alert: "You don't have permission to manage team members"
+      redirect_to settings_team_path(@advertiser.slug), alert: "You don't have permission to manage team members"
     end
   end
 
@@ -169,5 +171,15 @@ class InvitationsController < ApplicationController
 
   def invitation_params
     params.require(:invitation).permit(:email, :role)
+  end
+
+  def resolve_layout
+    # Use auth layout for public invitation acceptance pages
+    if action_name.in?(['accept', 'process_acceptance'])
+      'auth'
+    else
+      # Use sidebar layout for team management pages
+      'sidebar'
+    end
   end
 end

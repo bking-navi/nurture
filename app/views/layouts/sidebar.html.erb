@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for(:title) || "Nurture" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+
+    <%# Includes all stylesheet files in app/assets/stylesheets %>
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="bg-gray-100">
+    <div class="flex h-screen overflow-hidden" data-controller="sidebar">
+      <!-- Mobile Overlay -->
+      <div data-sidebar-target="overlay" 
+           data-action="click->sidebar#hide"
+           class="hidden fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"></div>
+
+      <!-- Sidebar -->
+      <aside data-sidebar-target="sidebar"
+             class="fixed inset-y-0 left-0 z-50 flex flex-col w-64 bg-gray-100 transform transition-transform duration-300 ease-in-out">
+        <!-- Advertiser Switcher -->
+        <div class="p-4 relative" data-controller="dropdown">
+          <% advertiser = Current.advertiser || @advertiser %>
+          <% if advertiser %>
+            <button type="button" 
+                    data-action="click->dropdown#toggle click@window->dropdown#hide"
+                    class="w-full flex items-center gap-1.5 px-3 py-2 bg-gray-50 border border-gray-300 rounded-md hover:bg-white transition-colors">
+              <div class="flex items-center justify-center w-5 h-5 rounded-full bg-neutral-700 text-white text-[10px] font-semibold">
+                <%= advertiser.name[0].upcase %>
+              </div>
+              <span class="flex-1 text-left text-[13.33px] text-neutral-900 truncate">
+                <%= advertiser.name %>
+              </span>
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div data-dropdown-target="menu" 
+                 class="hidden absolute top-[85%] left-4 right-4 bg-white border border-slate-200 rounded-md shadow-lg z-50">
+              <!-- Advertisers List -->
+              <div class="border-b border-slate-200 p-1">
+                <% current_user.advertisers.order(:name).each do |adv| %>
+                  <%= link_to advertiser_dashboard_path(adv.slug),
+                      class: "flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-50 transition-colors #{adv.id == advertiser.id ? 'bg-gray-50' : ''}" do %>
+                    <div class="flex items-center justify-center w-5 h-5 rounded-full bg-slate-100 text-slate-600 text-[11px] font-medium">
+                      <%= adv.name[0..1].upcase %>
+                    </div>
+                    <span class="text-sm text-neutral-700 truncate">
+                      <%= adv.name %>
+                    </span>
+                  <% end %>
+                <% end %>
+              </div>
+
+              <!-- Actions -->
+              <div class="p-1">
+                <%= link_to advertisers_path,
+                    class: "flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-50 transition-colors" do %>
+                  <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                  </svg>
+                  <span class="text-sm text-neutral-700">View all</span>
+                <% end %>
+
+                <%= link_to new_advertiser_path,
+                    class: "flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-50 transition-colors" do %>
+                  <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                  </svg>
+                  <span class="text-sm text-neutral-700">Create a new advertiser</span>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="flex-1 px-3.5 py-2 space-y-1 overflow-y-auto">
+          <% advertiser = Current.advertiser || @advertiser %>
+          <% if advertiser %>
+            <%= link_to advertiser_dashboard_path(advertiser.slug), 
+                class: "flex items-center gap-2 px-1.5 py-1 rounded text-[13px] font-medium tracking-tight transition-colors #{controller_name == 'advertisers' && action_name == 'show' ? 'bg-neutral-200 text-neutral-900' : 'text-neutral-700 hover:bg-gray-50'}" do %>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+              </svg>
+              <span>Dashboard</span>
+            <% end %>
+
+            <%= link_to campaigns_path(advertiser_slug: advertiser.slug), 
+                class: "flex items-center gap-2 px-1.5 py-1 rounded text-[13px] font-medium tracking-tight transition-colors #{controller_name == 'campaigns' ? 'bg-neutral-200 text-neutral-900' : 'text-neutral-700 hover:bg-gray-50'}" do %>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
+            </svg>
+            <span>Campaigns</span>
+          <% end %>
+
+          <a href="#" class="flex items-center gap-2 px-1.5 py-1 rounded text-[13px] font-medium tracking-tight text-neutral-700 hover:bg-gray-50 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+            <span>Audience</span>
+          </a>
+
+          <a href="#" class="flex items-center gap-2 px-1.5 py-1 rounded text-[13px] font-medium tracking-tight text-neutral-700 hover:bg-gray-50 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+            <span>Analytics</span>
+          </a>
+
+          <a href="#" class="flex items-center gap-2 px-1.5 py-1 rounded text-[13px] font-medium tracking-tight text-neutral-700 hover:bg-gray-50 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"></path>
+            </svg>
+            <span>Integrations</span>
+          </a>
+          <% end %>
+        </nav>
+
+        <!-- Settings Link (bottom of nav) -->
+        <% advertiser = Current.advertiser || @advertiser %>
+        <% if advertiser %>
+          <div class="px-3.5 pb-2">
+            <%= link_to advertiser_settings_path(advertiser.slug),
+                class: "flex items-center gap-2 px-2.5 py-1.5 rounded text-[14px] font-medium text-slate-600 hover:bg-gray-50 transition-colors #{controller_name == 'settings' ? 'bg-gray-50' : ''}" do %>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              </svg>
+              <span>Settings</span>
+            <% end %>
+          </div>
+        <% end %>
+
+        <!-- User Profile Footer -->
+        <div class="p-4" data-controller="dropdown">
+          <div class="relative">
+            <button type="button" 
+                    class="w-full flex items-center gap-2 hover:bg-gray-50 rounded p-1 -m-1 transition-colors"
+                    data-action="click->dropdown#toggle">
+              <div class="relative flex-shrink-0">
+                <div class="flex items-center justify-center w-8 h-8 rounded-full bg-neutral-700 text-white text-sm font-medium">
+                  <%= current_user.initials %>
+                </div>
+                <div class="absolute top-0 right-0 w-2 h-2 bg-green-500 border border-white rounded-full"></div>
+              </div>
+              <div class="flex-1 text-left min-w-0">
+                <p class="text-sm font-medium text-neutral-700 truncate">
+                  <%= current_user.display_name %>
+                </p>
+                <p class="text-xs text-neutral-500 truncate">
+                  <%= current_user.email %>
+                </p>
+              </div>
+              <svg class="w-4 h-4 text-neutral-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+              </svg>
+            </button>
+
+            <!-- Dropdown Menu (appears above) -->
+            <div data-dropdown-target="menu" 
+                 class="hidden absolute bottom-full left-0 right-0 mb-2 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+              <%= link_to destroy_user_session_path, 
+                  data: { turbo_method: :delete },
+                  class: "flex items-center gap-2 px-3 py-2 text-sm text-neutral-700 hover:bg-gray-50 transition-colors" do %>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                </svg>
+                <span>Log out</span>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content Area -->
+      <div data-sidebar-target="content" 
+           class="flex-1 flex flex-col overflow-hidden py-2 pr-2 lg:ml-64 transition-[margin] duration-300 ease-in-out">
+        <div class="flex-1 flex flex-col overflow-hidden bg-gray-50 rounded-tl-lg rounded-bl-lg shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
+          <!-- Top Navbar -->
+          <header class="bg-gray-50 border-b border-neutral-200 px-2 py-[11px] flex items-center gap-2">
+            <!-- Sidebar toggle button -->
+            <button type="button" 
+                    data-action="click->sidebar#toggle"
+                    class="p-1.5 rounded-md hover:bg-gray-100 transition-colors">
+              <svg class="w-4 h-4 text-neutral-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+              </svg>
+            </button>
+
+            <!-- Breadcrumb -->
+            <nav class="text-xs text-neutral-600 font-medium">
+              <%= yield :breadcrumb if content_for?(:breadcrumb) %>
+            </nav>
+          </header>
+
+          <!-- Main Content -->
+          <main class="flex-1 overflow-y-auto bg-gray-50 p-4 lg:p-8">
+            <%= yield %>
+          </main>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+

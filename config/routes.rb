@@ -26,20 +26,27 @@ Rails.application.routes.draw do
   get 'advertisers', to: 'advertisers#index', as: :advertisers
   get 'advertisers/:slug', to: 'advertisers#show', as: :advertiser_dashboard
   
-  # Team management
-  get 'advertisers/:advertiser_slug/team', to: 'team#index', as: :advertiser_team
-  patch 'advertisers/:advertiser_slug/team/members/:id/role', to: 'team#update_role', as: :update_member_role
-  delete 'advertisers/:advertiser_slug/team/members/:id', to: 'team#remove_member', as: :remove_team_member
+  # Settings (namespaced)
+  scope 'advertisers/:advertiser_slug' do
+    get 'settings', to: 'settings#index', as: :advertiser_settings
+    
+    namespace :settings do
+      # Team management
+      get 'team', to: 'team#index', as: :team
+      patch 'team/members/:id/role', to: 'team#update_role', as: :update_member_role
+      delete 'team/members/:id', to: 'team#remove_member', as: :remove_team_member
+      
+      # Invitations (nested under team)
+      get 'team/invitations/new', to: 'team/invitations#new', as: :team_new_invitation
+      post 'team/invitations', to: 'team/invitations#create', as: :team_invitations
+      post 'team/invitations/:id/resend', to: 'team/invitations#resend', as: :team_resend_invitation
+      delete 'team/invitations/:id', to: 'team/invitations#destroy', as: :team_invitation
+    end
+  end
   
-  # Invitations
-  get 'advertisers/:advertiser_slug/invitations/new', to: 'invitations#new', as: :new_advertiser_invitation
-  post 'advertisers/:advertiser_slug/invitations', to: 'invitations#create', as: :advertiser_invitations
-  post 'advertisers/:advertiser_slug/invitations/:id/resend', to: 'invitations#resend', as: :resend_advertiser_invitation
-  delete 'advertisers/:advertiser_slug/invitations/:id', to: 'invitations#destroy', as: :advertiser_invitation
-  
-  # Invitation acceptance
-  get 'invitations/:token/accept', to: 'invitations#accept', as: :accept_invitation
-  post 'invitations/:token/accept', to: 'invitations#process_acceptance', as: :process_invitation
+  # Invitation acceptance (public, not scoped to advertiser)
+  get 'invitations/:token/accept', to: 'settings/team/invitations#accept', as: :accept_invitation
+  post 'invitations/:token/accept', to: 'settings/team/invitations#process_acceptance', as: :process_invitation
   
   # Campaigns
   scope 'advertisers/:advertiser_slug' do

@@ -4,6 +4,8 @@ class CampaignContactsController < ApplicationController
   before_action :set_campaign
   before_action :verify_campaign_editable!, except: [:retry]
   
+  layout "sidebar"
+  
   def new
     @contact = @campaign.campaign_contacts.build
   end

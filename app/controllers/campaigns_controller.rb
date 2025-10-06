@@ -5,6 +5,8 @@ class CampaignsController < ApplicationController
   before_action :set_campaign, only: [:show, :edit, :update, :destroy, :send_now, :calculate_cost, :preview, :preview_live]
   before_action :verify_editable!, only: [:edit, :update, :destroy, :send_now]
   
+  layout "sidebar"
+  
   def index
     @campaigns = @advertiser.campaigns.recent
     
