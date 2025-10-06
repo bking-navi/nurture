@@ -39,18 +39,59 @@
 
 <!-- Stats -->
 <div class="bg-white shadow sm:rounded-lg mb-6 p-6">
-  <div class="flex items-center">
-    <div class="flex-shrink-0">
-      <svg class="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-      </svg>
-    </div>
-    <div class="ml-5">
+  <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="px-4 py-5 border-r border-gray-200">
       <div class="text-3xl font-bold text-gray-900"><%= @segment.contact_count || 0 %></div>
-      <div class="text-sm text-gray-500">Contacts in this segment</div>
+      <div class="text-sm text-gray-500 mt-1">Contacts</div>
+    </div>
+    
+    <% 
+      contacts = @segment.contacts
+      avg_spent = contacts.average(:total_spent)&.to_f || 0
+      avg_orders = contacts.average(:orders_count)&.to_f || 0
+      avg_order_value = contacts.average(:average_order_value)&.to_f || 0
+      total_value = contacts.sum(:total_spent)&.to_f || 0
+    %>
+    
+    <div class="px-4 py-5 border-r border-gray-200">
+      <div class="text-3xl font-bold text-gray-900">$<%= number_with_precision(total_value, precision: 0, delimiter: ',') %></div>
+      <div class="text-sm text-gray-500 mt-1">Total Customer Value</div>
+    </div>
+    
+    <div class="px-4 py-5 border-r border-gray-200">
+      <div class="text-3xl font-bold text-gray-900">$<%= number_with_precision(avg_spent, precision: 0, delimiter: ',') %></div>
+      <div class="text-sm text-gray-500 mt-1">Avg Lifetime Value</div>
+    </div>
+    
+    <div class="px-4 py-5">
+      <div class="text-3xl font-bold text-gray-900">$<%= number_with_precision(avg_order_value, precision: 0, delimiter: ',') %></div>
+      <div class="text-sm text-gray-500 mt-1">Avg Order Value</div>
     </div>
   </div>
 </div>
+
+<!-- RFM Distribution -->
+<% if @segment.contacts.where.not(rfm_segment: [nil, ""]).exists? %>
+  <div class="bg-white shadow sm:rounded-lg mb-6 p-6">
+    <h3 class="text-lg font-medium text-gray-900 mb-4">Customer Segment Distribution</h3>
+    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+      <% 
+        rfm_distribution = @segment.contacts
+          .where.not(rfm_segment: [nil, ""])
+          .group(:rfm_segment)
+          .count
+          .sort_by { |_, count| -count }
+      %>
+      
+      <% rfm_distribution.each do |segment_name, count| %>
+        <div class="bg-gray-50 rounded-lg p-4">
+          <div class="text-2xl font-semibold text-gray-900"><%= count %></div>
+          <div class="text-xs text-gray-600 mt-1"><%= segment_name %></div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>
 
 <!-- Filters -->
 <div class="bg-white shadow sm:rounded-lg mb-6 p-6">

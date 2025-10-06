@@ -55,6 +55,40 @@ class Segment < ApplicationRecord
       query = query.where("default_address->>'zip' = ?", filters['zip'])
     end
     
+    # Apply RFM filters
+    if filters['rfm_segment'].present?
+      query = query.where(rfm_segment: filters['rfm_segment'])
+    end
+    
+    if filters['min_orders'].present?
+      query = query.where("orders_count >= ?", filters['min_orders'].to_i)
+    end
+    
+    if filters['max_orders'].present?
+      query = query.where("orders_count <= ?", filters['max_orders'].to_i)
+    end
+    
+    if filters['min_spent'].present?
+      query = query.where("total_spent >= ?", filters['min_spent'].to_f)
+    end
+    
+    if filters['max_spent'].present?
+      query = query.where("total_spent <= ?", filters['max_spent'].to_f)
+    end
+    
+    if filters['min_avg_order'].present?
+      query = query.where("average_order_value >= ?", filters['min_avg_order'].to_f)
+    end
+    
+    if filters['days_since_last_order'].present?
+      date_threshold = filters['days_since_last_order'].to_i.days.ago
+      query = query.where("last_order_at <= ?", date_threshold)
+    end
+    
+    if filters['has_tag'].present?
+      query = query.where("? = ANY(tags)", filters['has_tag'])
+    end
+    
     query
   end
   

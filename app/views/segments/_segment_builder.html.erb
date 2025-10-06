@@ -34,6 +34,72 @@
         <input type="text" name="segment[filters][zip]" id="segment_filters_zip" value="<%= segment.filters&.dig('zip') %>" placeholder="e.g., 94102" class="mt-1 block w-full shadow-sm focus:ring-gray-700 focus:border-gray-700 sm:text-sm border-gray-300 rounded-md" data-action="input->segment-builder#updatePreview" data-segment-builder-target="filter" />
       </div>
     </div>
+
+    <!-- RFM & Behavior Filters -->
+    <div class="mt-6 pt-6 border-t border-gray-200">
+      <h3 class="text-md font-medium text-gray-900 mb-4">Customer Value & Behavior</h3>
+      
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label for="segment_filters_rfm_segment" class="block text-sm font-medium text-gray-700 mb-1">RFM Segment</label>
+          <select name="segment[filters][rfm_segment]" id="segment_filters_rfm_segment" class="mt-1 block w-full shadow-sm focus:ring-gray-700 focus:border-gray-700 sm:text-sm border-gray-300 rounded-md" data-action="change->segment-builder#updatePreview" data-segment-builder-target="filter">
+            <option value="" <%= 'selected' if segment.filters&.dig('rfm_segment').blank? %>>All Segments</option>
+            <option value="Champions" <%= 'selected' if segment.filters&.dig('rfm_segment') == 'Champions' %>>Champions (Top Customers)</option>
+            <option value="Loyal Customers" <%= 'selected' if segment.filters&.dig('rfm_segment') == 'Loyal Customers' %>>Loyal Customers</option>
+            <option value="Potential Loyalist" <%= 'selected' if segment.filters&.dig('rfm_segment') == 'Potential Loyalist' %>>Potential Loyalist</option>
+            <option value="Recent Customers" <%= 'selected' if segment.filters&.dig('rfm_segment') == 'Recent Customers' %>>Recent Customers</option>
+            <option value="Promising" <%= 'selected' if segment.filters&.dig('rfm_segment') == 'Promising' %>>Promising</option>
+            <option value="Needs Attention" <%= 'selected' if segment.filters&.dig('rfm_segment') == 'Needs Attention' %>>Needs Attention</option>
+            <option value="About to Sleep" <%= 'selected' if segment.filters&.dig('rfm_segment') == 'About to Sleep' %>>About to Sleep</option>
+            <option value="At Risk" <%= 'selected' if segment.filters&.dig('rfm_segment') == 'At Risk' %>>At Risk</option>
+            <option value="Cannot Lose Them" <%= 'selected' if segment.filters&.dig('rfm_segment') == 'Cannot Lose Them' %>>Cannot Lose Them</option>
+            <option value="Hibernating" <%= 'selected' if segment.filters&.dig('rfm_segment') == 'Hibernating' %>>Hibernating</option>
+            <option value="Lost" <%= 'selected' if segment.filters&.dig('rfm_segment') == 'Lost' %>>Lost</option>
+          </select>
+        </div>
+        
+        <div>
+          <label for="segment_filters_has_tag" class="block text-sm font-medium text-gray-700 mb-1">Has Tag</label>
+          <input type="text" name="segment[filters][has_tag]" id="segment_filters_has_tag" value="<%= segment.filters&.dig('has_tag') %>" placeholder="e.g., VIP" class="mt-1 block w-full shadow-sm focus:ring-gray-700 focus:border-gray-700 sm:text-sm border-gray-300 rounded-md" data-action="input->segment-builder#updatePreview" data-segment-builder-target="filter" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 mt-4">
+        <div>
+          <label for="segment_filters_min_orders" class="block text-sm font-medium text-gray-700 mb-1">Min Orders</label>
+          <input type="number" name="segment[filters][min_orders]" id="segment_filters_min_orders" value="<%= segment.filters&.dig('min_orders') %>" placeholder="e.g., 5" min="0" class="mt-1 block w-full shadow-sm focus:ring-gray-700 focus:border-gray-700 sm:text-sm border-gray-300 rounded-md" data-action="input->segment-builder#updatePreview" data-segment-builder-target="filter" />
+        </div>
+        
+        <div>
+          <label for="segment_filters_max_orders" class="block text-sm font-medium text-gray-700 mb-1">Max Orders</label>
+          <input type="number" name="segment[filters][max_orders]" id="segment_filters_max_orders" value="<%= segment.filters&.dig('max_orders') %>" placeholder="e.g., 100" min="0" class="mt-1 block w-full shadow-sm focus:ring-gray-700 focus:border-gray-700 sm:text-sm border-gray-300 rounded-md" data-action="input->segment-builder#updatePreview" data-segment-builder-target="filter" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 mt-4">
+        <div>
+          <label for="segment_filters_min_spent" class="block text-sm font-medium text-gray-700 mb-1">Min Total Spent ($)</label>
+          <input type="number" name="segment[filters][min_spent]" id="segment_filters_min_spent" value="<%= segment.filters&.dig('min_spent') %>" placeholder="e.g., 100" min="0" step="0.01" class="mt-1 block w-full shadow-sm focus:ring-gray-700 focus:border-gray-700 sm:text-sm border-gray-300 rounded-md" data-action="input->segment-builder#updatePreview" data-segment-builder-target="filter" />
+        </div>
+        
+        <div>
+          <label for="segment_filters_max_spent" class="block text-sm font-medium text-gray-700 mb-1">Max Total Spent ($)</label>
+          <input type="number" name="segment[filters][max_spent]" id="segment_filters_max_spent" value="<%= segment.filters&.dig('max_spent') %>" placeholder="e.g., 10000" min="0" step="0.01" class="mt-1 block w-full shadow-sm focus:ring-gray-700 focus:border-gray-700 sm:text-sm border-gray-300 rounded-md" data-action="input->segment-builder#updatePreview" data-segment-builder-target="filter" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 mt-4">
+        <div>
+          <label for="segment_filters_min_avg_order" class="block text-sm font-medium text-gray-700 mb-1">Min Avg Order Value ($)</label>
+          <input type="number" name="segment[filters][min_avg_order]" id="segment_filters_min_avg_order" value="<%= segment.filters&.dig('min_avg_order') %>" placeholder="e.g., 50" min="0" step="0.01" class="mt-1 block w-full shadow-sm focus:ring-gray-700 focus:border-gray-700 sm:text-sm border-gray-300 rounded-md" data-action="input->segment-builder#updatePreview" data-segment-builder-target="filter" />
+        </div>
+        
+        <div>
+          <label for="segment_filters_days_since_last_order" class="block text-sm font-medium text-gray-700 mb-1">Days Since Last Order</label>
+          <input type="number" name="segment[filters][days_since_last_order]" id="segment_filters_days_since_last_order" value="<%= segment.filters&.dig('days_since_last_order') %>" placeholder="e.g., 90 (haven't ordered in 90+ days)" min="0" class="mt-1 block w-full shadow-sm focus:ring-gray-700 focus:border-gray-700 sm:text-sm border-gray-300 rounded-md" data-action="input->segment-builder#updatePreview" data-segment-builder-target="filter" />
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Preview Section -->

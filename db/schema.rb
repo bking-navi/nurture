@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_06_195047) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_06_202739) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -178,8 +178,17 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_06_195047) do
     t.datetime "updated_at_source"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.decimal "average_order_value", precision: 10, scale: 2, default: "0.0"
+    t.integer "rfm_recency_score", default: 0
+    t.integer "rfm_frequency_score", default: 0
+    t.integer "rfm_monetary_score", default: 0
+    t.string "rfm_segment"
     t.index ["advertiser_id", "email"], name: "index_contacts_on_advertiser_id_and_email"
     t.index ["advertiser_id", "last_order_at"], name: "index_contacts_on_advertiser_id_and_last_order_at"
+    t.index ["advertiser_id", "rfm_frequency_score"], name: "index_contacts_on_advertiser_id_and_rfm_frequency_score"
+    t.index ["advertiser_id", "rfm_monetary_score"], name: "index_contacts_on_advertiser_id_and_rfm_monetary_score"
+    t.index ["advertiser_id", "rfm_recency_score"], name: "index_contacts_on_advertiser_id_and_rfm_recency_score"
+    t.index ["advertiser_id", "rfm_segment"], name: "index_contacts_on_advertiser_id_and_rfm_segment"
     t.index ["advertiser_id", "total_spent"], name: "index_contacts_on_advertiser_id_and_total_spent"
     t.index ["advertiser_id"], name: "index_contacts_on_advertiser_id"
     t.index ["source_type", "source_id", "external_id"], name: "idx_contacts_source_external", unique: true

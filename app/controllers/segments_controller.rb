@@ -83,7 +83,12 @@ class SegmentsController < ApplicationController
   def segment_params
     params.require(:segment).permit(
       :name, :description,
-      filters: [:source, :search, :city, :state, :zip]
+      filters: [
+        :source, :search, :city, :state, :zip,
+        :rfm_segment, :min_orders, :max_orders,
+        :min_spent, :max_spent, :min_avg_order,
+        :days_since_last_order, :has_tag
+      ]
     )
   end
 end

@@ -76,6 +76,10 @@ class ShopifyFullSyncJob < ApplicationJob
       )
 
       Rails.logger.info "[ShopifySync] Completed sync for #{shopify_store.shop_domain} in #{duration}s"
+      
+      # Calculate RFM scores for all contacts after sync
+      Rails.logger.info "[ShopifySync] Queuing RFM calculation for #{advertiser.name}..."
+      CalculateRfmScoresJob.perform_later(advertiser.id)
 
       # TODO: Send completion email via Loops
       
