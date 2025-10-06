@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_06_202739) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_06_231951) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -131,11 +131,13 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_06_202739) do
     t.integer "postcard_template_id"
     t.text "template_data"
     t.integer "color_palette_id"
+    t.bigint "creative_id"
     t.index ["advertiser_id", "created_at"], name: "index_campaigns_on_advertiser_id_and_created_at"
     t.index ["advertiser_id", "status"], name: "index_campaigns_on_advertiser_id_and_status"
     t.index ["advertiser_id"], name: "index_campaigns_on_advertiser_id"
     t.index ["color_palette_id"], name: "index_campaigns_on_color_palette_id"
     t.index ["created_by_user_id"], name: "index_campaigns_on_created_by_user_id"
+    t.index ["creative_id"], name: "index_campaigns_on_creative_id"
     t.index ["postcard_template_id"], name: "index_campaigns_on_postcard_template_id"
   end
 
@@ -193,6 +195,28 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_06_202739) do
     t.index ["advertiser_id"], name: "index_contacts_on_advertiser_id"
     t.index ["source_type", "source_id", "external_id"], name: "idx_contacts_source_external", unique: true
     t.index ["tags"], name: "index_contacts_on_tags", using: :gin
+  end
+
+  create_table "creatives", force: :cascade do |t|
+    t.bigint "advertiser_id", null: false
+    t.bigint "postcard_template_id", null: false
+    t.bigint "created_by_user_id"
+    t.bigint "created_from_campaign_id"
+    t.string "name", null: false
+    t.text "description"
+    t.string "tags", default: [], array: true
+    t.integer "usage_count", default: 0
+    t.datetime "last_used_at"
+    t.string "status", default: "active"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["advertiser_id", "status"], name: "index_creatives_on_advertiser_id_and_status"
+    t.index ["advertiser_id"], name: "index_creatives_on_advertiser_id"
+    t.index ["created_by_user_id"], name: "index_creatives_on_created_by_user_id"
+    t.index ["created_from_campaign_id"], name: "index_creatives_on_created_from_campaign_id"
+    t.index ["postcard_template_id"], name: "index_creatives_on_postcard_template_id"
+    t.index ["tags"], name: "index_creatives_on_tags", using: :gin
+    t.index ["usage_count"], name: "index_creatives_on_usage_count"
   end
 
   create_table "invitations", force: :cascade do |t|
@@ -521,10 +545,15 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_06_202739) do
   add_foreign_key "campaign_contacts", "contacts"
   add_foreign_key "campaigns", "advertisers"
   add_foreign_key "campaigns", "color_palettes", on_delete: :nullify
+  add_foreign_key "campaigns", "creatives"
   add_foreign_key "campaigns", "postcard_templates", on_delete: :nullify
   add_foreign_key "campaigns", "users", column: "created_by_user_id"
   add_foreign_key "color_palettes", "advertisers", on_delete: :cascade
   add_foreign_key "contacts", "advertisers"
+  add_foreign_key "creatives", "advertisers"
+  add_foreign_key "creatives", "campaigns", column: "created_from_campaign_id"
+  add_foreign_key "creatives", "postcard_templates"
+  add_foreign_key "creatives", "users", column: "created_by_user_id"
   add_foreign_key "invitations", "advertisers"
   add_foreign_key "invitations", "users", column: "invited_by_id"
   add_foreign_key "orders", "advertisers"

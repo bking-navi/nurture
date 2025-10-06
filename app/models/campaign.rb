@@ -3,11 +3,15 @@ class Campaign < ApplicationRecord
   belongs_to :created_by_user, class_name: 'User'
   belongs_to :postcard_template, optional: true
   belongs_to :color_palette, optional: true
+  belongs_to :creative, optional: true
   has_many :campaign_contacts, dependent: :destroy
   
   # Active Storage for PDF uploads
   has_one_attached :front_pdf
   has_one_attached :back_pdf
+  
+  # Callbacks
+  after_create :increment_creative_usage, if: :creative_id?
   
   # Serialize JSON fields for SQLite compatibility
   serialize :merge_variables, coder: JSON
@@ -153,6 +157,26 @@ class Campaign < ApplicationRecord
     
     data = template_data_with_defaults.merge(contact_data.symbolize_keys)
     postcard_template.render_back(data)
+  end
+  
+  # Creative management methods
+  def front_pdf_file
+    creative&.front_pdf || front_pdf
+  end
+  
+  def back_pdf_file
+    creative&.back_pdf || back_pdf || creative&.postcard_template&.default_back_pdf
+  end
+  
+  def using_creative?
+    creative_id.present?
+  end
+  
+  private
+  
+  def increment_creative_usage
+    creative.increment!(:usage_count)
+    creative.touch(:last_used_at)
   end
 end
 
