@@ -1,0 +1,37 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "96761b83d6579c9a5774b9e58fa0a251"
+name = "windtunnel"
+handle = "windtunnel"
+application_url = "https://navistone.dev"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = "naviswag.myshopify.com"
+
+[access_scopes]
+# https://shopify.dev/docs/api/usage/access-scopes
+scopes = "read_customers,read_orders,read_products,read_inventory"
+
+[auth]
+redirect_urls = [
+  "http://localhost:3000/auth/shopify/callback",
+  "https://navistone.dev/auth/shopify/callback"
+]
+
+[webhooks]
+api_version = "2024-10"
+
+# Optional: Privacy webhooks (for GDPR compliance)
+# [[webhooks.subscriptions]]
+# topics = ["customers/data_request"]
+# uri = "/webhooks/customers/data_request"
+
+# [[webhooks.subscriptions]]
+# topics = ["customers/redact"]
+# uri = "/webhooks/customers/redact"
+
+# [[webhooks.subscriptions]]
+# topics = ["shop/redact"]
+# uri = "/webhooks/shop/redact"

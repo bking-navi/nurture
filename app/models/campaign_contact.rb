@@ -1,5 +1,6 @@
 class CampaignContact < ApplicationRecord
   belongs_to :campaign
+  belongs_to :contact, optional: true
   
   # Serialize JSON fields for SQLite compatibility
   serialize :metadata, coder: JSON

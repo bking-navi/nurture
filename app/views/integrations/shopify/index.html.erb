@@ -1,0 +1,182 @@
+<div class="p-6">
+  <div class="max-w-4xl mx-auto">
+    
+    <!-- Breadcrumb -->
+    <nav class="flex mb-6 text-sm" aria-label="Breadcrumb">
+      <ol class="inline-flex items-center space-x-1">
+        <li class="inline-flex items-center">
+          <%= link_to "Integrations", integrations_path(@advertiser.slug), class: "text-neutral-500 hover:text-neutral-700" %>
+        </li>
+        <li>
+          <div class="flex items-center">
+            <svg class="w-3 h-3 text-neutral-400 mx-1" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+            </svg>
+            <span class="text-neutral-700 font-medium">Shopify</span>
+          </div>
+        </li>
+      </ol>
+    </nav>
+
+    <!-- Overview Card -->
+    <div class="bg-white rounded-lg shadow-sm border border-neutral-200 p-6 mb-6">
+      <div class="flex items-start justify-between mb-6">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-[#96bf48] rounded-lg flex items-center justify-center">
+            <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M16.373 10.723c-.271-.081-.381-.11-.707-.11-.435 0-.518.109-.518.272 0 .218.163.353.544.598.599.38 1.007.788 1.007 1.552 0 1.252-.924 1.966-2.398 1.966-.735 0-1.36-.19-1.741-.381l.272-1.087c.327.163.788.326 1.306.326.381 0 .599-.136.599-.353 0-.19-.163-.353-.544-.598-.599-.38-.98-.761-.98-1.524 0-1.142.897-1.966 2.316-1.966.707 0 1.224.163 1.524.299l-.272 1.006z"/>
+              <path d="M12 2L2 6v5c0 6.627 4.373 11 10 11s10-4.373 10-11V6l-10-4z"/>
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-xl font-semibold text-neutral-900">Shopify</h1>
+            <p class="text-sm text-neutral-600 mt-1">
+              Automate data ingestion and track activity on your storefront.
+            </p>
+          </div>
+        </div>
+        <a href="https://help.shopify.com" target="_blank" class="px-4 py-2 bg-neutral-900 text-white text-sm font-medium rounded-md hover:bg-neutral-800">
+          Documentation
+        </a>
+      </div>
+
+      <div>
+        <h3 class="text-sm font-semibold text-neutral-900 mb-2">Overview</h3>
+        <p class="text-sm text-neutral-600">
+          Turn your Shopify customer data into targeted direct mail campaigns. This integration pulls your store's customer, order, and product data to build precise audience segments for postcard marketing.
+        </p>
+      </div>
+    </div>
+
+    <!-- Connected Stores -->
+    <div class="bg-white rounded-lg shadow-sm border border-neutral-200 p-6 mb-6">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-lg font-semibold text-neutral-900">Connected Stores</h2>
+        <button type="button" onclick="document.getElementById('connect-form').classList.remove('hidden')" class="px-4 py-2 bg-neutral-50 border border-neutral-300 text-neutral-700 text-sm font-medium rounded-md hover:bg-neutral-100">
+          + Add store
+        </button>
+      </div>
+
+      <% if @shopify_stores.any? %>
+        <div class="space-y-4">
+          <% @shopify_stores.each do |store| %>
+            <div class="border border-neutral-200 rounded-lg p-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="text-sm font-semibold text-neutral-900"><%= store.display_name %></h3>
+                  <p class="text-sm text-neutral-600"><%= store.shop_domain %></p>
+                  <p class="text-xs text-neutral-500 mt-1">
+                    Enabled <%= store.created_at.strftime("%B %d, %Y") %>
+                  </p>
+                </div>
+                <div class="flex items-center gap-3">
+                  <% if store.connected? %>
+                    <span class="inline-flex items-center px-3 py-1 rounded-md bg-green-50 text-green-700 text-xs font-medium">
+                      ✓ Connected
+                    </span>
+                  <% elsif store.syncing? %>
+                    <span class="inline-flex items-center px-3 py-1 rounded-md bg-blue-50 text-blue-700 text-xs font-medium">
+                      ⏳ Syncing...
+                    </span>
+                  <% else %>
+                    <span class="inline-flex items-center px-3 py-1 rounded-md bg-red-50 text-red-700 text-xs font-medium">
+                      ⚠ <%= store.status.titleize %>
+                    </span>
+                  <% end %>
+                  
+                  <% if store.needs_reconnection? %>
+                    <%= link_to "Reconnect", integrations_shopify_connect_path(@advertiser.slug, shop: store.shop_domain), data: { turbo: false }, class: "px-4 py-1 bg-neutral-900 text-white text-xs font-medium rounded-md hover:bg-neutral-800" %>
+                  <% else %>
+                    <%= button_to "Sync Now", integrations_shopify_sync_now_path(@advertiser.slug, store), method: :post, data: { turbo: false }, class: "px-3 py-1 bg-neutral-50 border border-neutral-300 text-neutral-700 text-xs font-medium rounded-md hover:bg-neutral-100" %>
+                    
+                    <%= button_to "Disconnect", integrations_shopify_disconnect_path(@advertiser.slug, store), method: :post, data: { turbo: false, confirm: "Are you sure? Your data won't be deleted." }, class: "px-3 py-1 text-red-600 text-xs font-medium hover:text-red-700" %>
+                  <% end %>
+                </div>
+              </div>
+
+              <% if store.last_sync_at %>
+                <div class="mt-3 pt-3 border-t border-neutral-200">
+                  <p class="text-xs text-neutral-600">
+                    Last synced <%= time_ago_in_words(store.last_sync_at) %> ago
+                    <% if store.last_sync_status %>
+                      · <%= store.last_sync_status.titleize %>
+                    <% end %>
+                  </p>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <!-- Empty State -->
+        <div id="connect-form" class="<%= 'hidden' unless params[:connect] %>">
+          <%= form_with url: integrations_shopify_connect_path(@advertiser.slug), method: :get, data: { turbo: false }, class: "space-y-4" do |f| %>
+            <div>
+              <label class="block text-sm font-medium text-neutral-700 mb-2">Storefront URL</label>
+              <p class="text-xs text-neutral-600 mb-3">Enter the URL for your storefront, including the domain "myshopify.com"</p>
+              <div class="flex gap-3">
+                <%= f.text_field :shop, 
+                  placeholder: "https://yourstore.myshopify.com", 
+                  class: "flex-1 px-4 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-neutral-900 focus:border-transparent" %>
+                <%= f.submit "Install app", class: "px-6 py-2 bg-neutral-900 text-white font-medium rounded-md hover:bg-neutral-800 cursor-pointer" %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+
+        <div id="empty-state" class="<%= 'hidden' if params[:connect] %> text-center py-12">
+          <svg class="w-16 h-16 text-neutral-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+          <h3 class="text-lg font-semibold text-neutral-900 mb-2">No stores connected</h3>
+          <p class="text-sm text-neutral-600 mb-6">Connect your Shopify store to start syncing customer data.</p>
+          <button type="button" onclick="document.getElementById('empty-state').classList.add('hidden'); document.getElementById('connect-form').classList.remove('hidden')" class="px-6 py-2 bg-neutral-900 text-white font-medium rounded-md hover:bg-neutral-800">
+            Connect Shopify Store
+          </button>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Sync History -->
+    <% if @sync_jobs.any? %>
+      <div class="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
+        <h2 class="text-lg font-semibold text-neutral-900 mb-4">Recent Syncs</h2>
+        <div class="space-y-3">
+          <% @sync_jobs.each do |sync_job| %>
+            <div class="flex items-center justify-between py-3 border-b border-neutral-100 last:border-0">
+              <div class="flex-1">
+                <div class="flex items-center gap-3">
+                  <% if sync_job.completed? %>
+                    <span class="text-green-600 text-lg">✓</span>
+                  <% elsif sync_job.failed? %>
+                    <span class="text-red-600 text-lg">✗</span>
+                  <% else %>
+                    <span class="text-blue-600 text-lg">⏳</span>
+                  <% end %>
+                  
+                  <div>
+                    <p class="text-sm font-medium text-neutral-900">
+                      <%= sync_job.shopify_store.display_name %> · <%= sync_job.job_type.titleize %>
+                    </p>
+                    <p class="text-xs text-neutral-600">
+                      <%= sync_job.created_at.strftime("%b %d, %Y at %I:%M %p") %>
+                      <% if sync_job.completed? %>
+                        · <%= sync_job.summary %>
+                      <% elsif sync_job.failed? %>
+                        · Failed: <%= sync_job.error_message&.truncate(50) %>
+                      <% else %>
+                        · <%= sync_job.status.titleize %>
+                      <% end %>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+  </div>
+</div>
+

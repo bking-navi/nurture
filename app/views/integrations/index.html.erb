@@ -1,0 +1,92 @@
+<div class="p-6">
+  <div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-2xl font-semibold text-neutral-900 mb-2">Integrations</h1>
+      <p class="text-sm text-neutral-600">Connect your data sources to power campaigns and analytics.</p>
+    </div>
+
+    <!-- Integrations Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      
+      <!-- Shopify Integration Card -->
+      <%= link_to integrations_shopify_path(@advertiser.slug), class: "block" do %>
+        <div class="bg-white rounded-lg shadow-sm border border-neutral-200 p-6 hover:shadow-md transition-shadow">
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 bg-[#96bf48] rounded-lg flex items-center justify-center">
+                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M16.373 10.723c-.271-.081-.381-.11-.707-.11-.435 0-.518.109-.518.272 0 .218.163.353.544.598.599.38 1.007.788 1.007 1.552 0 1.252-.924 1.966-2.398 1.966-.735 0-1.36-.19-1.741-.381l.272-1.087c.327.163.788.326 1.306.326.381 0 .599-.136.599-.353 0-.19-.163-.353-.544-.598-.599-.38-.98-.761-.98-1.524 0-1.142.897-1.966 2.316-1.966.707 0 1.224.163 1.524.299l-.272 1.006z"/>
+                  <path d="M12 2L2 6v5c0 6.627 4.373 11 10 11s10-4.373 10-11V6l-10-4z"/>
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold text-neutral-900">Shopify</h3>
+                <% if @shopify_stores.any? %>
+                  <span class="text-xs font-medium text-green-600">Connected</span>
+                <% else %>
+                  <span class="text-xs text-neutral-500">Not connected</span>
+                <% end %>
+              </div>
+            </div>
+          </div>
+          
+          <p class="text-sm text-neutral-600 mb-4">
+            Sync customers, orders, and products from your Shopify store.
+          </p>
+          
+          <% if @shopify_stores.any? %>
+            <div class="text-xs text-neutral-500">
+              <%= pluralize(@shopify_stores.count, 'store') %> connected
+            </div>
+          <% else %>
+            <div class="text-sm font-medium text-neutral-900">
+              Connect now →
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
+      <!-- Coming Soon Cards -->
+      <div class="bg-white rounded-lg shadow-sm border border-neutral-200 p-6 opacity-60">
+        <div class="flex items-start justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-neutral-200 rounded-lg flex items-center justify-center">
+              <svg class="w-6 h-6 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-neutral-700">CSV Upload</h3>
+              <span class="text-xs text-neutral-400">Coming Soon</span>
+            </div>
+          </div>
+        </div>
+        <p class="text-sm text-neutral-500">
+          Manually upload customer lists via CSV files.
+        </p>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-sm border border-neutral-200 p-6 opacity-60">
+        <div class="flex items-start justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-neutral-200 rounded-lg flex items-center justify-center">
+              <svg class="w-6 h-6 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-neutral-700">BigCommerce</h3>
+              <span class="text-xs text-neutral-400">Coming Soon</span>
+            </div>
+          </div>
+        </div>
+        <p class="text-sm text-neutral-500">
+          Sync data from your BigCommerce store.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</div>
+

@@ -48,6 +48,21 @@ Rails.application.routes.draw do
   get 'invitations/:token/accept', to: 'settings/team/invitations#accept', as: :accept_invitation
   post 'invitations/:token/accept', to: 'settings/team/invitations#process_acceptance', as: :process_invitation
   
+  # Integrations
+  scope 'advertisers/:advertiser_slug' do
+    get 'integrations', to: 'integrations#index', as: :integrations
+    
+    namespace :integrations do
+      get 'shopify', to: 'shopify#index', as: :shopify
+      get 'shopify/connect', to: 'shopify#connect', as: :shopify_connect
+      post 'shopify/:id/disconnect', to: 'shopify#disconnect', as: :shopify_disconnect
+      post 'shopify/:id/sync', to: 'shopify#sync_now', as: :shopify_sync_now
+    end
+  end
+  
+  # OAuth callback (not scoped to advertiser)
+  get 'auth/shopify/callback', to: 'integrations/shopify#callback', as: :auth_shopify_callback
+  
   # Campaigns
   scope 'advertisers/:advertiser_slug' do
     resources :campaigns do

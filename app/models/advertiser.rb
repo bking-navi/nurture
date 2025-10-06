@@ -5,6 +5,13 @@ class Advertiser < ApplicationRecord
   has_many :invitations, dependent: :destroy
   has_many :campaigns, dependent: :destroy
   has_many :color_palettes, dependent: :destroy
+  
+  # Shopify integration
+  has_many :shopify_stores, dependent: :destroy
+  has_many :contacts, dependent: :destroy
+  has_many :orders, dependent: :destroy
+  has_many :products, dependent: :destroy
+  has_many :sync_jobs, dependent: :destroy
 
   # Serialize settings as JSON for SQLite (PostgreSQL will use jsonb)
   serialize :settings, coder: JSON

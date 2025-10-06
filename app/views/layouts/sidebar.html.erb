@@ -121,12 +121,13 @@
             <span>Analytics</span>
           </a>
 
-          <a href="#" class="flex items-center gap-2 px-1.5 py-1 rounded text-[13px] font-medium tracking-tight text-neutral-700 hover:bg-gray-50 transition-colors">
+          <%= link_to integrations_path(advertiser.slug), 
+              class: "flex items-center gap-2 px-1.5 py-1 rounded text-[13px] font-medium tracking-tight transition-colors #{controller_name == 'integrations' || controller_path == 'integrations/shopify' ? 'bg-neutral-200 text-neutral-900' : 'text-neutral-700 hover:bg-gray-50'}" do %>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"></path>
             </svg>
             <span>Integrations</span>
-          </a>
+          <% end %>
           <% end %>
         </nav>
 

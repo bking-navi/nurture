@@ -1,0 +1,10 @@
+{
+  "name": "windtunnel",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Windtunnel Direct Mail Marketing Platform",
+  "scripts": {
+    "build": "echo 'Rails app - no build needed'"
+  }
+}
+

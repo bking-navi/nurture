@@ -10,7 +10,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_05_125014) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_06_144548) do
+  # These are extensions that must be enabled in order to support this database
+  enable_extension "pg_catalog.plpgsql"
+
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -94,9 +97,11 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_05_125014) do
     t.text "lob_response"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "contact_id"
     t.index ["campaign_id", "created_at"], name: "index_campaign_contacts_on_campaign_id_and_created_at"
     t.index ["campaign_id", "status"], name: "index_campaign_contacts_on_campaign_id_and_status"
     t.index ["campaign_id"], name: "index_campaign_contacts_on_campaign_id"
+    t.index ["contact_id"], name: "index_campaign_contacts_on_contact_id"
     t.index ["lob_postcard_id"], name: "index_campaign_contacts_on_lob_postcard_id", unique: true
   end
 
@@ -147,6 +152,40 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_05_125014) do
     t.index ["slug"], name: "index_color_palettes_on_slug"
   end
 
+  create_table "contacts", force: :cascade do |t|
+    t.bigint "advertiser_id", null: false
+    t.string "source_type", null: false
+    t.bigint "source_id", null: false
+    t.string "external_id", null: false
+    t.string "email"
+    t.string "phone"
+    t.string "first_name"
+    t.string "last_name"
+    t.boolean "accepts_marketing", default: false
+    t.datetime "accepts_marketing_updated_at"
+    t.string "marketing_opt_in_level"
+    t.string "tags", default: [], array: true
+    t.text "note"
+    t.integer "state", default: 0
+    t.decimal "total_spent", precision: 10, scale: 2, default: "0.0"
+    t.integer "orders_count", default: 0
+    t.datetime "last_order_at"
+    t.datetime "first_order_at"
+    t.jsonb "default_address"
+    t.jsonb "addresses", default: []
+    t.jsonb "metadata", default: {}
+    t.datetime "created_at_source"
+    t.datetime "updated_at_source"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["advertiser_id", "email"], name: "index_contacts_on_advertiser_id_and_email"
+    t.index ["advertiser_id", "last_order_at"], name: "index_contacts_on_advertiser_id_and_last_order_at"
+    t.index ["advertiser_id", "total_spent"], name: "index_contacts_on_advertiser_id_and_total_spent"
+    t.index ["advertiser_id"], name: "index_contacts_on_advertiser_id"
+    t.index ["source_type", "source_id", "external_id"], name: "idx_contacts_source_external", unique: true
+    t.index ["tags"], name: "index_contacts_on_tags", using: :gin
+  end
+
   create_table "invitations", force: :cascade do |t|
     t.integer "advertiser_id", null: false
     t.string "email", null: false
@@ -163,6 +202,46 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_05_125014) do
     t.index ["invited_by_id"], name: "index_invitations_on_invited_by_id"
     t.index ["status"], name: "index_invitations_on_status"
     t.index ["token"], name: "index_invitations_on_token", unique: true
+  end
+
+  create_table "orders", force: :cascade do |t|
+    t.bigint "advertiser_id", null: false
+    t.string "source_type", null: false
+    t.bigint "source_id", null: false
+    t.bigint "contact_id"
+    t.string "external_id", null: false
+    t.string "order_number"
+    t.string "email"
+    t.integer "financial_status"
+    t.integer "fulfillment_status"
+    t.string "currency", null: false
+    t.decimal "subtotal", precision: 10, scale: 2
+    t.decimal "total_tax", precision: 10, scale: 2
+    t.decimal "total_discounts", precision: 10, scale: 2
+    t.decimal "total_price", precision: 10, scale: 2, null: false
+    t.jsonb "line_items", default: []
+    t.jsonb "discount_codes", default: []
+    t.jsonb "shipping_address"
+    t.jsonb "billing_address"
+    t.string "customer_locale"
+    t.string "tags", default: [], array: true
+    t.text "note"
+    t.datetime "cancelled_at"
+    t.string "cancel_reason"
+    t.datetime "closed_at"
+    t.jsonb "metadata", default: {}
+    t.datetime "ordered_at", null: false
+    t.datetime "created_at_source"
+    t.datetime "updated_at_source"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["advertiser_id", "contact_id"], name: "index_orders_on_advertiser_id_and_contact_id"
+    t.index ["advertiser_id", "financial_status"], name: "index_orders_on_advertiser_id_and_financial_status"
+    t.index ["advertiser_id", "ordered_at"], name: "index_orders_on_advertiser_id_and_ordered_at"
+    t.index ["advertiser_id"], name: "index_orders_on_advertiser_id"
+    t.index ["contact_id"], name: "index_orders_on_contact_id"
+    t.index ["line_items"], name: "index_orders_on_line_items", using: :gin
+    t.index ["source_type", "source_id", "external_id"], name: "idx_orders_source_external", unique: true
   end
 
   create_table "postcard_templates", force: :cascade do |t|
@@ -187,6 +266,84 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_05_125014) do
     t.index ["category"], name: "index_postcard_templates_on_category"
     t.index ["slug"], name: "index_postcard_templates_on_slug", unique: true
     t.index ["sort_order"], name: "index_postcard_templates_on_sort_order"
+  end
+
+  create_table "products", force: :cascade do |t|
+    t.bigint "advertiser_id", null: false
+    t.string "source_type", null: false
+    t.bigint "source_id", null: false
+    t.string "external_id", null: false
+    t.string "title", null: false
+    t.text "description"
+    t.string "product_type"
+    t.string "vendor"
+    t.string "tags", default: [], array: true
+    t.integer "status", default: 0
+    t.jsonb "variants", default: []
+    t.jsonb "images", default: []
+    t.string "handle"
+    t.datetime "published_at"
+    t.jsonb "metadata", default: {}
+    t.datetime "created_at_source"
+    t.datetime "updated_at_source"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["advertiser_id", "status"], name: "index_products_on_advertiser_id_and_status"
+    t.index ["advertiser_id"], name: "index_products_on_advertiser_id"
+    t.index ["source_type", "source_id", "external_id"], name: "idx_products_source_external", unique: true
+    t.index ["tags"], name: "index_products_on_tags", using: :gin
+  end
+
+  create_table "shopify_stores", force: :cascade do |t|
+    t.bigint "advertiser_id", null: false
+    t.string "shop_domain", null: false
+    t.text "access_token", null: false
+    t.string "access_scopes", default: [], array: true
+    t.string "name"
+    t.integer "status", default: 0, null: false
+    t.datetime "last_sync_at"
+    t.integer "last_sync_status"
+    t.text "last_sync_error"
+    t.integer "sync_frequency", default: 2, null: false
+    t.boolean "initial_sync_completed", default: false
+    t.bigint "shopify_shop_id"
+    t.string "shop_owner"
+    t.string "email"
+    t.string "currency"
+    t.string "timezone"
+    t.string "plan_name"
+    t.boolean "webhooks_installed", default: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["advertiser_id", "shop_domain"], name: "index_shopify_stores_on_advertiser_id_and_shop_domain", unique: true
+    t.index ["advertiser_id"], name: "index_shopify_stores_on_advertiser_id"
+  end
+
+  create_table "sync_jobs", force: :cascade do |t|
+    t.bigint "advertiser_id", null: false
+    t.bigint "shopify_store_id", null: false
+    t.integer "job_type", null: false
+    t.integer "status", default: 0, null: false
+    t.datetime "started_at"
+    t.datetime "completed_at"
+    t.jsonb "records_processed", default: {}
+    t.jsonb "records_created", default: {}
+    t.jsonb "records_updated", default: {}
+    t.jsonb "records_failed", default: {}
+    t.text "error_message"
+    t.jsonb "error_details", default: {}
+    t.integer "estimated_duration"
+    t.integer "actual_duration"
+    t.integer "triggered_by", default: 0
+    t.bigint "triggered_by_user_id"
+    t.string "job_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["advertiser_id"], name: "index_sync_jobs_on_advertiser_id"
+    t.index ["shopify_store_id", "created_at"], name: "index_sync_jobs_on_shopify_store_id_and_created_at"
+    t.index ["shopify_store_id"], name: "index_sync_jobs_on_shopify_store_id"
+    t.index ["status", "created_at"], name: "index_sync_jobs_on_status_and_created_at"
+    t.index ["triggered_by_user_id"], name: "index_sync_jobs_on_triggered_by_user_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -220,11 +377,20 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_05_125014) do
   add_foreign_key "advertiser_memberships", "advertisers"
   add_foreign_key "advertiser_memberships", "users"
   add_foreign_key "campaign_contacts", "campaigns"
+  add_foreign_key "campaign_contacts", "contacts"
   add_foreign_key "campaigns", "advertisers"
   add_foreign_key "campaigns", "color_palettes", on_delete: :nullify
   add_foreign_key "campaigns", "postcard_templates", on_delete: :nullify
   add_foreign_key "campaigns", "users", column: "created_by_user_id"
   add_foreign_key "color_palettes", "advertisers", on_delete: :cascade
+  add_foreign_key "contacts", "advertisers"
   add_foreign_key "invitations", "advertisers"
   add_foreign_key "invitations", "users", column: "invited_by_id"
+  add_foreign_key "orders", "advertisers"
+  add_foreign_key "orders", "contacts"
+  add_foreign_key "products", "advertisers"
+  add_foreign_key "shopify_stores", "advertisers"
+  add_foreign_key "sync_jobs", "advertisers"
+  add_foreign_key "sync_jobs", "shopify_stores"
+  add_foreign_key "sync_jobs", "users", column: "triggered_by_user_id"
 end
