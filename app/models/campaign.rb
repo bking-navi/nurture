@@ -5,6 +5,10 @@ class Campaign < ApplicationRecord
   belongs_to :color_palette, optional: true
   has_many :campaign_contacts, dependent: :destroy
   
+  # Active Storage for PDF uploads
+  has_one_attached :front_pdf
+  has_one_attached :back_pdf
+  
   # Serialize JSON fields for SQLite compatibility
   serialize :merge_variables, coder: JSON
   serialize :template_data, coder: JSON
@@ -56,8 +60,10 @@ class Campaign < ApplicationRecord
   
   def has_design?
     # Campaign has design if it has either:
-    # 1. New custom template system (postcard_template_id)
-    # 2. Old simple system (template_id or front_message/back_message)
+    # 1. PDF uploads (front_pdf and back_pdf)
+    # 2. New custom template system (postcard_template_id)
+    # 3. Old simple system (template_id or front_message/back_message)
+    (front_pdf.attached? && back_pdf.attached?) ||
     postcard_template_id.present? || 
     template_id.present? || 
     front_message.present? || 

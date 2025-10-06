@@ -12,27 +12,51 @@ class LobClient
     def create_postcard(campaign_contact:, campaign:, from_address:)
       postcards_api = Lob::PostcardsApi.new(api_client)
       
-      # Build contact-specific data for template rendering
-      contact_data = {
-        first_name: campaign_contact.first_name,
-        last_name: campaign_contact.last_name,
-        full_name: campaign_contact.full_name,
-        company: campaign_contact.company,
-        email: campaign_contact.email,
-        phone: campaign_contact.phone
-      }
-      
-      # Render HTML using campaign templates or fallback to simple messages
-      front_html = if campaign.using_template?
-        campaign.render_front_html(contact_data)
+      # Determine front and back content (PDF URLs or HTML)
+      if campaign.front_pdf.attached? && campaign.back_pdf.attached?
+        # Use PDF files - generate publicly accessible URLs
+        host_url = ENV['APP_URL'] || ENV['NGROK_URL'] || 'http://localhost:3000'
+        
+        # Check if we're using localhost (which Lob can't access)
+        if Rails.env.development? && host_url.include?('localhost')
+          raise "PDF uploads require a publicly accessible URL. Please either:\n" \
+                "1. Set up ngrok: `ngrok http 3000` and set NGROK_URL=https://your-ngrok-url.ngrok-free.app\n" \
+                "2. Deploy to production and use PDFs there\n" \
+                "3. Use HTML templates for local testing instead"
+        end
+        
+        front_content = Rails.application.routes.url_helpers.rails_blob_url(
+          campaign.front_pdf,
+          host: host_url
+        )
+        back_content = Rails.application.routes.url_helpers.rails_blob_url(
+          campaign.back_pdf,
+          host: host_url
+        )
       else
-        "<html><body><h1>#{campaign.front_message || 'Hello!'}</h1></body></html>"
-      end
-      
-      back_html = if campaign.using_template?
-        campaign.render_back_html(contact_data)
-      else
-        "<html><body><p>#{campaign.back_message || 'Thank you!'}</p></body></html>"
+        # Use HTML templates
+        # Build contact-specific data for template rendering
+        contact_data = {
+          first_name: campaign_contact.first_name,
+          last_name: campaign_contact.last_name,
+          full_name: campaign_contact.full_name,
+          company: campaign_contact.company,
+          email: campaign_contact.email,
+          phone: campaign_contact.phone
+        }
+        
+        # Render HTML using campaign templates or fallback to simple messages
+        front_content = if campaign.using_template?
+          campaign.render_front_html(contact_data)
+        else
+          "<html><body><h1>#{campaign.front_message || 'Hello!'}</h1></body></html>"
+        end
+        
+        back_content = if campaign.using_template?
+          campaign.render_back_html(contact_data)
+        else
+          "<html><body><p>#{campaign.back_message || 'Thank you!'}</p></body></html>"
+        end
       end
       
       postcard_editable = Lob::PostcardEditable.new(
@@ -48,8 +72,8 @@ class LobClient
           address_country: campaign_contact.address_country
         ),
         from: from_address,
-        front: front_html,
-        back: back_html,
+        front: front_content,
+        back: back_content,
         merge_variables: build_merge_variables(campaign, campaign_contact),
         size: "6x9",
         mail_type: "usps_first_class",
