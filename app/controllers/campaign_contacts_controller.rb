@@ -252,6 +252,115 @@ class CampaignContactsController < ApplicationController
     end
   end
   
+  def preview_contacts
+    # Build query for contacts with US addresses
+    contacts = @advertiser.contacts
+                         .where("default_address->>'address1' IS NOT NULL")
+                         .where("default_address->>'city' IS NOT NULL")
+                         .where("default_address->>'state' IS NOT NULL")
+                         .where("default_address->>'zip' IS NOT NULL")
+                         .where("default_address->>'country_code' IN ('US', 'USA') OR default_address IS NULL")
+    
+    # Apply source filter
+    if params[:source].present?
+      case params[:source]
+      when 'shopify'
+        contacts = contacts.where(source_type: 'ShopifyStore')
+      when 'manual'
+        contacts = contacts.where(source_type: 'Advertiser')
+      end
+    end
+    
+    # Apply search filter
+    if params[:search].present?
+      search_term = "%#{params[:search]}%"
+      contacts = contacts.where(
+        "first_name ILIKE ? OR last_name ILIKE ? OR email ILIKE ?",
+        search_term, search_term, search_term
+      )
+    end
+    
+    count = contacts.count
+    
+    render json: { count: count }
+  end
+  
+  def import_contacts
+    # Build query for contacts with US addresses
+    contacts = @advertiser.contacts
+                         .where("default_address->>'address1' IS NOT NULL")
+                         .where("default_address->>'city' IS NOT NULL")
+                         .where("default_address->>'state' IS NOT NULL")
+                         .where("default_address->>'zip' IS NOT NULL")
+                         .where("default_address->>'country_code' IN ('US', 'USA') OR default_address IS NULL")
+    
+    # Apply source filter
+    if params[:source].present?
+      case params[:source]
+      when 'shopify'
+        contacts = contacts.where(source_type: 'ShopifyStore')
+      when 'manual'
+        contacts = contacts.where(source_type: 'Advertiser')
+      end
+    end
+    
+    # Apply search filter
+    if params[:search].present?
+      search_term = "%#{params[:search]}%"
+      contacts = contacts.where(
+        "first_name ILIKE ? OR last_name ILIKE ? OR email ILIKE ?",
+        search_term, search_term, search_term
+      )
+    end
+    
+    imported_count = 0
+    skipped_count = 0
+    errors = []
+    
+    contacts.find_each do |contact|
+      address = contact.default_address
+      
+      # Skip if already added to this campaign
+      if @campaign.campaign_contacts.exists?(contact: contact)
+        skipped_count += 1
+        next
+      end
+      
+      # Create CampaignContact
+      campaign_contact = @campaign.campaign_contacts.build(
+        contact: contact,
+        first_name: contact.first_name,
+        last_name: contact.last_name,
+        email: contact.email,
+        phone: contact.phone,
+        address_line1: address['address1'],
+        address_line2: address['address2'],
+        address_city: address['city'],
+        address_state: address['state'],
+        address_zip: address['zip']
+      )
+      
+      if campaign_contact.save
+        imported_count += 1
+      else
+        errors << "#{contact.full_name}: #{campaign_contact.errors.full_messages.join(', ')}"
+      end
+    end
+    
+    # Update campaign counts
+    @campaign.update_counts!
+    
+    if imported_count > 0
+      message = "Successfully imported #{imported_count} contact#{'s' unless imported_count == 1}"
+      message += " (#{skipped_count} already added)" if skipped_count > 0
+      redirect_to edit_campaign_path(@advertiser.slug, @campaign, tab: 'recipients'),
+                  notice: message
+    else
+      redirect_to edit_campaign_path(@advertiser.slug, @campaign, tab: 'recipients'),
+                  alert: "No contacts found matching your criteria."
+    end
+  end
+  
   private
   
   def parse_lob_error(error)

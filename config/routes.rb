@@ -90,6 +90,8 @@ Rails.application.routes.draw do
           get :download_sample
           get :preview_shopify
           post :import_shopify
+          get :preview_contacts
+          post :import_contacts
         end
       end
     end
