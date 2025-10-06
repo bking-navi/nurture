@@ -1,0 +1,9 @@
+#!/bin/bash
+set -e
+
+# Start Solid Queue worker in background
+bundle exec rake solid_queue:start &
+
+# Start the web server (this keeps the container alive)
+exec ./bin/thrust ./bin/rails server
+
