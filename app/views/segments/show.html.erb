@@ -134,6 +134,62 @@
       </div>
     <% end %>
     
+    <% if @segment.filters['rfm_segment'].present? %>
+      <div>
+        <dt class="text-sm font-medium text-gray-500">RFM Segment</dt>
+        <dd class="mt-1 text-sm text-gray-900"><%= @segment.filters['rfm_segment'] %></dd>
+      </div>
+    <% end %>
+    
+    <% if @segment.filters['min_orders'].present? %>
+      <div>
+        <dt class="text-sm font-medium text-gray-500">Min Orders</dt>
+        <dd class="mt-1 text-sm text-gray-900"><%= @segment.filters['min_orders'] %></dd>
+      </div>
+    <% end %>
+    
+    <% if @segment.filters['max_orders'].present? %>
+      <div>
+        <dt class="text-sm font-medium text-gray-500">Max Orders</dt>
+        <dd class="mt-1 text-sm text-gray-900"><%= @segment.filters['max_orders'] %></dd>
+      </div>
+    <% end %>
+    
+    <% if @segment.filters['min_spent'].present? %>
+      <div>
+        <dt class="text-sm font-medium text-gray-500">Min Total Spent</dt>
+        <dd class="mt-1 text-sm text-gray-900">$<%= number_with_precision(@segment.filters['min_spent'].to_f, precision: 2, delimiter: ',') %></dd>
+      </div>
+    <% end %>
+    
+    <% if @segment.filters['max_spent'].present? %>
+      <div>
+        <dt class="text-sm font-medium text-gray-500">Max Total Spent</dt>
+        <dd class="mt-1 text-sm text-gray-900">$<%= number_with_precision(@segment.filters['max_spent'].to_f, precision: 2, delimiter: ',') %></dd>
+      </div>
+    <% end %>
+    
+    <% if @segment.filters['min_avg_order'].present? %>
+      <div>
+        <dt class="text-sm font-medium text-gray-500">Min Avg Order Value</dt>
+        <dd class="mt-1 text-sm text-gray-900">$<%= number_with_precision(@segment.filters['min_avg_order'].to_f, precision: 2, delimiter: ',') %></dd>
+      </div>
+    <% end %>
+    
+    <% if @segment.filters['days_since_last_order'].present? %>
+      <div>
+        <dt class="text-sm font-medium text-gray-500">Days Since Last Order</dt>
+        <dd class="mt-1 text-sm text-gray-900"><%= @segment.filters['days_since_last_order'] %>+ days</dd>
+      </div>
+    <% end %>
+    
+    <% if @segment.filters['has_tag'].present? %>
+      <div>
+        <dt class="text-sm font-medium text-gray-500">Has Tag</dt>
+        <dd class="mt-1 text-sm text-gray-900"><%= @segment.filters['has_tag'] %></dd>
+      </div>
+    <% end %>
+    
     <% if @segment.filters.values.compact.blank? %>
       <div class="sm:col-span-2">
         <p class="text-sm text-gray-500">No filters applied - includes all contacts with valid US addresses</p>
