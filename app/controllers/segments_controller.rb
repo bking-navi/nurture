@@ -55,7 +55,12 @@ class SegmentsController < ApplicationController
   
   def preview
     # Return count of contacts matching current filter params
-    filters = params[:filters]&.permit(:source, :search, :city, :state, :zip).to_h || {}
+    filters = params[:filters]&.permit(
+      :source, :search, :city, :state, :zip,
+      :rfm_segment, :min_orders, :max_orders,
+      :min_spent, :max_spent, :min_avg_order,
+      :days_since_last_order, :has_tag
+    ).to_h || {}
     
     temp_segment = @advertiser.segments.build(filters: filters)
     count = temp_segment.contacts.count
