@@ -1,0 +1,71 @@
+<div class="bg-white shadow sm:rounded-lg p-6" data-controller="segment-builder" data-segment-builder-preview-url-value="<%= preview_url %>">
+  <h2 class="text-lg font-medium text-gray-900 mb-4">Filter Criteria</h2>
+  
+  <div class="space-y-4">
+    <%= f.fields_for :filters, OpenStruct.new(segment.filters || {}) do |ff| %>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <%= ff.label :source, "Source", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= ff.select :source, 
+              [["All Sources", ""], ["Shopify", "shopify"], ["Manual/CSV", "manual"]],
+              { selected: segment.filters&.dig('source') },
+              { class: "mt-1 block w-full shadow-sm focus:ring-gray-700 focus:border-gray-700 sm:text-sm border-gray-300 rounded-md", data: { action: "change->segment-builder#updatePreview", segment_builder_target: "filter" } } %>
+        </div>
+        
+        <div>
+          <%= ff.label :search, "Search", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= ff.text_field :search,
+              value: segment.filters&.dig('search'),
+              placeholder: "Search by name or email",
+              class: "mt-1 block w-full shadow-sm focus:ring-gray-700 focus:border-gray-700 sm:text-sm border-gray-300 rounded-md",
+              data: { action: "input->segment-builder#updatePreview", segment_builder_target: "filter" } %>
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div>
+          <%= ff.label :city, "City", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= ff.text_field :city,
+              value: segment.filters&.dig('city'),
+              placeholder: "e.g., San Francisco",
+              class: "mt-1 block w-full shadow-sm focus:ring-gray-700 focus:border-gray-700 sm:text-sm border-gray-300 rounded-md",
+              data: { action: "input->segment-builder#updatePreview", segment_builder_target: "filter" } %>
+        </div>
+        
+        <div>
+          <%= ff.label :state, "State", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= ff.text_field :state,
+              value: segment.filters&.dig('state'),
+              placeholder: "e.g., CA",
+              maxlength: 2,
+              class: "mt-1 block w-full shadow-sm focus:ring-gray-700 focus:border-gray-700 sm:text-sm border-gray-300 rounded-md uppercase",
+              data: { action: "input->segment-builder#updatePreview", segment_builder_target: "filter" } %>
+        </div>
+        
+        <div>
+          <%= ff.label :zip, "ZIP Code", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= ff.text_field :zip,
+              value: segment.filters&.dig('zip'),
+              placeholder: "e.g., 94102",
+              class: "mt-1 block w-full shadow-sm focus:ring-gray-700 focus:border-gray-700 sm:text-sm border-gray-300 rounded-md",
+              data: { action: "input->segment-builder#updatePreview", segment_builder_target: "filter" } %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Preview Section -->
+  <div class="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
+    <div class="flex items-center justify-between mb-3">
+      <h4 class="text-sm font-semibold text-gray-900">Matching Contacts</h4>
+      <button type="button" data-action="click->segment-builder#updatePreview" class="text-sm text-gray-950 hover:text-gray-900 font-medium">
+        Refresh Preview
+      </button>
+    </div>
+    
+    <div data-segment-builder-target="preview" class="text-center py-4">
+      <p class="text-sm text-gray-500">Click "Refresh Preview" to see matching contacts</p>
+    </div>
+  </div>
+</div>
+

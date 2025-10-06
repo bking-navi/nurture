@@ -1,6 +1,12 @@
 <div class="space-y-6">
   <!-- Upload/Add Options -->
   <div class="flex flex-wrap gap-3">
+    <button type="button" onclick="toggleSection('segment-select-section')" class="inline-flex items-center px-4 py-2 border border-purple-300 shadow-sm text-sm font-medium rounded-md text-gray-900 bg-purple-50 hover:bg-purple-100">
+      <svg class="-ml-1 mr-2 h-5 w-5 text-gray-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+      </svg>
+      Select from Segment
+    </button>
     <button type="button" onclick="toggleSection('contacts-select-section')" class="inline-flex items-center px-4 py-2 border border-indigo-300 shadow-sm text-sm font-medium rounded-md text-gray-900 bg-indigo-50 hover:bg-indigo-100">
       <svg class="-ml-1 mr-2 h-5 w-5 text-gray-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -25,7 +31,7 @@
   <script>
     function toggleSection(sectionId) {
       // Hide all sections
-      ['contacts-select-section', 'csv-upload-section', 'manual-add-section'].forEach(id => {
+      ['segment-select-section', 'contacts-select-section', 'csv-upload-section', 'manual-add-section'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.add('hidden');
       });
@@ -34,6 +40,85 @@
       if (section) section.classList.remove('hidden');
     }
   </script>
+
+  <!-- Segment Selection Section -->
+  <div id="segment-select-section" class="hidden border-2 border-dashed border-purple-200 bg-purple-50/50 rounded-lg p-6">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
+        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+        </svg>
+      </div>
+      <h3 class="text-lg font-medium text-gray-900">Select from Saved Segment</h3>
+    </div>
+
+    <% segments = advertiser.segments %>
+    
+    <% if segments.none? %>
+      <div class="text-center py-8">
+        <p class="text-sm text-gray-600 mb-4">No segments created yet.</p>
+        <%= link_to "Create a Segment", new_segment_path(advertiser.slug), class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gray-950 hover:bg-gray-900" %>
+      </div>
+    <% else %>
+      <%= form_with url: import_segment_campaign_campaign_contacts_path(advertiser.slug, campaign), method: :post, data: { turbo: false } do |f| %>
+        <div class="space-y-4">
+          <div>
+            <%= f.label :segment_id, "Choose a Segment", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= f.select :segment_id, 
+                options_from_collection_for_select(segments, :id, :name),
+                { include_blank: "Select a segment..." },
+                class: "mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-gray-700 focus:border-gray-700 sm:text-sm rounded-md",
+                onchange: "displaySegmentInfo(this.value)" %>
+          </div>
+
+          <div id="segment-info" class="hidden bg-white rounded-lg border border-gray-200 p-4">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <svg class="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <div class="ml-4">
+                <div class="text-2xl font-bold text-gray-900" id="segment-contact-count">0</div>
+                <div class="text-sm text-gray-500">Contacts in this segment</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+            <button type="button" onclick="toggleSection('segment-select-section')" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+              Cancel
+            </button>
+            <%= f.submit "Import from Segment", 
+                class: "inline-flex items-center px-6 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gray-950 hover:bg-gray-900",
+                id: "import-segment-btn" %>
+          </div>
+        </div>
+      <% end %>
+
+      <script>
+        const segmentData = <%= raw segments.map { |s| { id: s.id, contact_count: s.contact_count || 0 } }.to_json %>;
+        
+        function displaySegmentInfo(segmentId) {
+          const infoDiv = document.getElementById('segment-info');
+          const countDiv = document.getElementById('segment-contact-count');
+          const btn = document.getElementById('import-segment-btn');
+          
+          if (segmentId && segmentId !== '') {
+            const segment = segmentData.find(s => s.id === parseInt(segmentId));
+            if (segment) {
+              countDiv.textContent = segment.contact_count.toLocaleString();
+              infoDiv.classList.remove('hidden');
+              btn.disabled = segment.contact_count === 0;
+            }
+          } else {
+            infoDiv.classList.add('hidden');
+            btn.disabled = true;
+          }
+        }
+      </script>
+    <% end %>
+  </div>
 
   <!-- Contacts Selection Section -->
   <div id="contacts-select-section" class="hidden border-2 border-dashed border-indigo-200 bg-indigo-50/50 rounded-lg p-6">

@@ -361,6 +361,58 @@ class CampaignContactsController < ApplicationController
     end
   end
   
+  def import_segment
+    segment = @advertiser.segments.find(params[:segment_id])
+    contacts = segment.contacts
+    
+    imported_count = 0
+    skipped_count = 0
+    errors = []
+    
+    contacts.find_each do |contact|
+      address = contact.default_address
+      
+      # Skip if already added to this campaign
+      if @campaign.campaign_contacts.exists?(contact: contact)
+        skipped_count += 1
+        next
+      end
+      
+      # Create CampaignContact
+      campaign_contact = @campaign.campaign_contacts.build(
+        contact: contact,
+        first_name: contact.first_name,
+        last_name: contact.last_name,
+        email: contact.email,
+        phone: contact.phone,
+        address_line1: address['address1'],
+        address_line2: address['address2'],
+        address_city: address['city'],
+        address_state: address['state'],
+        address_zip: address['zip']
+      )
+      
+      if campaign_contact.save
+        imported_count += 1
+      else
+        errors << "#{contact.full_name}: #{campaign_contact.errors.full_messages.join(', ')}"
+      end
+    end
+    
+    # Update campaign counts
+    @campaign.update_counts!
+    
+    if imported_count > 0
+      message = "Successfully imported #{imported_count} contact#{'s' unless imported_count == 1} from segment '#{segment.name}'"
+      message += " (#{skipped_count} already added)" if skipped_count > 0
+      redirect_to edit_campaign_path(@advertiser.slug, @campaign, tab: 'recipients'),
+                  notice: message
+    else
+      redirect_to edit_campaign_path(@advertiser.slug, @campaign, tab: 'recipients'),
+                  alert: "No contacts found in segment '#{segment.name}'."
+    end
+  end
+  
   private
   
   def parse_lob_error(error)

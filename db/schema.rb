@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_06_182522) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_06_195047) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -294,6 +294,17 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_06_182522) do
     t.index ["tags"], name: "index_products_on_tags", using: :gin
   end
 
+  create_table "segments", force: :cascade do |t|
+    t.bigint "advertiser_id", null: false
+    t.string "name"
+    t.text "description"
+    t.text "filters"
+    t.integer "contact_count"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["advertiser_id"], name: "index_segments_on_advertiser_id"
+  end
+
   create_table "shopify_stores", force: :cascade do |t|
     t.bigint "advertiser_id", null: false
     t.string "shop_domain", null: false
@@ -510,6 +521,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_06_182522) do
   add_foreign_key "orders", "advertisers"
   add_foreign_key "orders", "contacts"
   add_foreign_key "products", "advertisers"
+  add_foreign_key "segments", "advertisers"
   add_foreign_key "shopify_stores", "advertisers"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

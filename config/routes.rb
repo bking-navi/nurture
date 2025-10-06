@@ -72,6 +72,13 @@ Rails.application.routes.draw do
     post 'audience/import_csv', to: 'contacts#import_csv', as: :import_contacts_csv
     get 'audience/download_sample', to: 'contacts#download_sample', as: :download_contacts_sample
     
+    # Segments
+    resources :segments, path: 'audience/segments' do
+      collection do
+        get :preview
+      end
+    end
+    
     resources :campaigns do
       member do
         post :send_now
@@ -92,6 +99,7 @@ Rails.application.routes.draw do
           post :import_shopify
           get :preview_contacts
           post :import_contacts
+          post :import_segment
         end
       end
     end
