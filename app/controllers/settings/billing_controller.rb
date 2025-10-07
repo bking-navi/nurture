@@ -27,14 +27,24 @@ class Settings::BillingController < ApplicationController
     amount_cents = (amount_dollars * 100).to_i
     payment_method_id = params[:payment_method_id]
     
+    Rails.logger.info "=== CREATE DEPOSIT ==="
+    Rails.logger.info "Amount: $#{amount_dollars} (#{amount_cents} cents)"
+    Rails.logger.info "Payment Method ID: #{payment_method_id}"
+    Rails.logger.info "Save Payment Method: #{params[:save_payment_method]}"
+    
+    if payment_method_id.blank?
+      flash[:error] = "Payment method is required"
+      redirect_to settings_new_deposit_path(@advertiser.slug) and return
+    end
+    
     if amount_cents < 500
       flash[:error] = "Minimum deposit is $5"
-      redirect_to new_deposit_path(@advertiser.slug) and return
+      redirect_to settings_new_deposit_path(@advertiser.slug) and return
     end
     
     if amount_cents > 1_000_000
       flash[:error] = "Maximum deposit is $10,000"
-      redirect_to new_deposit_path(@advertiser.slug) and return
+      redirect_to settings_new_deposit_path(@advertiser.slug) and return
     end
     
     service = StripePaymentService.new(@advertiser)
@@ -46,6 +56,8 @@ class Settings::BillingController < ApplicationController
         current_user,
         auto_recharge: false
       )
+      
+      Rails.logger.info "Payment Intent created: #{intent.id} with status #{intent.status}"
       
       # If this is their first payment method, save it
       if !@advertiser.payment_method_on_file? && params[:save_payment_method] == 'true'
@@ -61,7 +73,14 @@ class Settings::BillingController < ApplicationController
       
       redirect_to settings_billing_path(@advertiser.slug)
     rescue StripePaymentService::PaymentError => e
+      Rails.logger.error "Payment failed: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
       flash[:error] = "Payment failed: #{e.message}"
+      redirect_to settings_new_deposit_path(@advertiser.slug)
+    rescue => e
+      Rails.logger.error "Unexpected error in create_deposit: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
+      flash[:error] = "An unexpected error occurred: #{e.message}"
       redirect_to settings_new_deposit_path(@advertiser.slug)
     end
   end

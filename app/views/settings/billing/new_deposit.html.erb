@@ -141,6 +141,7 @@
       amount: 10000, // Default $100, will update dynamically
       currency: 'usd',
       paymentMethodTypes: ['card', 'us_bank_account'],
+      paymentMethodCreation: 'manual', // We'll create the payment method ourselves
     });
   
   // Create Payment Element (supports Card + ACH)
@@ -201,14 +202,18 @@
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     
+    console.log('Form submit started');
+    
     // Disable submit button
     submitButton.disabled = true;
     buttonText.textContent = 'Processing...';
     spinner.classList.remove('hidden');
     
     // Submit payment to Stripe
+    console.log('Submitting elements to Stripe...');
     const { error: submitError } = await elements.submit();
     if (submitError) {
+      console.error('Elements submit error:', submitError);
       document.getElementById('payment-errors').textContent = submitError.message;
       submitButton.disabled = false;
       buttonText.textContent = 'Add Funds';
@@ -217,19 +222,23 @@
     }
     
     // Create payment method
+    console.log('Creating payment method...');
     const { paymentMethod, error } = await stripe.createPaymentMethod({
       elements,
     });
     
     if (error) {
       // Show error
+      console.error('Payment method creation error:', error);
       document.getElementById('payment-errors').textContent = error.message;
       submitButton.disabled = false;
       buttonText.textContent = 'Add Funds';
       spinner.classList.add('hidden');
     } else {
       // Set payment method ID and submit form
+      console.log('Payment method created:', paymentMethod.id, 'Type:', paymentMethod.type);
       document.getElementById('payment-method-id').value = paymentMethod.id;
+      console.log('Submitting form to server...');
       form.submit();
     }
   });
