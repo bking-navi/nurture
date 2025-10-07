@@ -8,7 +8,9 @@ class CampaignsController < ApplicationController
   layout "sidebar"
   
   def index
-    @campaigns = @advertiser.campaigns.recent
+    @campaigns = @advertiser.campaigns
+                            .includes(:created_by_user, :creative)
+                            .recent
     
     # Filter by status if provided
     if params[:status].present?
