@@ -1,0 +1,170 @@
+<div class="max-w-2xl mx-auto">
+  <!-- Header -->
+  <div class="mb-8">
+    <%= link_to settings_billing_path(@advertiser.slug), class: "text-sm text-gray-600 hover:text-gray-900 flex items-center mb-4" do %>
+      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+      </svg>
+      Back to Billing
+    <% end %>
+    
+    <h1 class="text-3xl font-bold text-gray-900">Payment Method</h1>
+    <p class="mt-1 text-sm text-gray-500">Update your default payment method</p>
+  </div>
+
+  <!-- Current Payment Method (if exists) -->
+  <% if @advertiser.payment_method_on_file? %>
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+      <h2 class="text-sm font-medium text-gray-700 mb-2">Current Payment Method</h2>
+      <div class="flex items-center justify-between bg-gray-50 rounded-lg p-4">
+        <div class="flex items-center">
+          <svg class="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+          </svg>
+          <span class="ml-3 text-gray-900 font-medium"><%= @current_payment_method %></span>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Update Payment Method Form -->
+  <div class="bg-white shadow rounded-lg overflow-hidden">
+    <div class="px-6 py-8">
+      <%= form_with url: settings_update_payment_method_path(@advertiser.slug), method: :patch, id: "payment-method-form", class: "space-y-6" do |f| %>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            <%= @advertiser.payment_method_on_file? ? 'New Payment Method' : 'Add Payment Method' %>
+          </label>
+          <div id="card-element" class="p-3 border border-gray-300 rounded-md">
+            <!-- Stripe Card Element will be inserted here -->
+          </div>
+          <div id="card-errors" class="mt-2 text-sm text-red-600" role="alert"></div>
+        </div>
+
+        <%= f.hidden_field :payment_method_id, id: "payment-method-id" %>
+        
+        <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+          <%= link_to "Cancel", settings_billing_path(@advertiser.slug), class: "text-sm text-gray-600 hover:text-gray-900" %>
+          <button type="submit" id="submit-button" class="inline-flex items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
+            <span id="button-text"><%= @advertiser.payment_method_on_file? ? 'Update' : 'Save' %> Payment Method</span>
+            <svg class="hidden animate-spin ml-2 h-4 w-4 text-white" id="spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Security Info -->
+  <div class="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
+    <div class="flex">
+      <div class="flex-shrink-0">
+        <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path>
+        </svg>
+      </div>
+      <div class="ml-3">
+        <h3 class="text-sm font-medium text-gray-900">Secure & Encrypted</h3>
+        <div class="mt-1 text-sm text-gray-600">
+          <p>Your payment information is encrypted and securely processed by Stripe. We never store your full card details.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+  function initializeStripePaymentMethod() {
+    // Check if we're on the right page
+    const cardElement = document.getElementById('card-element');
+    if (!cardElement) return;
+    
+    // Skip if already initialized
+    if (cardElement.dataset.stripeInitialized === 'true') return;
+    
+    // Wait for Stripe to be available
+    if (typeof Stripe === 'undefined') {
+      setTimeout(initializeStripePaymentMethod, 100);
+      return;
+    }
+    
+    // Initialize Stripe
+    const stripe = Stripe('<%= @publishable_key %>');
+    const elements = stripe.elements();
+  
+  // Create card element
+  const cardField = elements.create('card', {
+    style: {
+      base: {
+        fontSize: '16px',
+        color: '#32325d',
+        '::placeholder': {
+          color: '#aab7c4',
+        },
+      },
+      invalid: {
+        color: '#fa755a',
+        iconColor: '#fa755a',
+      },
+    },
+  });
+  
+  cardField.mount('#card-element');
+  cardElement.dataset.stripeInitialized = 'true';
+  
+  // Handle validation errors
+  cardField.on('change', (event) => {
+    const displayError = document.getElementById('card-errors');
+    if (event.error) {
+      displayError.textContent = event.error.message;
+    } else {
+      displayError.textContent = '';
+    }
+  });
+  
+  // Handle form submission
+  const form = document.getElementById('payment-method-form');
+  const submitButton = document.getElementById('submit-button');
+  const buttonText = document.getElementById('button-text');
+  const spinner = document.getElementById('spinner');
+  
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    
+    // Disable submit button
+    submitButton.disabled = true;
+    buttonText.textContent = 'Processing...';
+    spinner.classList.remove('hidden');
+    
+    // Create payment method
+    const { paymentMethod, error } = await stripe.createPaymentMethod({
+      type: 'card',
+      card: cardField,
+    });
+    
+    if (error) {
+      // Show error
+      document.getElementById('card-errors').textContent = error.message;
+      submitButton.disabled = false;
+      buttonText.textContent = '<%= @advertiser.payment_method_on_file? ? 'Update' : 'Save' %> Payment Method';
+      spinner.classList.add('hidden');
+    } else {
+      // Set payment method ID and submit form
+      document.getElementById('payment-method-id').value = paymentMethod.id;
+      form.submit();
+    }
+  });
+  }
+  
+  // Initialize on page load and Turbo navigation
+  document.addEventListener('turbo:load', initializeStripePaymentMethod);
+  document.addEventListener('DOMContentLoaded', initializeStripePaymentMethod);
+  
+  // Also try to initialize immediately in case we're already loaded
+  initializeStripePaymentMethod();
+</script>
+

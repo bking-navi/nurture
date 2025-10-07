@@ -1,0 +1,22 @@
+Hello <%= @owner.display_name %>,
+
+⚠️ IMPORTANT: Your auto-recharge for <%= @advertiser.name %> has failed.
+
+Current Balance: $<%= number_with_precision(@balance, precision: 2) %>
+Error: <%= @error %>
+
+Auto-recharge has been automatically disabled to prevent repeated failures.
+
+ACTION REQUIRED:
+1. Update your payment method
+2. Manually add funds to your account
+3. Re-enable auto-recharge if desired
+
+Manage your billing:
+<%= settings_billing_url(@advertiser.slug, host: ENV.fetch('APP_HOST', 'localhost:3000'), protocol: Rails.env.production? ? 'https' : 'http') %>
+
+Without sufficient balance, your campaigns cannot be sent.
+
+Best regards,
+The Nurture Team
+

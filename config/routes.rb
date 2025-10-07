@@ -41,6 +41,16 @@ Rails.application.routes.draw do
     get 'settings', to: 'settings#index', as: :advertiser_settings
     
     namespace :settings do
+      # Billing routes
+      get 'billing', to: 'billing#index', as: :billing
+      get 'billing/add-funds', to: 'billing#new_deposit', as: :new_deposit
+      post 'billing/add-funds', to: 'billing#create_deposit', as: :create_deposit
+      patch 'billing/settings', to: 'billing#update_settings', as: :update_billing_settings
+      
+      # Payment methods
+      get 'billing/payment-method', to: 'payment_methods#edit', as: :edit_payment_method
+      patch 'billing/payment-method', to: 'payment_methods#update', as: :update_payment_method
+      
       # Team management
       get 'team', to: 'team#index', as: :team
       patch 'team/members/:id/role', to: 'team#update_role', as: :update_member_role
@@ -147,4 +157,7 @@ Rails.application.routes.draw do
       end
     end
   end
+  
+  # Stripe Webhooks
+  post 'webhooks/stripe', to: 'webhooks#stripe'
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_07_120532) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_07_164900) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -82,8 +82,23 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_07_120532) do
     t.text "settings"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "balance_cents", default: 0, null: false
+    t.string "stripe_customer_id"
+    t.string "payment_method_last4"
+    t.string "payment_method_brand"
+    t.integer "payment_method_exp_month"
+    t.integer "payment_method_exp_year"
+    t.integer "low_balance_threshold_cents", default: 10000
+    t.datetime "low_balance_alert_sent_at"
+    t.boolean "low_balance_emails_enabled", default: true
+    t.boolean "auto_recharge_enabled", default: false
+    t.integer "auto_recharge_threshold_cents", default: 10000
+    t.integer "auto_recharge_amount_cents", default: 10000
+    t.datetime "last_auto_recharge_at"
+    t.index ["balance_cents"], name: "index_advertisers_on_balance_cents"
     t.index ["name"], name: "index_advertisers_on_name"
     t.index ["slug"], name: "index_advertisers_on_slug", unique: true
+    t.index ["stripe_customer_id"], name: "index_advertisers_on_stripe_customer_id", unique: true
   end
 
   create_table "agencies", force: :cascade do |t|
@@ -144,6 +159,32 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_07_120532) do
     t.index ["status"], name: "index_agency_memberships_on_status"
     t.index ["user_id", "agency_id"], name: "index_agency_memberships_on_user_id_and_agency_id", unique: true
     t.index ["user_id"], name: "index_agency_memberships_on_user_id"
+  end
+
+  create_table "balance_transactions", force: :cascade do |t|
+    t.bigint "advertiser_id", null: false
+    t.string "transaction_type", null: false
+    t.integer "amount_cents", null: false
+    t.integer "balance_before_cents", null: false
+    t.integer "balance_after_cents", null: false
+    t.string "description", null: false
+    t.string "stripe_payment_intent_id"
+    t.string "stripe_charge_id"
+    t.string "payment_method_last4"
+    t.integer "stripe_fee_cents", default: 0
+    t.bigint "campaign_id"
+    t.integer "postcards_count"
+    t.bigint "processed_by_id"
+    t.jsonb "metadata", default: {}
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["advertiser_id", "created_at"], name: "index_balance_transactions_on_advertiser_id_and_created_at"
+    t.index ["advertiser_id"], name: "index_balance_transactions_on_advertiser_id"
+    t.index ["campaign_id"], name: "index_balance_transactions_on_campaign_id"
+    t.index ["created_at"], name: "index_balance_transactions_on_created_at"
+    t.index ["processed_by_id"], name: "index_balance_transactions_on_processed_by_id"
+    t.index ["stripe_payment_intent_id"], name: "index_balance_transactions_on_stripe_payment_intent_id"
+    t.index ["transaction_type"], name: "index_balance_transactions_on_transaction_type"
   end
 
   create_table "campaign_contacts", force: :cascade do |t|
@@ -207,6 +248,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_07_120532) do
     t.text "template_data"
     t.integer "color_palette_id"
     t.bigint "creative_id"
+    t.datetime "charged_at"
     t.index ["advertiser_id", "created_at"], name: "index_campaigns_on_advertiser_id_and_created_at"
     t.index ["advertiser_id", "status"], name: "index_campaigns_on_advertiser_id_and_status"
     t.index ["advertiser_id"], name: "index_campaigns_on_advertiser_id"
@@ -626,6 +668,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_07_120532) do
   add_foreign_key "agency_invitations", "users", column: "invited_by_id"
   add_foreign_key "agency_memberships", "agencies"
   add_foreign_key "agency_memberships", "users"
+  add_foreign_key "balance_transactions", "advertisers"
+  add_foreign_key "balance_transactions", "campaigns"
+  add_foreign_key "balance_transactions", "users", column: "processed_by_id"
   add_foreign_key "campaign_contacts", "campaigns"
   add_foreign_key "campaign_contacts", "contacts"
   add_foreign_key "campaigns", "advertisers"

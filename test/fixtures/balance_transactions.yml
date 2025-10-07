@@ -1,0 +1,33 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  advertiser: one
+  transaction_type: MyString
+  amount_cents: 1
+  balance_before_cents: 1
+  balance_after_cents: 1
+  description: MyString
+  stripe_payment_intent_id: MyString
+  stripe_charge_id: MyString
+  payment_method_last4: MyString
+  stripe_fee_cents: 1
+  campaign: one
+  postcards_count: 1
+  processed_by: one
+  metadata: 
+
+two:
+  advertiser: two
+  transaction_type: MyString
+  amount_cents: 1
+  balance_before_cents: 1
+  balance_after_cents: 1
+  description: MyString
+  stripe_payment_intent_id: MyString
+  stripe_charge_id: MyString
+  payment_method_last4: MyString
+  stripe_fee_cents: 1
+  campaign: two
+  postcards_count: 1
+  processed_by: two
+  metadata: 

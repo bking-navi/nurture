@@ -18,6 +18,9 @@ class Advertiser < ApplicationRecord
   # Agency relationships
   has_many :advertiser_agency_accesses, dependent: :destroy
   has_many :agencies, through: :advertiser_agency_accesses
+  
+  # Billing
+  has_many :balance_transactions, dependent: :restrict_with_error
 
   # Serialize settings as JSON for SQLite (PostgreSQL will use jsonb)
   serialize :settings, coder: JSON
@@ -55,6 +58,196 @@ class Advertiser < ApplicationRecord
       "#{city}, #{state} #{postal_code}",
       country
     ].join("\n")
+  end
+  
+  # =================
+  # BILLING METHODS
+  # =================
+  
+  # Balance management
+  def balance_dollars
+    balance_cents / 100.0
+  end
+  
+  def has_sufficient_balance?(amount_cents)
+    balance_cents >= amount_cents
+  end
+  
+  def can_send_campaign?(campaign)
+    has_sufficient_balance?(campaign.estimated_cost_cents)
+  end
+  
+  # Low balance management
+  def low_balance_threshold_dollars
+    low_balance_threshold_cents / 100.0
+  end
+  
+  def below_low_balance_threshold?
+    balance_cents < low_balance_threshold_cents
+  end
+  
+  def should_send_low_balance_alert?
+    return false unless low_balance_emails_enabled?
+    return false unless below_low_balance_threshold?
+    
+    # Only send alert once per day
+    low_balance_alert_sent_at.nil? || low_balance_alert_sent_at < 24.hours.ago
+  end
+  
+  def mark_low_balance_alert_sent!
+    update!(low_balance_alert_sent_at: Time.current)
+  end
+  
+  # Auto-recharge management
+  def auto_recharge_threshold_dollars
+    auto_recharge_threshold_cents / 100.0
+  end
+  
+  def auto_recharge_amount_dollars
+    auto_recharge_amount_cents / 100.0
+  end
+  
+  def should_auto_recharge?
+    return false unless auto_recharge_enabled?
+    return false unless payment_method_on_file?
+    return false unless balance_cents < auto_recharge_threshold_cents
+    
+    # Prevent multiple rapid recharges
+    last_auto_recharge_at.nil? || last_auto_recharge_at < 1.hour.ago
+  end
+  
+  def attempt_auto_recharge!(system_user)
+    return unless should_auto_recharge?
+    
+    service = StripePaymentService.new(self)
+    
+    # Get default payment method from Stripe customer
+    customer = stripe_customer
+    default_pm = customer.invoice_settings.default_payment_method
+    
+    intent = service.charge_and_add_funds(
+      auto_recharge_amount_cents,
+      default_pm,
+      system_user,
+      auto_recharge: true
+    )
+    
+    update!(last_auto_recharge_at: Time.current)
+    
+    # Send success email
+    BillingMailer.auto_recharge_success(self, auto_recharge_amount_dollars).deliver_later
+    
+    true
+  rescue StripePaymentService::PaymentError => e
+    # Log error and notify admins
+    Rails.logger.error "Auto-recharge failed for advertiser #{id}: #{e.message}"
+    BillingMailer.auto_recharge_failed(self, e.message).deliver_later
+    
+    # Disable auto-recharge to prevent repeated failures
+    update!(auto_recharge_enabled: false)
+    
+    false
+  end
+  
+  # Transaction methods
+  def add_funds!(amount_cents, stripe_payment_intent_id:, processed_by:, payment_method_last4: nil, stripe_fee_cents: nil, auto_recharge: false)
+    raise ArgumentError, "Amount must be positive" if amount_cents <= 0
+    
+    transaction do
+      balance_before = balance_cents
+      increment!(:balance_cents, amount_cents)
+      balance_after = reload.balance_cents
+      
+      txn_type = auto_recharge ? 'auto_recharge' : 'deposit'
+      description = auto_recharge ? 
+        "Auto-recharge: #{ActionController::Base.helpers.number_to_currency(amount_cents / 100.0)}" :
+        "Funds added: #{ActionController::Base.helpers.number_to_currency(amount_cents / 100.0)}"
+      
+      balance_transactions.create!(
+        transaction_type: txn_type,
+        amount_cents: amount_cents,
+        balance_before_cents: balance_before,
+        balance_after_cents: balance_after,
+        description: description,
+        stripe_payment_intent_id: stripe_payment_intent_id,
+        payment_method_last4: payment_method_last4,
+        stripe_fee_cents: stripe_fee_cents,
+        processed_by: processed_by
+      )
+    end
+  end
+  
+  def charge_for_campaign!(campaign, processed_by:)
+    raise ArgumentError, "Campaign must have actual cost" unless campaign.actual_cost_cents&.positive?
+    raise "Insufficient balance" unless has_sufficient_balance?(campaign.actual_cost_cents)
+    
+    transaction do
+      balance_before = balance_cents
+      decrement!(:balance_cents, campaign.actual_cost_cents)
+      balance_after = reload.balance_cents
+      
+      balance_transactions.create!(
+        transaction_type: 'charge',
+        amount_cents: -campaign.actual_cost_cents,
+        balance_before_cents: balance_before,
+        balance_after_cents: balance_after,
+        description: "Campaign sent: #{campaign.name}",
+        campaign: campaign,
+        postcards_count: campaign.sent_count,
+        processed_by: processed_by
+      )
+      
+      # Mark campaign as charged
+      campaign.update!(charged_at: Time.current)
+      
+      # Check if we should trigger auto-recharge or low balance alert
+      check_balance_thresholds!(processed_by)
+    end
+  end
+  
+  def check_balance_thresholds!(user)
+    # Try auto-recharge first
+    if should_auto_recharge?
+      attempt_auto_recharge!(user)
+      return  # If auto-recharge succeeds, no need for low balance alert
+    end
+    
+    # Send low balance alert if needed
+    if should_send_low_balance_alert?
+      BillingMailer.low_balance_alert(self).deliver_later
+      mark_low_balance_alert_sent!
+    end
+  end
+  
+  # Stripe methods
+  def stripe_customer
+    return nil unless stripe_customer_id
+    @stripe_customer ||= Stripe::Customer.retrieve(stripe_customer_id)
+  end
+  
+  def create_stripe_customer!(user)
+    return stripe_customer_id if stripe_customer_id
+    
+    customer = Stripe::Customer.create(
+      email: user.email,
+      name: name,
+      metadata: {
+        advertiser_id: id,
+        advertiser_name: name
+      }
+    )
+    
+    update!(stripe_customer_id: customer.id)
+    customer.id
+  end
+  
+  def payment_method_summary
+    return "No payment method" unless payment_method_last4
+    "#{payment_method_brand.titleize} ••••#{payment_method_last4} (exp #{payment_method_exp_month}/#{payment_method_exp_year})"
+  end
+  
+  def payment_method_on_file?
+    stripe_customer_id.present? && payment_method_last4.present?
   end
 
   private

@@ -1,0 +1,15 @@
+Hello <%= @owner.display_name %>,
+
+Your Nurture account for <%= @advertiser.name %> has a low balance.
+
+Current Balance: $<%= number_with_precision(@balance, precision: 2) %>
+Alert Threshold: $<%= number_with_precision(@threshold, precision: 2) %>
+
+To continue sending campaigns, please add funds to your account:
+<%= settings_billing_url(@advertiser.slug, host: ENV.fetch('APP_HOST', 'localhost:3000'), protocol: Rails.env.production? ? 'https' : 'http') %>
+
+You can also enable auto-recharge to automatically top up your balance when it runs low.
+
+Best regards,
+The Nurture Team
+

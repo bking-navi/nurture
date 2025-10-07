@@ -93,6 +93,18 @@ class SendCampaignJob < ApplicationJob
     
     Rails.logger.info "Completed campaign #{campaign.id} with status '#{final_status}': #{sent_count} sent, #{failed_count} failed, $#{total_cost/100.0} total"
     
+    # Charge advertiser's balance if campaign sent any postcards
+    if sent_count > 0 && total_cost > 0 && !campaign.charged?
+      begin
+        advertiser.charge_for_campaign!(campaign, processed_by: campaign.created_by_user)
+        Rails.logger.info "Charged advertiser #{advertiser.id} $#{total_cost/100.0} for campaign #{campaign.id}"
+      rescue => e
+        Rails.logger.error "Failed to charge advertiser #{advertiser.id} for campaign #{campaign.id}: #{e.message}"
+        # Don't fail the job if charging fails - the campaign was already sent
+        # Platform admin can manually resolve billing issues
+      end
+    end
+    
     # Send appropriate completion email
     if final_status == :failed
       CampaignMailer.campaign_failed(campaign, "All postcards failed to send").deliver_later

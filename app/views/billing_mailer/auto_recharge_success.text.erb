@@ -1,0 +1,15 @@
+Hello <%= @owner.display_name %>,
+
+Your Nurture account for <%= @advertiser.name %> has been automatically recharged.
+
+Recharge Amount: $<%= number_with_precision(@amount, precision: 2) %>
+New Balance: $<%= number_with_precision(@new_balance, precision: 2) %>
+
+Your campaigns can continue running without interruption.
+
+View your billing details:
+<%= settings_billing_url(@advertiser.slug, host: ENV.fetch('APP_HOST', 'localhost:3000'), protocol: Rails.env.production? ? 'https' : 'http') %>
+
+Best regards,
+The Nurture Team
+

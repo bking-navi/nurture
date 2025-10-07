@@ -36,6 +36,8 @@ class Campaign < ApplicationRecord
   scope :scheduled_for_sending, -> { where(status: 'scheduled').where('scheduled_at <= ?', Time.current) }
   
   # Cost calculations (in cents)
+  COST_PER_POSTCARD_CENTS = 105  # $1.05 per 6x9 postcard
+  
   def estimated_cost_dollars
     (estimated_cost_cents || 0) / 100.0
   end
@@ -47,14 +49,21 @@ class Campaign < ApplicationRecord
   def calculate_estimated_cost!
     return 0 if campaign_contacts.empty?
     
-    # Cost for 6x9 postcard with USPS First Class: $1.05
-    cost_per_postcard = 105 # cents
+    cost_per_postcard = COST_PER_POSTCARD_CENTS
     total = campaign_contacts.count * cost_per_postcard
     
     update!(estimated_cost_cents: total)
     campaign_contacts.update_all(estimated_cost_cents: cost_per_postcard)
     
     total
+  end
+  
+  def charged?
+    charged_at.present?
+  end
+  
+  def chargeable?
+    !charged? && actual_cost_cents.present? && actual_cost_cents > 0
   end
   
   # State checks
@@ -95,6 +104,11 @@ class Campaign < ApplicationRecord
   # Actions
   def send_now!
     raise "Campaign not ready to send" unless sendable?
+    
+    # Check if advertiser has sufficient balance
+    unless advertiser.can_send_campaign?(self)
+      raise "Insufficient balance. Please add funds to your account."
+    end
     
     update!(status: :processing, sent_at: Time.current)
     SendCampaignJob.perform_later(id)
