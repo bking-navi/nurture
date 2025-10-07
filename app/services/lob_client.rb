@@ -89,19 +89,45 @@ class LobClient
     
     def sanitize_request(data)
       return nil unless data
-      data.try(:to_hash) || data
+      hash = data.try(:to_hash) || data
+      
+      # Remove PII from request data
+      if hash.is_a?(Hash)
+        sanitized = hash.deep_dup
+        # Remove address details
+        if sanitized[:to].is_a?(Hash)
+          sanitized[:to] = {
+            name: '[REDACTED]',
+            address_city: sanitized[:to][:address_city],
+            address_state: sanitized[:to][:address_state],
+            address_zip: sanitized[:to][:address_zip]&.first(3) # Only first 3 digits
+          }
+        end
+        # Remove from address
+        if sanitized[:from].is_a?(Hash)
+          sanitized[:from] = '[REDACTED]'
+        end
+        # Don't store HTML/PDF content
+        sanitized.delete(:front)
+        sanitized.delete(:back)
+        sanitized.delete(:merge_variables)
+        sanitized
+      else
+        nil
+      end
     end
     
     def sanitize_response(result)
       return nil unless result
-      # Only store essential fields to avoid bloat
+      # Only store essential fields, no PII
       if result.respond_to?(:to_hash)
         hash = result.to_hash
         {
           id: hash[:id],
           object: hash[:object],
           status: hash[:status],
-          url: hash[:url]
+          expected_delivery_date: hash[:expected_delivery_date],
+          send_date: hash[:send_date]
         }.compact
       else
         nil

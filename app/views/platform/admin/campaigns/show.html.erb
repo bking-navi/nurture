@@ -6,7 +6,7 @@
     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
     </svg>
-    Back to campaigns
+    Back to fulfillment
   <% end %>
 </div>
 
@@ -138,30 +138,27 @@
   </div>
 </div>
 
-<!-- Recent Recipients -->
+<!-- Recent Recipients (PII Redacted) -->
 <div class="bg-white shadow rounded-lg">
   <div class="px-6 py-5 border-b border-gray-200">
     <h3 class="text-lg leading-6 font-medium text-gray-900">Recent Recipients</h3>
-    <p class="mt-1 text-sm text-gray-500">Last 10 contacts added to this campaign</p>
+    <p class="mt-1 text-sm text-gray-500">Last 10 contacts added to this campaign (PII redacted for privacy)</p>
   </div>
   <div class="overflow-x-auto">
     <table class="min-w-full divide-y divide-gray-200">
       <thead class="bg-gray-50">
         <tr>
-          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Address</th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
           <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
           <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lob ID</th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Added</th>
         </tr>
       </thead>
       <tbody class="bg-white divide-y divide-gray-200">
         <% @recent_contacts.each do |cc| %>
           <tr>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-              <%= cc.full_name %>
-            </td>
-            <td class="px-6 py-4 text-sm text-gray-500">
-              <%= cc.address_line1 %>, <%= cc.address_city %>, <%= cc.address_state %> <%= cc.address_zip %>
+            <td class="px-6 py-4 text-sm text-gray-900">
+              <%= cc.address_city %>, <%= cc.address_state %> <%= cc.address_zip ? cc.address_zip[0..2] + 'XX' : '' %>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium <%= 
@@ -180,6 +177,9 @@
               <% else %>
                 —
               <% end %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <%= time_ago_in_words(cc.created_at) %> ago
             </td>
           </tr>
         <% end %>
