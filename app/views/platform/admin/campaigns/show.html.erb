@@ -1,0 +1,190 @@
+<% content_for :page_title, @campaign.name %>
+
+<!-- Back Link -->
+<div class="mb-4">
+  <%= link_to platform_admin_campaigns_path, class: "inline-flex items-center text-sm text-gray-600 hover:text-gray-900" do %>
+    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+    </svg>
+    Back to campaigns
+  <% end %>
+</div>
+
+<!-- Campaign Header -->
+<div class="bg-white shadow rounded-lg mb-6">
+  <div class="px-6 py-5">
+    <div class="flex items-start justify-between">
+      <div class="flex-1">
+        <h2 class="text-2xl font-bold text-gray-900"><%= @campaign.name %></h2>
+        <div class="mt-2 flex items-center gap-4 text-sm text-gray-500">
+          <span>
+            Advertiser: <%= link_to @campaign.advertiser.name, platform_admin_advertiser_path(@campaign.advertiser), class: "text-indigo-600 hover:text-indigo-900" %>
+          </span>
+          <span>•</span>
+          <span>Created <%= time_ago_in_words(@campaign.created_at) %> ago</span>
+          <% if @campaign.created_by_user %>
+            <span>•</span>
+            <span>by <%= @campaign.created_by_user.display_name %></span>
+          <% end %>
+        </div>
+      </div>
+      <div>
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium <%= 
+          case @campaign.status
+          when 'draft' then 'bg-gray-100 text-gray-800'
+          when 'sending' then 'bg-yellow-100 text-yellow-800'
+          when 'sent' then 'bg-green-100 text-green-800'
+          when 'failed' then 'bg-red-100 text-red-800'
+          end %>">
+          <%= @campaign.status.titleize %>
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="grid grid-cols-1 gap-5 sm:grid-cols-4 mb-6">
+  <div class="bg-white overflow-hidden shadow rounded-lg">
+    <div class="p-5">
+      <dt class="text-sm font-medium text-gray-500 truncate">Total Recipients</dt>
+      <dd class="mt-1 text-3xl font-semibold text-gray-900"><%= @campaign.campaign_contacts.count %></dd>
+    </div>
+  </div>
+
+  <div class="bg-white overflow-hidden shadow rounded-lg">
+    <div class="p-5">
+      <dt class="text-sm font-medium text-gray-500 truncate">Sent</dt>
+      <dd class="mt-1 text-3xl font-semibold text-green-600">
+        <%= @campaign.campaign_contacts.where.not(lob_postcard_id: nil).count %>
+      </dd>
+    </div>
+  </div>
+
+  <div class="bg-white overflow-hidden shadow rounded-lg">
+    <div class="p-5">
+      <dt class="text-sm font-medium text-gray-500 truncate">Failed</dt>
+      <dd class="mt-1 text-3xl font-semibold text-red-600">
+        <%= @campaign.campaign_contacts.where(status: 'failed').count %>
+      </dd>
+    </div>
+  </div>
+
+  <div class="bg-white overflow-hidden shadow rounded-lg">
+    <div class="p-5">
+      <dt class="text-sm font-medium text-gray-500 truncate">Total Cost</dt>
+      <dd class="mt-1 text-3xl font-semibold text-gray-900">
+        <% if @campaign.total_cost_cents %>
+          $<%= '%.2f' % (@campaign.total_cost_cents / 100.0) %>
+        <% else %>
+          <span class="text-gray-400">—</span>
+        <% end %>
+      </dd>
+    </div>
+  </div>
+</div>
+
+<!-- Recent API Logs -->
+<div class="bg-white shadow rounded-lg mb-6">
+  <div class="px-6 py-5 border-b border-gray-200">
+    <h3 class="text-lg leading-6 font-medium text-gray-900">Recent API Activity</h3>
+    <p class="mt-1 text-sm text-gray-500">Last 20 Lob API calls for this campaign</p>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Timestamp</th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Endpoint</th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Duration</th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cost</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        <% @api_logs.each do |log| %>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <%= log.created_at.strftime('%b %d, %I:%M:%S %p') %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <%= log.readable_endpoint %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <% if log.success? %>
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                  Success
+                </span>
+              <% else %>
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                  Failed
+                </span>
+              <% end %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <%= log.duration_ms %>ms
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <% if log.cost_cents > 0 %>
+                $<%= '%.2f' % log.cost_dollars %>
+              <% else %>
+                —
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Recent Recipients -->
+<div class="bg-white shadow rounded-lg">
+  <div class="px-6 py-5 border-b border-gray-200">
+    <h3 class="text-lg leading-6 font-medium text-gray-900">Recent Recipients</h3>
+    <p class="mt-1 text-sm text-gray-500">Last 10 contacts added to this campaign</p>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Address</th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lob ID</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        <% @recent_contacts.each do |cc| %>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+              <%= cc.full_name %>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-500">
+              <%= cc.address_line1 %>, <%= cc.address_city %>, <%= cc.address_state %> <%= cc.address_zip %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium <%= 
+                case cc.status
+                when 'pending' then 'bg-gray-100 text-gray-800'
+                when 'sent' then 'bg-green-100 text-green-800'
+                when 'failed' then 'bg-red-100 text-red-800'
+                else 'bg-blue-100 text-blue-800'
+                end %>">
+                <%= cc.status.titleize %>
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <% if cc.lob_postcard_id %>
+                <code class="text-xs"><%= cc.lob_postcard_id %></code>
+              <% else %>
+                —
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+

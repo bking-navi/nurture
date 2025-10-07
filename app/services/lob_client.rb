@@ -8,6 +8,106 @@ class LobClient
       end
     end
     
+    # Log API call wrapper
+    def log_api_call(advertiser:, campaign: nil, endpoint:, method:, request_body: nil)
+      start_time = Time.current
+      start_ms = (start_time.to_f * 1000).to_i
+      
+      begin
+        result = yield
+        
+        end_time = Time.current
+        end_ms = (end_time.to_f * 1000).to_i
+        duration_ms = end_ms - start_ms
+        
+        # Extract Lob object details from response
+        lob_object_id = result.try(:id)
+        lob_object_type = result.try(:object) || detect_object_type(endpoint)
+        
+        # Estimate cost (Lob charges per postcard sent)
+        cost_cents = case lob_object_type
+        when 'postcard'
+          105 # $1.05 per postcard (will be adjusted based on actual pricing)
+        else
+          0
+        end
+        
+        LobApiLog.create!(
+          advertiser: advertiser,
+          campaign: campaign,
+          endpoint: endpoint,
+          method: method,
+          request_body: sanitize_request(request_body),
+          response_body: sanitize_response(result),
+          status_code: 200,
+          success: true,
+          duration_ms: duration_ms,
+          cost_cents: cost_cents,
+          lob_object_id: lob_object_id,
+          lob_object_type: lob_object_type
+        )
+        
+        result
+      rescue => e
+        end_time = Time.current
+        end_ms = (end_time.to_f * 1000).to_i
+        duration_ms = end_ms - start_ms
+        
+        status_code = e.respond_to?(:code) ? e.code : 500
+        
+        LobApiLog.create!(
+          advertiser: advertiser,
+          campaign: campaign,
+          endpoint: endpoint,
+          method: method,
+          request_body: sanitize_request(request_body),
+          response_body: nil,
+          status_code: status_code,
+          success: false,
+          error_message: e.message,
+          duration_ms: duration_ms,
+          cost_cents: 0,
+          lob_object_type: detect_object_type(endpoint)
+        )
+        
+        raise e
+      end
+    end
+    
+    def detect_object_type(endpoint)
+      case endpoint
+      when /postcards/
+        'postcard'
+      when /verifications/
+        'verification'
+      when /addresses/
+        'address'
+      else
+        'other'
+      end
+    end
+    
+    def sanitize_request(data)
+      return nil unless data
+      data.try(:to_hash) || data
+    end
+    
+    def sanitize_response(result)
+      return nil unless result
+      # Only store essential fields to avoid bloat
+      if result.respond_to?(:to_hash)
+        hash = result.to_hash
+        {
+          id: hash[:id],
+          object: hash[:object],
+          status: hash[:status],
+          url: hash[:url]
+        }.compact
+      else
+        nil
+      end
+    end
+    
     # Create a postcard via Lob API
     def create_postcard(campaign_contact:, campaign:, from_address:)
       postcards_api = Lob::PostcardsApi.new(api_client)
@@ -89,7 +189,15 @@ class LobClient
         }
       )
       
-      postcards_api.create(postcard_editable)
+      log_api_call(
+        advertiser: campaign.advertiser,
+        campaign: campaign,
+        endpoint: '/v1/postcards',
+        method: 'POST',
+        request_body: postcard_editable
+      ) do
+        postcards_api.create(postcard_editable)
+      end
     end
     
     # Retrieve postcard status
@@ -105,7 +213,7 @@ class LobClient
     end
     
     # Verify a US address
-    def verify_address(address_line1:, city:, state:, zip:, address_line2: nil)
+    def verify_address(address_line1:, city:, state:, zip:, address_line2: nil, advertiser: nil, campaign: nil)
       us_verifications_api = Lob::UsVerificationsApi.new(api_client)
       
       verification_data = Lob::UsVerificationsWritable.new(
@@ -116,7 +224,20 @@ class LobClient
         zip_code: zip
       )
       
-      us_verifications_api.verify(verification_data)
+      if advertiser
+        log_api_call(
+          advertiser: advertiser,
+          campaign: campaign,
+          endpoint: '/v1/us_verifications',
+          method: 'POST',
+          request_body: verification_data
+        ) do
+          us_verifications_api.verify(verification_data)
+        end
+      else
+        # No logging if advertiser context not provided
+        us_verifications_api.verify(verification_data)
+      end
     end
     
     # Format address for Lob API v6+ (returns AddressEditable object)

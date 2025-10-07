@@ -20,6 +20,8 @@ Rails.application.routes.draw do
         end
       end
       get 'billing', to: 'billing#index', as: 'billing'
+      resources :campaigns, only: [:index, :show]
+      resources :lob_api_logs, only: [:index, :show], path: 'api-logs'
     end
   end
 

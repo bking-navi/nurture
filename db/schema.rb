@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_07_174304) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_07_194445) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -359,6 +359,31 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_07_174304) do
     t.index ["token"], name: "index_invitations_on_token", unique: true
   end
 
+  create_table "lob_api_logs", force: :cascade do |t|
+    t.bigint "advertiser_id", null: false
+    t.bigint "campaign_id"
+    t.string "endpoint", null: false
+    t.string "method", null: false
+    t.json "request_body"
+    t.json "response_body"
+    t.integer "status_code"
+    t.boolean "success", default: false, null: false
+    t.text "error_message"
+    t.integer "duration_ms"
+    t.integer "cost_cents", default: 0
+    t.string "lob_object_id"
+    t.string "lob_object_type"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["advertiser_id", "created_at"], name: "index_lob_api_logs_on_advertiser_id_and_created_at"
+    t.index ["advertiser_id"], name: "index_lob_api_logs_on_advertiser_id"
+    t.index ["campaign_id", "created_at"], name: "index_lob_api_logs_on_campaign_id_and_created_at"
+    t.index ["campaign_id"], name: "index_lob_api_logs_on_campaign_id"
+    t.index ["created_at"], name: "index_lob_api_logs_on_created_at"
+    t.index ["lob_object_id"], name: "index_lob_api_logs_on_lob_object_id"
+    t.index ["success"], name: "index_lob_api_logs_on_success"
+  end
+
   create_table "orders", force: :cascade do |t|
     t.bigint "advertiser_id", null: false
     t.string "source_type", null: false
@@ -691,6 +716,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_07_174304) do
   add_foreign_key "creatives", "users", column: "created_by_user_id"
   add_foreign_key "invitations", "advertisers"
   add_foreign_key "invitations", "users", column: "invited_by_id"
+  add_foreign_key "lob_api_logs", "advertisers"
+  add_foreign_key "lob_api_logs", "campaigns"
   add_foreign_key "orders", "advertisers"
   add_foreign_key "orders", "contacts"
   add_foreign_key "products", "advertisers"

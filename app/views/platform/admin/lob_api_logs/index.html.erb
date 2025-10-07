@@ -1,0 +1,225 @@
+<% content_for :page_title, 'Lob API Logs' %>
+
+<div class="mb-6">
+  <h2 class="text-2xl font-bold text-gray-900">Lob API Activity</h2>
+  <p class="mt-1 text-sm text-gray-600">Monitor all Lob API interactions across the platform</p>
+</div>
+
+<!-- Summary Stats -->
+<div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5 mb-6">
+  <div class="bg-white overflow-hidden shadow rounded-lg">
+    <div class="p-5">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 2 0 01-2 2z"></path>
+          </svg>
+        </div>
+        <div class="ml-5 w-0 flex-1">
+          <dl>
+            <dt class="text-sm font-medium text-gray-500 truncate">Total API Calls</dt>
+            <dd class="text-2xl font-semibold text-gray-900"><%= number_with_delimiter(@all_time_stats[:total_logs]) %></dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white overflow-hidden shadow rounded-lg">
+    <div class="p-5">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+        <div class="ml-5 w-0 flex-1">
+          <dl>
+            <dt class="text-sm font-medium text-gray-500 truncate">Success Rate</dt>
+            <dd class="text-2xl font-semibold text-gray-900"><%= @all_time_stats[:success_rate] %>%</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white overflow-hidden shadow rounded-lg">
+    <div class="p-5">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <svg class="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+          </svg>
+        </div>
+        <div class="ml-5 w-0 flex-1">
+          <dl>
+            <dt class="text-sm font-medium text-gray-500 truncate">Postcards Sent</dt>
+            <dd class="text-2xl font-semibold text-gray-900"><%= number_with_delimiter(@all_time_stats[:total_postcards]) %></dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white overflow-hidden shadow rounded-lg">
+    <div class="p-5">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <svg class="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+        <div class="ml-5 w-0 flex-1">
+          <dl>
+            <dt class="text-sm font-medium text-gray-500 truncate">Avg Response</dt>
+            <dd class="text-2xl font-semibold text-gray-900"><%= @avg_duration %>ms</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white overflow-hidden shadow rounded-lg">
+    <div class="p-5">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+        <div class="ml-5 w-0 flex-1">
+          <dl>
+            <dt class="text-sm font-medium text-gray-500 truncate">Total Cost</dt>
+            <dd class="text-2xl font-semibold text-gray-900">$<%= '%.2f' % (@all_time_stats[:total_cost] / 100.0) %></dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="bg-white shadow sm:rounded-lg p-4 mb-6">
+  <%= form_with url: platform_admin_lob_api_logs_path, method: :get, local: true, class: "space-y-4" do |f| %>
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-6">
+      <div class="sm:col-span-2">
+        <%= label_tag :advertiser_id, "Advertiser", class: "block text-sm font-medium text-gray-700" %>
+        <%= select_tag :advertiser_id, 
+            options_from_collection_for_select(@advertisers, :id, :name, params[:advertiser_id]),
+            include_blank: "All Advertisers",
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" %>
+      </div>
+
+      <div>
+        <%= label_tag :success, "Status", class: "block text-sm font-medium text-gray-700" %>
+        <%= select_tag :success,
+            options_for_select([["All", ""], ["Success", "true"], ["Failed", "false"]], params[:success]),
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" %>
+      </div>
+
+      <div>
+        <%= label_tag :date_from, "From Date", class: "block text-sm font-medium text-gray-700" %>
+        <%= date_field_tag :date_from, params[:date_from], class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" %>
+      </div>
+
+      <div>
+        <%= label_tag :date_to, "To Date", class: "block text-sm font-medium text-gray-700" %>
+        <%= date_field_tag :date_to, params[:date_to], class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" %>
+      </div>
+
+      <div class="flex items-end">
+        <div class="flex space-x-2">
+          <%= submit_tag "Filter", class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+          <%= link_to "Clear", platform_admin_lob_api_logs_path, class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<!-- Logs Table -->
+<div class="bg-white shadow overflow-hidden sm:rounded-lg">
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Timestamp
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Advertiser
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Endpoint
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Campaign
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Status
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Duration
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Cost
+          </th>
+          <th scope="col" class="relative px-6 py-3">
+            <span class="sr-only">View</span>
+          </th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        <% @logs.each do |log| %>
+          <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <%= log.created_at.strftime('%b %d, %I:%M:%S %p') %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <%= link_to log.advertiser.name, platform_admin_advertiser_path(log.advertiser), class: "text-sm font-medium text-indigo-600 hover:text-indigo-900" %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <%= log.readable_endpoint %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <% if log.campaign %>
+                <%= link_to log.campaign.name, platform_admin_campaign_path(log.campaign), class: "text-indigo-600 hover:text-indigo-900" %>
+              <% else %>
+                <span class="text-gray-400">—</span>
+              <% end %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <% if log.success? %>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  Success
+                </span>
+              <% else %>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                  Failed
+                </span>
+              <% end %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <%= log.duration_ms %>ms
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <% if log.cost_cents > 0 %>
+                $<%= '%.2f' % log.cost_dollars %>
+              <% else %>
+                <span class="text-gray-400">—</span>
+              <% end %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+              <%= link_to "View", platform_admin_lob_api_log_path(log), class: "text-indigo-600 hover:text-indigo-900" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="mt-6">
+  <%= paginate @logs if @logs.respond_to?(:current_page) %>
+</div>
+
