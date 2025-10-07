@@ -49,3 +49,14 @@
 # Ignore Docker-related files
 /.dockerignore
 /Dockerfile*
+
+# Ignore documentation and test files (speeds up Docker context)
+/.docs
+/README.md
+/test
+/spec
+
+# Ignore local development files
+/vendor/bundle
+/.bundle/cache
+/coverage
