@@ -249,7 +249,14 @@ class CampaignsController < ApplicationController
   private
   
   def set_advertiser
-    @advertiser = current_user.advertisers.find_by!(slug: params[:advertiser_slug])
+    @advertiser = find_advertiser_by_slug(params[:advertiser_slug])
+    
+    unless @advertiser
+      redirect_to advertisers_path, alert: 'Advertiser not found or you do not have access'
+      return
+    end
+    
+    set_current_advertiser(@advertiser)
   end
   
   def verify_campaign_access!

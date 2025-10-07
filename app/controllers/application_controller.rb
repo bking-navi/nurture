@@ -7,6 +7,22 @@ class ApplicationController < ActionController::Base
 
   private
 
+  # Find advertiser by slug, checking both direct membership and agency access
+  def find_advertiser_by_slug(slug)
+    return nil unless current_user
+    
+    # First, try direct membership
+    advertiser = current_user.advertisers.find_by(slug: slug)
+    return advertiser if advertiser
+    
+    # If not found, check agency access
+    Advertiser.joins(advertiser_agency_accesses: { agency_client_assignments: :agency_membership })
+              .where(advertisers: { slug: slug })
+              .where(advertiser_agency_accesses: { status: 'accepted' })
+              .where(agency_client_assignments: { agency_membership: current_user.agency_memberships.accepted })
+              .first
+  end
+
   # Set the current advertiser in thread-safe storage
   # This enables automatic scoping for all AdvertiserScoped models
   def set_current_advertiser(advertiser)

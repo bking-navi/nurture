@@ -34,7 +34,8 @@ module Platform
           @agency.agency_memberships.create!(
             user: owner,
             role: 'owner',
-            status: 'accepted'
+            status: 'accepted',
+            accepted_at: Time.current
           )
           
           flash[:notice] = "Agency #{@agency.name} created successfully"
