@@ -4,7 +4,7 @@ module Platform
       before_action :authenticate_user!
       before_action :require_platform_admin
       before_action :set_platform_context
-      layout 'platform_admin'
+      layout 'sidebar'
       
       private
       

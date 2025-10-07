@@ -1,9 +1,6 @@
 module Platform
   module Admin
-    class BillingController < ApplicationController
-      before_action :authenticate_user!
-      before_action :require_platform_admin
-      
+    class BillingController < BaseController
       def index
         @advertisers = Advertiser.all.order(created_at: :desc)
         
@@ -29,15 +26,6 @@ module Platform
         
         # Get advertisers with pending ACH
         @pending_ach_advertisers = @advertisers.select { |a| a.has_pending_balance? }
-      end
-      
-      private
-      
-      def require_platform_admin
-        unless current_user.platform_admin?
-          flash[:error] = "You don't have permission to access this area"
-          redirect_to root_path
-        end
       end
     end
   end
