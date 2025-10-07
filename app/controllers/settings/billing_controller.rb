@@ -152,8 +152,31 @@ class Settings::BillingController < ApplicationController
     Rails.logger.info "Payment Intent ID: #{payment_intent_id}"
     
     begin
-      intent = Stripe::PaymentIntent.retrieve(payment_intent_id)
-      Rails.logger.info "Payment Intent status: #{intent.status}"
+      # Retry logic in case of timing issues with Stripe's status update
+      max_retries = 3
+      retry_delay = 1.0 # seconds
+      
+      intent = nil
+      max_retries.times do |attempt|
+        intent = Stripe::PaymentIntent.retrieve(payment_intent_id)
+        Rails.logger.info "Payment Intent status (attempt #{attempt + 1}): #{intent.status}"
+        
+        # If we got a valid status, break out of retry loop
+        break if ['succeeded', 'processing'].include?(intent.status)
+        
+        # If still requires_action and we have retries left, wait and try again
+        if intent.status == 'requires_action' && attempt < max_retries - 1
+          Rails.logger.info "Status still requires_action, waiting #{retry_delay}s before retry..."
+          sleep(retry_delay)
+          retry_delay *= 2 # exponential backoff
+        end
+      end
+      
+      Rails.logger.info "Final Payment Intent status: #{intent.status}"
+      Rails.logger.info "Payment Intent amount: #{intent.amount}"
+      Rails.logger.info "Payment Intent payment_method: #{intent.payment_method}"
+      Rails.logger.info "Payment Intent next_action: #{intent.next_action.inspect}"
+      Rails.logger.info "Payment Intent last_payment_error: #{intent.last_payment_error.inspect}"
       
       if intent.status == 'succeeded' || intent.status == 'processing'
         # Get payment method details

@@ -219,21 +219,30 @@
     const paymentIntentId = '<%= params[:payment_intent] %>';
     const stripe = Stripe('<%= Rails.application.credentials.dig(:stripe, :publishable_key) %>');
     
-    console.log('Handling ACH payment intent:', paymentIntentId, clientSecret);
-    
-    // Confirm the payment intent (this will open Plaid modal if needed)
-    stripe.handleNextAction({
-      clientSecret: clientSecret
-    }).then(function(result) {
-      if (result.error) {
-        console.error('ACH verification error:', result.error);
-        alert('Bank verification failed: ' + result.error.message);
-        window.location.href = '<%= settings_billing_path(@advertiser.slug) %>';
-      } else {
-        console.log('ACH verification completed!', result.paymentIntent);
-        
-        // Now tell the server to finalize the payment
-        console.log('Calling server to confirm payment intent...');
+            console.log('Handling ACH payment intent:', paymentIntentId, clientSecret);
+
+            // Confirm the payment intent (this will open Plaid modal if needed)
+            stripe.handleNextAction({
+              clientSecret: clientSecret
+            }).then(function(result) {
+              if (result.error) {
+                console.error('ACH verification error:', result.error);
+                alert('Bank verification failed: ' + result.error.message);
+                window.location.href = '<%= settings_billing_path(@advertiser.slug) %>';
+              } else {
+                console.log('ACH verification completed!', result.paymentIntent);
+                console.log('PaymentIntent status after handleNextAction:', result.paymentIntent.status);
+
+                // Check if the PaymentIntent is in a valid state
+                if (result.paymentIntent.status === 'requires_action') {
+                  console.error('PaymentIntent still requires action after handleNextAction');
+                  alert('Bank verification incomplete. Please try again or contact support.');
+                  window.location.href = '<%= settings_billing_path(@advertiser.slug) %>';
+                  return;
+                }
+
+                // Now tell the server to finalize the payment
+                console.log('Calling server to confirm payment intent...');
         fetch('<%= settings_create_deposit_path(@advertiser.slug) %>', {
           method: 'POST',
           headers: {
