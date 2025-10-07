@@ -21,6 +21,8 @@ class WebhooksController < ApplicationController
     
     # Handle the event
     case event.type
+    when 'payment_intent.processing'
+      handle_payment_processing(event.data.object)
     when 'payment_intent.succeeded'
       handle_payment_succeeded(event.data.object)
     when 'payment_intent.payment_failed'
@@ -36,12 +38,35 @@ class WebhooksController < ApplicationController
   
   private
   
+  def handle_payment_processing(payment_intent)
+    # ACH payment is processing - already recorded as pending in StripePaymentService
+    Rails.logger.info "ACH payment processing: #{payment_intent.id}"
+  end
+  
   def handle_payment_succeeded(payment_intent)
-    # Log success
     Rails.logger.info "Payment succeeded: #{payment_intent.id}"
     
-    # The payment was already processed in StripePaymentService when it was confirmed
-    # This is just a confirmation webhook
+    # Check if this is an ACH payment that was pending
+    advertiser_id = payment_intent.metadata&.advertiser_id
+    return unless advertiser_id
+    
+    advertiser = Advertiser.find_by(id: advertiser_id)
+    return unless advertiser
+    
+    # Find pending transaction
+    transaction = advertiser.balance_transactions.pending.find_by(stripe_payment_intent_id: payment_intent.id)
+    
+    if transaction
+      # ACH payment cleared! Convert pending to available balance
+      advertiser.clear_pending_funds!(transaction)
+      Rails.logger.info "ACH payment cleared for advertiser #{advertiser_id}: $#{transaction.amount_dollars}"
+      
+      # Send email notification
+      BillingMailer.ach_payment_cleared(advertiser, transaction).deliver_later
+    else
+      # Card payment - was already processed immediately
+      Rails.logger.info "Card payment already processed: #{payment_intent.id}"
+    end
   end
   
   def handle_payment_failed(payment_intent)
@@ -54,10 +79,22 @@ class WebhooksController < ApplicationController
     advertiser = Advertiser.find_by(id: advertiser_id)
     return unless advertiser
     
-    # Send notification email to owner
-    if advertiser.owner
-      # You could create a separate mailer for this if needed
-      Rails.logger.info "Sending payment failure notification to #{advertiser.owner.email}"
+    # Find pending transaction if it exists (ACH failure)
+    transaction = advertiser.balance_transactions.pending.find_by(stripe_payment_intent_id: payment_intent.id)
+    
+    if transaction
+      # Mark transaction as failed and remove from pending balance
+      advertiser.transaction do
+        advertiser.decrement!(:pending_balance_cents, transaction.amount_cents)
+        transaction.update!(status: 'failed')
+      end
+      
+      # Send failure notification
+      BillingMailer.ach_payment_failed(advertiser, transaction, payment_intent.last_payment_error&.message).deliver_later
+      Rails.logger.info "ACH payment failed for advertiser #{advertiser_id}, pending balance removed"
+    else
+      # Card payment failed (shouldn't happen if we confirmed it, but just in case)
+      Rails.logger.info "Payment failure notification for advertiser #{advertiser_id}"
     end
   end
   

@@ -1,0 +1,31 @@
+Hello <%= @owner.display_name %>,
+
+⚠️ IMPORTANT: Your ACH payment for <%= @advertiser.name %> has failed.
+
+Payment Amount: $<%= number_with_precision(@amount, precision: 2) %>
+Reason: <%= @error || 'Unknown error' %>
+Current Balance: $<%= number_with_precision(@balance, precision: 2) %>
+
+The pending funds have been removed from your account.
+
+WHAT HAPPENED:
+ACH payments can fail for several reasons:
+- Insufficient funds in your bank account
+- Account closed or frozen
+- Incorrect account details
+
+ACTION REQUIRED:
+1. Check your bank account status
+2. Try adding funds again with a different payment method
+3. Or use a credit/debit card for instant processing
+
+Manage your billing:
+<%= settings_billing_url(@advertiser.slug, host: ENV.fetch('APP_HOST', 'localhost:3000'), protocol: Rails.env.production? ? 'https' : 'http') %>
+
+Without sufficient balance, your campaigns cannot be sent.
+
+If you need assistance, please contact support.
+
+Best regards,
+The Nurture Team
+

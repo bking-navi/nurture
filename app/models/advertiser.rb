@@ -69,6 +69,22 @@ class Advertiser < ApplicationRecord
     balance_cents / 100.0
   end
   
+  def pending_balance_dollars
+    pending_balance_cents / 100.0
+  end
+  
+  def total_balance_cents
+    balance_cents + pending_balance_cents
+  end
+  
+  def total_balance_dollars
+    total_balance_cents / 100.0
+  end
+  
+  def has_pending_balance?
+    pending_balance_cents > 0
+  end
+  
   def has_sufficient_balance?(amount_cents)
     balance_cents >= amount_cents
   end
@@ -150,18 +166,29 @@ class Advertiser < ApplicationRecord
   end
   
   # Transaction methods
-  def add_funds!(amount_cents, stripe_payment_intent_id:, processed_by:, payment_method_last4: nil, stripe_fee_cents: nil, auto_recharge: false)
+  def add_funds!(amount_cents, stripe_payment_intent_id:, processed_by:, payment_method_last4: nil, stripe_fee_cents: nil, auto_recharge: false, payment_method_type: 'card', status: 'completed')
     raise ArgumentError, "Amount must be positive" if amount_cents <= 0
     
     transaction do
-      balance_before = balance_cents
-      increment!(:balance_cents, amount_cents)
-      balance_after = reload.balance_cents
+      # For pending ACH payments, add to pending_balance instead
+      if status == 'pending'
+        balance_before = balance_cents
+        increment!(:pending_balance_cents, amount_cents)
+        balance_after = balance_cents
+      else
+        balance_before = balance_cents
+        increment!(:balance_cents, amount_cents)
+        balance_after = reload.balance_cents
+      end
       
       txn_type = auto_recharge ? 'auto_recharge' : 'deposit'
-      description = auto_recharge ? 
-        "Auto-recharge: #{ActionController::Base.helpers.number_to_currency(amount_cents / 100.0)}" :
+      description = if auto_recharge
+        "Auto-recharge: #{ActionController::Base.helpers.number_to_currency(amount_cents / 100.0)}"
+      elsif status == 'pending'
+        "Pending deposit (ACH): #{ActionController::Base.helpers.number_to_currency(amount_cents / 100.0)}"
+      else
         "Funds added: #{ActionController::Base.helpers.number_to_currency(amount_cents / 100.0)}"
+      end
       
       balance_transactions.create!(
         transaction_type: txn_type,
@@ -172,7 +199,26 @@ class Advertiser < ApplicationRecord
         stripe_payment_intent_id: stripe_payment_intent_id,
         payment_method_last4: payment_method_last4,
         stripe_fee_cents: stripe_fee_cents,
-        processed_by: processed_by
+        processed_by: processed_by,
+        payment_method_type: payment_method_type,
+        status: status
+      )
+    end
+  end
+  
+  # Convert pending balance to available balance (when ACH clears)
+  def clear_pending_funds!(transaction)
+    raise ArgumentError, "Transaction must be pending" unless transaction.pending?
+    raise ArgumentError, "Transaction must be ACH" unless transaction.ach_payment?
+    
+    transaction do
+      amount = transaction.amount_cents
+      decrement!(:pending_balance_cents, amount)
+      increment!(:balance_cents, amount)
+      
+      transaction.update!(
+        status: 'completed',
+        balance_after_cents: reload.balance_cents
       )
     end
   end

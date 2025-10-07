@@ -52,7 +52,13 @@ class Settings::BillingController < ApplicationController
         service.setup_payment_method(payment_method_id, current_user)
       end
       
-      flash[:notice] = "Successfully added $#{'%.2f' % amount_dollars} to your balance"
+      # Show different message based on payment status
+      if intent.status == 'processing'
+        flash[:notice] = "ACH payment of $#{'%.2f' % amount_dollars} initiated! Funds will be available in 1-4 business days."
+      else
+        flash[:notice] = "Successfully added $#{'%.2f' % amount_dollars} to your balance"
+      end
+      
       redirect_to settings_billing_path(@advertiser.slug)
     rescue StripePaymentService::PaymentError => e
       flash[:error] = "Payment failed: #{e.message}"

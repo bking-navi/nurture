@@ -1,0 +1,17 @@
+Hello <%= @owner.display_name %>,
+
+Great news! Your ACH payment for <%= @advertiser.name %> has cleared and been added to your balance.
+
+Payment Amount: $<%= number_with_precision(@amount, precision: 2) %>
+New Balance: $<%= number_with_precision(@new_balance, precision: 2) %>
+
+Your funds are now available and you can send campaigns without interruption.
+
+View your billing details:
+<%= settings_billing_url(@advertiser.slug, host: ENV.fetch('APP_HOST', 'localhost:3000'), protocol: Rails.env.production? ? 'https' : 'http') %>
+
+Thank you for using Nurture!
+
+Best regards,
+The Nurture Team
+

@@ -57,10 +57,13 @@
           <label class="block text-sm font-medium text-gray-700 mb-2">
             Payment Method
           </label>
-          <div id="card-element" class="p-3 border border-gray-300 rounded-md">
-            <!-- Stripe Card Element will be inserted here -->
+          <p class="text-xs text-gray-500 mb-3">
+            <strong>💳 Card:</strong> Instant (2.9% + $0.30 fee) &nbsp;|&nbsp; <strong>🏦 Bank Account (ACH):</strong> 1-4 days (0.8% fee, $5 max) - <strong>Minimum $100</strong>
+          </p>
+          <div id="payment-element" class="p-3 border border-gray-300 rounded-md">
+            <!-- Stripe Payment Element will be inserted here (supports Card + ACH) -->
           </div>
-          <div id="card-errors" class="mt-2 text-sm text-red-600" role="alert"></div>
+          <div id="payment-errors" class="mt-2 text-sm text-red-600" role="alert"></div>
         </div>
 
         <% unless @advertiser.payment_method_on_file? %>
@@ -119,11 +122,11 @@
 <script>
   function initializeStripeDeposit() {
     // Check if we're on the right page
-    const cardElement = document.getElementById('card-element');
-    if (!cardElement) return;
+    const paymentElement = document.getElementById('payment-element');
+    if (!paymentElement) return;
     
     // Skip if already initialized
-    if (cardElement.dataset.stripeInitialized === 'true') return;
+    if (paymentElement.dataset.stripeInitialized === 'true') return;
     
     // Wait for Stripe to be available
     if (typeof Stripe === 'undefined') {
@@ -133,31 +136,36 @@
     
     // Initialize Stripe
     const stripe = Stripe('<%= @publishable_key %>');
-    const elements = stripe.elements();
+    const elements = stripe.elements({
+      mode: 'payment',
+      amount: 10000, // Default $100, will update dynamically
+      currency: 'usd',
+      paymentMethodTypes: ['card', 'us_bank_account'],
+    });
   
-  // Create card element
-  const cardField = elements.create('card', {
-    style: {
-      base: {
-        fontSize: '16px',
-        color: '#32325d',
-        '::placeholder': {
-          color: '#aab7c4',
-        },
-      },
-      invalid: {
-        color: '#fa755a',
-        iconColor: '#fa755a',
-      },
-    },
+  // Create Payment Element (supports Card + ACH)
+  const paymentField = elements.create('payment', {
+    layout: 'tabs',
+    defaultValues: {
+      billingDetails: {
+        email: '<%= current_user.email %>'
+      }
+    }
   });
   
-  cardField.mount('#card-element');
-  cardElement.dataset.stripeInitialized = 'true';
+  paymentField.mount('#payment-element');
+  paymentElement.dataset.stripeInitialized = 'true';
+  
+  // Update amount when user changes it
+  const amountInput = document.getElementById('amount');
+  amountInput.addEventListener('change', () => {
+    const newAmount = parseInt(amountInput.value) * 100;
+    elements.update({ amount: newAmount });
+  });
   
   // Handle validation errors
-  cardField.on('change', (event) => {
-    const displayError = document.getElementById('card-errors');
+  paymentField.on('change', (event) => {
+    const displayError = document.getElementById('payment-errors');
     if (event.error) {
       displayError.textContent = event.error.message;
     } else {
@@ -198,15 +206,24 @@
     buttonText.textContent = 'Processing...';
     spinner.classList.remove('hidden');
     
+    // Submit payment to Stripe
+    const { error: submitError } = await elements.submit();
+    if (submitError) {
+      document.getElementById('payment-errors').textContent = submitError.message;
+      submitButton.disabled = false;
+      buttonText.textContent = 'Add Funds';
+      spinner.classList.add('hidden');
+      return;
+    }
+    
     // Create payment method
     const { paymentMethod, error } = await stripe.createPaymentMethod({
-      type: 'card',
-      card: cardField,
+      elements,
     });
     
     if (error) {
       // Show error
-      document.getElementById('card-errors').textContent = error.message;
+      document.getElementById('payment-errors').textContent = error.message;
       submitButton.disabled = false;
       buttonText.textContent = 'Add Funds';
       spinner.classList.add('hidden');

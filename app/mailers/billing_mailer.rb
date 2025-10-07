@@ -43,5 +43,36 @@ class BillingMailer < ApplicationMailer
       subject: "⚠️ Auto-Recharge Failed - #{@advertiser.name}"
     )
   end
+  
+  def ach_payment_cleared(advertiser, transaction)
+    @advertiser = advertiser
+    @transaction = transaction
+    @amount = transaction.amount_dollars
+    @new_balance = advertiser.balance_dollars
+    @owner = advertiser.owner
+    
+    return unless @owner
+    
+    mail(
+      to: @owner.email,
+      subject: "ACH Payment Cleared - #{@advertiser.name}"
+    )
+  end
+  
+  def ach_payment_failed(advertiser, transaction, error_message)
+    @advertiser = advertiser
+    @transaction = transaction
+    @amount = transaction.amount_dollars
+    @error = error_message
+    @balance = advertiser.balance_dollars
+    @owner = advertiser.owner
+    
+    return unless @owner
+    
+    mail(
+      to: @owner.email,
+      subject: "⚠️ ACH Payment Failed - #{@advertiser.name}"
+    )
+  end
 end
 

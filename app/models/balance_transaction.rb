@@ -12,6 +12,13 @@ class BalanceTransaction < ApplicationRecord
   scope :auto_recharges, -> { where(transaction_type: 'auto_recharge') }
   scope :recent, -> { order(created_at: :desc) }
   
+  # ACH-specific scopes
+  scope :pending, -> { where(status: 'pending') }
+  scope :completed, -> { where(status: 'completed') }
+  scope :failed, -> { where(status: 'failed') }
+  scope :ach_payments, -> { where(payment_method_type: 'us_bank_account') }
+  scope :card_payments, -> { where(payment_method_type: 'card') }
+  
   def amount_dollars
     amount_cents.abs / 100.0
   end
@@ -34,5 +41,44 @@ class BalanceTransaction < ApplicationRecord
   
   def balance_after_dollars
     balance_after_cents / 100.0
+  end
+  
+  # Payment method type helpers
+  def card_payment?
+    payment_method_type == 'card'
+  end
+  
+  def ach_payment?
+    payment_method_type == 'us_bank_account'
+  end
+  
+  # Status helpers
+  def pending?
+    status == 'pending'
+  end
+  
+  def completed?
+    status == 'completed'
+  end
+  
+  def failed?
+    status == 'failed'
+  end
+  
+  def payment_method_display
+    case payment_method_type
+    when 'card' then 'Card'
+    when 'us_bank_account' then 'Bank Account (ACH)'
+    else payment_method_type.to_s.titleize
+    end
+  end
+  
+  def status_badge_color
+    case status
+    when 'pending' then 'yellow'
+    when 'completed' then 'green'
+    when 'failed' then 'red'
+    else 'gray'
+    end
   end
 end

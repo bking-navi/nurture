@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_07_164900) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_07_174304) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -95,6 +95,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_07_164900) do
     t.integer "auto_recharge_threshold_cents", default: 10000
     t.integer "auto_recharge_amount_cents", default: 10000
     t.datetime "last_auto_recharge_at"
+    t.integer "pending_balance_cents", default: 0, null: false
     t.index ["balance_cents"], name: "index_advertisers_on_balance_cents"
     t.index ["name"], name: "index_advertisers_on_name"
     t.index ["slug"], name: "index_advertisers_on_slug", unique: true
@@ -178,11 +179,15 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_07_164900) do
     t.jsonb "metadata", default: {}
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "payment_method_type", default: "card"
+    t.string "status", default: "completed"
     t.index ["advertiser_id", "created_at"], name: "index_balance_transactions_on_advertiser_id_and_created_at"
     t.index ["advertiser_id"], name: "index_balance_transactions_on_advertiser_id"
     t.index ["campaign_id"], name: "index_balance_transactions_on_campaign_id"
     t.index ["created_at"], name: "index_balance_transactions_on_created_at"
+    t.index ["payment_method_type"], name: "index_balance_transactions_on_payment_method_type"
     t.index ["processed_by_id"], name: "index_balance_transactions_on_processed_by_id"
+    t.index ["status"], name: "index_balance_transactions_on_status"
     t.index ["stripe_payment_intent_id"], name: "index_balance_transactions_on_stripe_payment_intent_id"
     t.index ["transaction_type"], name: "index_balance_transactions_on_transaction_type"
   end
