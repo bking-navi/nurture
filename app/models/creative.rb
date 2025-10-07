@@ -17,7 +17,7 @@ class Creative < ApplicationRecord
   validate :back_pdf_is_pdf, if: -> { back_pdf.attached? }
   
   # Callbacks
-  after_commit :generate_thumbnail, if: :should_generate_thumbnail?
+  after_commit :queue_thumbnail_generation, if: :should_generate_thumbnail?
   
   # Scopes
   scope :active, -> { where(status: 'active') }
@@ -80,31 +80,9 @@ class Creative < ApplicationRecord
     )
   end
   
-  # Generate thumbnail from front PDF
-  def generate_thumbnail
-    return unless front_pdf.attached?
-    
-    # Use MiniMagick to convert first page of PDF to PNG
-    front_pdf.open do |file|
-      begin
-        require 'mini_magick'
-        
-        # Convert first page of PDF to image
-        image = MiniMagick::Image.open(file.path)
-        image.format "png"
-        image.resize "400x600"  # 2:3 aspect ratio for postcard
-        image.quality "85"
-        
-        # Attach the thumbnail
-        thumbnail.attach(
-          io: File.open(image.path),
-          filename: "#{name.parameterize}-thumb.png",
-          content_type: "image/png"
-        )
-      rescue => e
-        Rails.logger.error "Failed to generate thumbnail for Creative #{id}: #{e.message}"
-      end
-    end
+  # Queue thumbnail generation in background
+  def queue_thumbnail_generation
+    GenerateCreativeThumbnailJob.perform_later(id)
   end
 end
 

@@ -55,7 +55,7 @@ class CreativesController < ApplicationController
     
     if @creative.save
       redirect_to creative_path(@advertiser.slug, @creative), 
-                  notice: 'Creative saved to library!'
+                  notice: 'Creative saved to library! Thumbnail will be generated shortly.'
     else
       @postcard_templates = PostcardTemplate.all
       set_current_advertiser(@advertiser)
