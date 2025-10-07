@@ -46,12 +46,6 @@ module Platform
           total_postcards: LobApiLog.postcards.count
         }
         
-        # Recent activity by day
-        @daily_stats = LobApiLog
-          .where('created_at >= ?', 7.days.ago)
-          .group_by_day(:created_at)
-          .count
-        
         @advertisers = Advertiser.order(:name)
       end
       

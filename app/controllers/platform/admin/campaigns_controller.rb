@@ -28,7 +28,7 @@ module Platform
         @failed_count = Campaign.where(status: 'failed').count
         
         # Cost stats
-        @total_cost_estimate = Campaign.where(status: 'sent').sum(:total_cost_cents)
+        @total_cost_estimate = Campaign.where(status: 'sent').sum(:actual_cost_cents)
         @campaigns_today = Campaign.where('created_at >= ?', Time.current.beginning_of_day).count
         @campaigns_this_week = Campaign.where('created_at >= ?', Time.current.beginning_of_week).count
         

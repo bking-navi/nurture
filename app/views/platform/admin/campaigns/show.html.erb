@@ -74,8 +74,8 @@
     <div class="p-5">
       <dt class="text-sm font-medium text-gray-500 truncate">Total Cost</dt>
       <dd class="mt-1 text-3xl font-semibold text-gray-900">
-        <% if @campaign.total_cost_cents %>
-          $<%= '%.2f' % (@campaign.total_cost_cents / 100.0) %>
+        <% if @campaign.actual_cost_cents %>
+          $<%= '%.2f' % (@campaign.actual_cost_cents / 100.0) %>
         <% else %>
           <span class="text-gray-400">—</span>
         <% end %>
