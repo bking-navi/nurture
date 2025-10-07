@@ -14,7 +14,11 @@ Rails.application.routes.draw do
       get 'dashboard', to: 'dashboard#index', as: 'dashboard'
       resources :advertisers, only: [:index, :show]
       resources :agencies, only: [:index, :show, :new, :create]
-      resources :users, only: [:index, :show]
+      resources :users, only: [:index, :show] do
+        member do
+          patch 'toggle_platform_admin'
+        end
+      end
       get 'billing', to: 'billing#index', as: 'billing'
     end
   end
