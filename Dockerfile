@@ -16,8 +16,11 @@ WORKDIR /rails
 
 # Install base packages
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl libjemalloc2 libvips libpq5 sqlite3 imagemagick && \
+    apt-get install --no-install-recommends -y curl libjemalloc2 libvips libpq5 sqlite3 imagemagick ghostscript && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
+# Fix ImageMagick PDF policy (required for PDF thumbnail generation)
+RUN sed -i 's/<policy domain="coder" rights="none" pattern="PDF" \/>/<policy domain="coder" rights="read|write" pattern="PDF" \/>/' /etc/ImageMagick-6/policy.xml || true
 
 # Set production environment
 ENV RAILS_ENV="production" \
