@@ -248,6 +248,7 @@ class CampaignsController < ApplicationController
       :name, :description, :template_id, :template_name, 
       :template_thumbnail_url, :front_message, :back_message,
       :postcard_template_id, :color_palette_id,
+      :creative_id,
       :front_pdf, :back_pdf,
       template_data: {}
     )

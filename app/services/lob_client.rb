@@ -13,7 +13,11 @@ class LobClient
       postcards_api = Lob::PostcardsApi.new(api_client)
       
       # Determine front and back content (PDF URLs or HTML)
-      if campaign.front_pdf.attached? && campaign.back_pdf.attached?
+      # Use helper methods that check both creative library and direct uploads
+      front_pdf = campaign.front_pdf_file
+      back_pdf = campaign.back_pdf_file
+      
+      if front_pdf&.attached? && back_pdf&.attached?
         # Use PDF files - generate publicly accessible URLs
         host_url = ENV['APP_URL'] || ENV['NGROK_URL'] || 'http://localhost:3000'
         
@@ -26,11 +30,11 @@ class LobClient
         end
         
         front_content = Rails.application.routes.url_helpers.rails_blob_url(
-          campaign.front_pdf,
+          front_pdf,
           host: host_url
         )
         back_content = Rails.application.routes.url_helpers.rails_blob_url(
-          campaign.back_pdf,
+          back_pdf,
           host: host_url
         )
       else

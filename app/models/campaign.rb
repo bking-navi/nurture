@@ -64,9 +64,11 @@ class Campaign < ApplicationRecord
   
   def has_design?
     # Campaign has design if it has either:
-    # 1. PDF uploads (front_pdf and back_pdf)
-    # 2. New custom template system (postcard_template_id)
-    # 3. Old simple system (template_id or front_message/back_message)
+    # 1. Creative from library
+    # 2. PDF uploads (front_pdf and back_pdf)
+    # 3. New custom template system (postcard_template_id)
+    # 4. Old simple system (template_id or front_message/back_message)
+    creative_id.present? ||
     (front_pdf.attached? && back_pdf.attached?) ||
     postcard_template_id.present? || 
     template_id.present? || 
