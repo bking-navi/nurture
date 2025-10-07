@@ -15,6 +15,7 @@ Rails.application.routes.draw do
       resources :advertisers, only: [:index, :show]
       resources :agencies, only: [:index, :show, :new, :create]
       resources :users, only: [:index, :show]
+      get 'billing', to: 'billing#index', as: 'billing'
     end
   end
 
