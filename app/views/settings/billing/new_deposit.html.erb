@@ -237,6 +237,14 @@
     } else {
       // Set payment method ID and submit form
       console.log('Payment method created:', paymentMethod.id, 'Type:', paymentMethod.type);
+      
+      // For ACH, we need to handle the payment intent confirmation
+      if (paymentMethod.type === 'us_bank_account') {
+        // For ACH, we need to confirm the payment on the server first
+        // Then handle any required actions (like bank verification)
+        console.log('ACH payment - will handle server-side confirmation');
+      }
+      
       document.getElementById('payment-method-id').value = paymentMethod.id;
       console.log('Submitting form to server...');
       form.submit();

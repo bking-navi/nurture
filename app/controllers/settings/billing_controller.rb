@@ -23,6 +23,14 @@ class Settings::BillingController < ApplicationController
   end
   
   def create_deposit
+    payment_intent_id = params[:payment_intent_id]
+    
+    # If we're confirming an existing PaymentIntent after bank verification
+    if payment_intent_id.present?
+      return confirm_payment_intent(payment_intent_id)
+    end
+    
+    # Original payment flow
     amount_dollars = params[:amount].to_f
     amount_cents = (amount_dollars * 100).to_i
     payment_method_id = params[:payment_method_id]
@@ -58,6 +66,25 @@ class Settings::BillingController < ApplicationController
       )
       
       Rails.logger.info "Payment Intent created: #{intent.id} with status #{intent.status}"
+      
+      # Handle requires_action status (ACH bank verification)
+      if intent.status == 'requires_action'
+        # Return the client secret so the frontend can handle the next action
+        respond_to do |format|
+          format.html do
+            # Store intent details in session for after redirect
+            session[:pending_payment_intent] = {
+              intent_id: intent.id,
+              client_secret: intent.client_secret,
+              amount: amount_dollars
+            }
+            # Redirect with client secret in URL
+            redirect_to settings_billing_path(@advertiser.slug, payment_intent: intent.id, payment_intent_client_secret: intent.client_secret)
+          end
+          format.json { render json: { requires_action: true, client_secret: intent.client_secret, payment_intent_id: intent.id } }
+        end
+        return
+      end
       
       # If this is their first payment method, save it
       if !@advertiser.payment_method_on_file? && params[:save_payment_method] == 'true'
@@ -119,6 +146,100 @@ class Settings::BillingController < ApplicationController
   end
   
   private
+  
+  def confirm_payment_intent(payment_intent_id)
+    Rails.logger.info "=== CONFIRMING PAYMENT INTENT ==="
+    Rails.logger.info "Payment Intent ID: #{payment_intent_id}"
+    
+    begin
+      intent = Stripe::PaymentIntent.retrieve(payment_intent_id)
+      Rails.logger.info "Payment Intent status: #{intent.status}"
+      
+      if intent.status == 'succeeded' || intent.status == 'processing'
+        # Get payment method details
+        payment_method = Stripe::PaymentMethod.retrieve(intent.payment_method)
+        payment_method_type = payment_method.type
+        
+        last4 = if payment_method_type == 'card'
+          payment_method.card.last4
+        elsif payment_method_type == 'us_bank_account'
+          payment_method.us_bank_account.last4
+        else
+          'N/A'
+        end
+        
+        amount_cents = intent.amount
+        amount_dollars = amount_cents / 100.0
+        stripe_fee_cents = StripePaymentService.calculate_stripe_fee(amount_cents, payment_method_type)
+        balance_before = @advertiser.balance_cents
+        
+        status = intent.status == 'processing' ? 'pending' : 'completed'
+        
+        # Update advertiser balance
+        if status == 'pending'
+          @advertiser.increment!(:pending_balance_cents, amount_cents)
+          balance_after = balance_before
+        else
+          @advertiser.increment!(:balance_cents, amount_cents)
+          balance_after = balance_before + amount_cents
+        end
+        
+        # Create balance transaction
+        transaction = @advertiser.balance_transactions.create!(
+          transaction_type: 'deposit',
+          amount_cents: amount_cents,
+          balance_before_cents: balance_before,
+          balance_after_cents: balance_after,
+          description: "Added funds via #{payment_method_type == 'us_bank_account' ? 'ACH' : 'card'}",
+          stripe_payment_intent_id: intent.id,
+          stripe_charge_id: intent.charges.data.first&.id,
+          payment_method_last4: last4,
+          payment_method_type: payment_method_type,
+          stripe_fee_cents: stripe_fee_cents,
+          processed_by: current_user,
+          status: status
+        )
+        
+        Rails.logger.info "Balance transaction created: #{transaction.id}"
+        
+        message = if status == 'pending'
+          "ACH payment of $#{'%.2f' % amount_dollars} initiated! Funds will be available in 1-4 business days."
+        else
+          "Successfully added $#{'%.2f' % amount_dollars} to your balance"
+        end
+        
+        respond_to do |format|
+          format.html do
+            flash[:notice] = message
+            redirect_to settings_billing_path(@advertiser.slug)
+          end
+          format.json { render json: { success: true, message: message, pending: status == 'pending' } }
+        end
+      else
+        error_message = "Payment verification failed. Status: #{intent.status}"
+        Rails.logger.error error_message
+        
+        respond_to do |format|
+          format.html do
+            flash[:error] = error_message
+            redirect_to settings_billing_path(@advertiser.slug)
+          end
+          format.json { render json: { success: false, error: error_message }, status: :unprocessable_entity }
+        end
+      end
+    rescue => e
+      Rails.logger.error "Error confirming payment: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
+      
+      respond_to do |format|
+        format.html do
+          flash[:error] = "Failed to confirm payment: #{e.message}"
+          redirect_to settings_billing_path(@advertiser.slug)
+        end
+        format.json { render json: { success: false, error: e.message }, status: :unprocessable_entity }
+      end
+    end
+  end
   
   def set_advertiser
     @advertiser = find_advertiser_by_slug(params[:advertiser_slug])

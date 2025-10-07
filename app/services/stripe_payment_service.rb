@@ -33,6 +33,7 @@ class StripePaymentService
       currency: 'usd',
       customer: @advertiser.stripe_customer_id,
       payment_method: payment_method_id,
+      payment_method_types: [payment_method_type], # Explicitly allow the payment method type
       description: auto_recharge ? 
         "Auto-recharge for #{@advertiser.name}" :
         "Balance top-up for #{@advertiser.name}",
@@ -48,9 +49,10 @@ class StripePaymentService
       }
     }
     
-    # ACH requires manual confirmation, cards can be confirmed immediately
+    # ACH requires manual confirmation and return_url for redirect-based authentication
     if payment_method_type == 'us_bank_account'
       intent_params[:confirm] = true
+      intent_params[:return_url] = "#{ENV.fetch('APP_HOST', 'http://localhost:3000')}/advertisers/#{@advertiser.slug}/settings/billing"
       intent_params[:mandate_data] = {
         customer_acceptance: {
           type: 'online',
@@ -70,7 +72,12 @@ class StripePaymentService
     # Handle payment based on status
     # Card payments: 'succeeded' immediately
     # ACH payments: 'processing' initially, 'succeeded' later via webhook
-    if intent.status == 'succeeded'
+    # ACH with verification: 'requires_action' for Financial Connections flow
+    if intent.status == 'requires_action'
+      # ACH requires additional action (bank verification via Plaid/Financial Connections)
+      # Return the intent so the client can handle next action
+      return intent
+    elsif intent.status == 'succeeded'
       # Card payment succeeded immediately
       last4 = payment_method.type == 'card' ? payment_method.card.last4 : payment_method.us_bank_account.last4
       

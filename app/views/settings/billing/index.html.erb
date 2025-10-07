@@ -210,3 +210,60 @@
   </div>
 </div>
 
+<% if params[:payment_intent_client_secret].present? %>
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+  // Handle ACH bank verification on return
+  (function() {
+    const clientSecret = '<%= params[:payment_intent_client_secret] %>';
+    const paymentIntentId = '<%= params[:payment_intent] %>';
+    const stripe = Stripe('<%= Rails.application.credentials.dig(:stripe, :publishable_key) %>');
+    
+    console.log('Handling ACH payment intent:', paymentIntentId, clientSecret);
+    
+    // Confirm the payment intent (this will open Plaid modal if needed)
+    stripe.handleNextAction({
+      clientSecret: clientSecret
+    }).then(function(result) {
+      if (result.error) {
+        console.error('ACH verification error:', result.error);
+        alert('Bank verification failed: ' + result.error.message);
+        window.location.href = '<%= settings_billing_path(@advertiser.slug) %>';
+      } else {
+        console.log('ACH verification completed!', result.paymentIntent);
+        
+        // Now tell the server to finalize the payment
+        console.log('Calling server to confirm payment intent...');
+        fetch('<%= settings_create_deposit_path(@advertiser.slug) %>', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            payment_intent_id: result.paymentIntent.id
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log('Server response:', data);
+          if (data.success) {
+            alert(data.message);
+            window.location.href = '<%= settings_billing_path(@advertiser.slug) %>';
+          } else {
+            alert('Failed to process payment: ' + data.error);
+            window.location.href = '<%= settings_billing_path(@advertiser.slug) %>';
+          }
+        })
+        .catch(error => {
+          console.error('Error confirming payment:', error);
+          alert('An error occurred while processing your payment. Please contact support.');
+          window.location.href = '<%= settings_billing_path(@advertiser.slug) %>';
+        });
+      }
+    });
+  })();
+</script>
+<% end %>
+
