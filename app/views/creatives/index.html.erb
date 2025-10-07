@@ -17,7 +17,8 @@
 
       <div class="w-48">
         <%= f.label :size, "Postcard Size", class: "block text-sm font-medium text-gray-700 mb-1" %>
-        <%= f.select :size, options_from_collection_for_select(PostcardTemplate.all, :id, :name, params[:size]), { include_blank: "All Sizes" }, class: "mt-1 block w-full shadow-sm focus:ring-gray-700 focus:border-gray-700 sm:text-sm border-gray-300 rounded-md" %>
+        <%= f.select :size, [["6x9", "6x9"]], { include_blank: "All Sizes" }, class: "mt-1 block w-full shadow-sm focus:ring-gray-700 focus:border-gray-700 sm:text-sm border-gray-300 rounded-md bg-gray-100", disabled: true %>
+        <p class="mt-1 text-xs text-gray-500">All postcards are 6"x9"</p>
       </div>
 
       <div class="w-48">
@@ -109,7 +110,7 @@
               </h3>
               
               <div class="mt-1 flex items-center text-xs text-gray-500">
-                <span><%= creative.postcard_template.name %></span>
+                <span>6x9</span>
                 <% if creative.back_pdf.attached? %>
                   <span class="mx-1">•</span>
                   <span>2-sided</span>
