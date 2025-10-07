@@ -1,0 +1,11 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  agency_membership: one
+  advertiser_agency_access: one
+  role: MyString
+
+two:
+  agency_membership: two
+  advertiser_agency_access: two
+  role: MyString

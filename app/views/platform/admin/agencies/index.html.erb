@@ -1,0 +1,95 @@
+<% content_for :page_title, 'Agencies' %>
+
+<div class="mb-6 flex items-center justify-between">
+  <div>
+    <h2 class="text-2xl font-bold text-gray-900">Agency Partners</h2>
+    <p class="mt-1 text-sm text-gray-600">Manage all agency partners on the platform</p>
+  </div>
+  <div>
+    <%= link_to new_platform_admin_agency_path, 
+        class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" do %>
+      <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+      </svg>
+      Create Agency
+    <% end %>
+  </div>
+</div>
+
+<% if @agencies.any? %>
+  <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+    <ul role="list" class="divide-y divide-gray-200">
+      <% @agencies.each do |agency| %>
+        <% owner = agency.agency_memberships.find_by(role: 'owner')&.user %>
+        <li>
+          <%= link_to platform_admin_agency_path(agency), class: "block hover:bg-gray-50 transition-colors" do %>
+            <div class="px-6 py-5">
+              <div class="flex items-center justify-between">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-4">
+                    <div class="flex-shrink-0">
+                      <div class="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-green-100 text-green-700 font-bold text-lg">
+                        <%= agency.name.first.upcase %>
+                      </div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-base font-medium text-gray-900 truncate">
+                        <%= agency.name %>
+                      </p>
+                      <p class="text-sm text-gray-500 truncate">
+                        <%= agency.website_url %>
+                      </p>
+                      <div class="mt-1 flex items-center gap-4 text-xs text-gray-500">
+                        <span><%= agency.city %>, <%= agency.state %></span>
+                        <span>•</span>
+                        <span>Owner: <%= owner&.display_name || 'N/A' %></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-6">
+                  <div class="text-right">
+                    <p class="text-sm font-medium text-gray-900">
+                      <%= pluralize(agency.users.count, 'member') %>
+                    </p>
+                    <p class="text-xs text-gray-500">
+                      Created <%= time_ago_in_words(agency.created_at) %> ago
+                    </p>
+                  </div>
+                  <svg class="h-5 w-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+  
+  <div class="mt-6">
+    <%= paginate @agencies if @agencies.respond_to?(:current_page) %>
+  </div>
+<% else %>
+  <!-- Empty State -->
+  <div class="bg-white shadow sm:rounded-lg">
+    <div class="px-4 py-12 text-center">
+      <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+      </svg>
+      <h3 class="mt-2 text-sm font-medium text-gray-900">No agencies yet</h3>
+      <p class="mt-1 text-sm text-gray-500">Get started by creating the first agency partner.</p>
+      <div class="mt-6">
+        <%= link_to new_platform_admin_agency_path, 
+            class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" do %>
+          <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+          </svg>
+          Create Agency
+        <% end %>
+      </div>
+    </div>
+  </div>
+<% end %>
+

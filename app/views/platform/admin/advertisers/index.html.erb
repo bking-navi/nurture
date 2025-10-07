@@ -1,0 +1,76 @@
+<% content_for :page_title, 'Advertisers' %>
+
+<div class="mb-6">
+  <h2 class="text-2xl font-bold text-gray-900">All Advertisers</h2>
+  <p class="mt-1 text-sm text-gray-600">View and manage all advertisers on the platform</p>
+</div>
+
+<% if @advertisers.any? %>
+  <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+    <ul role="list" class="divide-y divide-gray-200">
+      <% @advertisers.each do |advertiser| %>
+        <% owner = advertiser.advertiser_memberships.find_by(role: 'owner')&.user %>
+        <li>
+          <%= link_to platform_admin_advertiser_path(advertiser), class: "block hover:bg-gray-50 transition-colors" do %>
+            <div class="px-6 py-5">
+              <div class="flex items-center justify-between">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-4">
+                    <div class="flex-shrink-0">
+                      <div class="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-indigo-100 text-indigo-700 font-bold text-lg">
+                        <%= advertiser.name.first.upcase %>
+                      </div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-base font-medium text-gray-900 truncate">
+                        <%= advertiser.name %>
+                      </p>
+                      <p class="text-sm text-gray-500 truncate">
+                        <%= advertiser.website_url %>
+                      </p>
+                      <div class="mt-1 flex items-center gap-4 text-xs text-gray-500">
+                        <span><%= advertiser.city %>, <%= advertiser.state %></span>
+                        <span>•</span>
+                        <span>Owner: <%= owner&.display_name || 'N/A' %></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-6">
+                  <div class="text-right">
+                    <p class="text-sm font-medium text-gray-900">
+                      <%= pluralize(advertiser.users.count, 'member') %>
+                    </p>
+                    <p class="text-xs text-gray-500">
+                      Created <%= time_ago_in_words(advertiser.created_at) %> ago
+                    </p>
+                  </div>
+                  <svg class="h-5 w-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+  
+  <!-- Pagination would go here if needed -->
+  <div class="mt-6">
+    <%= paginate @advertisers if @advertisers.respond_to?(:current_page) %>
+  </div>
+<% else %>
+  <!-- Empty State -->
+  <div class="bg-white shadow sm:rounded-lg">
+    <div class="px-4 py-12 text-center">
+      <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+      </svg>
+      <h3 class="mt-2 text-sm font-medium text-gray-900">No advertisers</h3>
+      <p class="mt-1 text-sm text-gray-500">No advertisers have been created yet.</p>
+    </div>
+  </div>
+<% end %>
+

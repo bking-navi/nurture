@@ -1,0 +1,164 @@
+<% content_for :breadcrumb do %>
+  <%= link_to 'Home', advertiser_dashboard_path(@advertiser.slug), class: 'hover:text-neutral-900' %> / 
+  <%= link_to 'Settings', advertiser_settings_path(@advertiser.slug), class: 'hover:text-neutral-900' %> / 
+  <span class="text-neutral-900">Agency Partners</span>
+<% end %>
+
+<!-- Header with Invite Button -->
+<div class="mb-6 sm:flex sm:items-center sm:justify-between">
+  <div>
+    <h2 class="text-2xl font-bold text-gray-900">Agency Partners</h2>
+    <p class="mt-1 text-sm text-gray-500">Manage agencies that have access to your advertiser account</p>
+  </div>
+  <div class="mt-4 sm:mt-0">
+    <%= link_to settings_new_agency_path(@advertiser.slug), 
+        class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gray-950 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700" do %>
+      <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+      </svg>
+      Invite Agency
+    <% end %>
+  </div>
+</div>
+
+<% if @agency_accesses.any? %>
+  <!-- Active Agencies -->
+  <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
+    <div class="px-6 py-5 border-b border-gray-200">
+      <h3 class="text-lg leading-6 font-medium text-gray-900">Active Agencies</h3>
+      <p class="mt-1 text-sm text-gray-500">Agencies with current access to your account</p>
+    </div>
+    
+    <ul role="list" class="divide-y divide-gray-200">
+      <% @agency_accesses.active.each do |access| %>
+        <% agency = access.agency %>
+        <% owner = agency.owner %>
+        <li class="px-6 py-5">
+          <div class="flex items-center justify-between">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-4">
+                <div class="flex-shrink-0">
+                  <div class="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-green-100 text-green-700 font-bold text-lg">
+                    <%= agency.name.first.upcase %>
+                  </div>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-base font-medium text-gray-900">
+                    <%= agency.name %>
+                  </p>
+                  <p class="text-sm text-gray-500">
+                    <%= agency.website_url %>
+                  </p>
+                  <div class="mt-1 flex items-center gap-4 text-xs text-gray-500">
+                    <span>Owner: <%= owner&.display_name || 'N/A' %></span>
+                    <span>•</span>
+                    <span>Access granted <%= time_ago_in_words(access.accepted_at) %> ago</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                Active
+              </span>
+              <%= button_to "Revoke Access", settings_agency_path(@advertiser.slug, access),
+                  method: :delete,
+                  data: { confirm: "Are you sure you want to revoke #{agency.name}'s access? They will no longer be able to manage your campaigns." },
+                  class: "inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500" %>
+            </div>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+  
+  <!-- Pending Invitations -->
+  <% if @agency_accesses.pending.any? %>
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
+      <div class="px-6 py-5 border-b border-gray-200">
+        <h3 class="text-lg leading-6 font-medium text-gray-900">Pending Invitations</h3>
+        <p class="mt-1 text-sm text-gray-500">Agencies that haven't accepted your invitation yet</p>
+      </div>
+      
+      <ul role="list" class="divide-y divide-gray-200">
+        <% @agency_accesses.pending.each do |access| %>
+          <% agency = access.agency %>
+          <% owner = agency.owner %>
+          <li class="px-6 py-5">
+            <div class="flex items-center justify-between">
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-900">
+                  <%= agency.name %>
+                </p>
+                <p class="text-xs text-gray-500 mt-1">
+                  Invited <%= time_ago_in_words(access.invited_at) %> ago • Owner: <%= owner&.email || 'N/A' %>
+                </p>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                  Pending
+                </span>
+                <%= button_to "Cancel", settings_agency_path(@advertiser.slug, access),
+                    method: :delete,
+                    data: { confirm: "Are you sure you want to cancel this invitation?" },
+                    class: "text-sm text-red-600 hover:text-red-900" %>
+              </div>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+  
+  <!-- Revoked Agencies -->
+  <% if @agency_accesses.revoked.any? %>
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+      <div class="px-6 py-5 border-b border-gray-200">
+        <h3 class="text-lg leading-6 font-medium text-gray-900">Revoked Access</h3>
+        <p class="mt-1 text-sm text-gray-500">Agencies whose access has been revoked. You can re-invite them anytime.</p>
+      </div>
+      
+      <ul role="list" class="divide-y divide-gray-200">
+        <% @agency_accesses.revoked.each do |access| %>
+          <% agency = access.agency %>
+          <li class="px-6 py-5">
+            <div class="flex items-center justify-between">
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-500">
+                  <%= agency.name %>
+                </p>
+                <p class="text-xs text-gray-400 mt-1">
+                  Access revoked <%= time_ago_in_words(access.revoked_at) %> ago
+                </p>
+              </div>
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                Revoked
+              </span>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+<% else %>
+  <!-- Empty State -->
+  <div class="bg-white shadow sm:rounded-lg">
+    <div class="px-4 py-12 text-center">
+      <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+      </svg>
+      <h3 class="mt-2 text-sm font-medium text-gray-900">No agencies yet</h3>
+      <p class="mt-1 text-sm text-gray-500">Get started by inviting an agency partner to help manage your campaigns.</p>
+      <div class="mt-6">
+        <%= link_to settings_new_agency_path(@advertiser.slug), 
+            class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gray-950 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700" do %>
+          <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+          </svg>
+          Invite Agency
+        <% end %>
+      </div>
+    </div>
+  </div>
+<% end %>
+

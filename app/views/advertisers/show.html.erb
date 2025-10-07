@@ -24,13 +24,23 @@
               Welcome to your Dashboard!
             </h3>
             <div class="mt-2 max-w-xl text-sm text-gray-500">
-              <p>You're now the owner of <%= @advertiser.name %>. Here's what you can do:</p>
+              <% if @membership %>
+                <p>You're now the <%= @membership.role %> of <%= @advertiser.name %>. Here's what you can do:</p>
+              <% elsif @agency_assignment %>
+                <p>You have <%= @agency_assignment.role %> access to <%= @advertiser.name %> via <%= @agency_assignment.agency.name %>.</p>
+              <% end %>
             </div>
           </div>
           <div class="mt-5 sm:mt-0 sm:ml-6 sm:flex-shrink-0">
-            <span class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
-              <%= @membership.role.titleize %>
-            </span>
+            <% if @membership %>
+              <span class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium <%= @membership.role == 'owner' ? 'bg-purple-100 text-purple-800' : 'bg-indigo-100 text-indigo-800' %>">
+                <%= @membership.role.titleize %>
+              </span>
+            <% elsif @agency_assignment %>
+              <span class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                Agency <%= @agency_assignment.role.titleize %>
+              </span>
+            <% end %>
           </div>
         </div>
       </div>

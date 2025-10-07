@@ -1,0 +1,63 @@
+<% content_for :breadcrumb do %>
+  <%= link_to 'Home', advertiser_dashboard_path(@advertiser.slug), class: 'hover:text-neutral-900' %> / 
+  <%= link_to 'Settings', advertiser_settings_path(@advertiser.slug), class: 'hover:text-neutral-900' %> / 
+  <%= link_to 'Agency Partners', settings_agencies_path(@advertiser.slug), class: 'hover:text-neutral-900' %> / 
+  <span class="text-neutral-900">Invite Agency</span>
+<% end %>
+
+<div class="max-w-2xl">
+  <div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-900">Invite Agency Partner</h2>
+    <p class="mt-1 text-sm text-gray-600">Enter the email address of the agency owner to invite them to manage your campaigns.</p>
+  </div>
+
+  <div class="bg-white shadow sm:rounded-lg">
+    <div class="px-6 py-5">
+      <%= form_with url: settings_create_agency_path(@advertiser.slug), method: :post, class: "space-y-6" do |f| %>
+        <div>
+          <label for="agency_owner_email" class="block text-sm font-medium text-gray-700">
+            Agency Owner Email
+          </label>
+          <div class="mt-1">
+            <%= text_field_tag :agency_owner_email, params[:agency_owner_email],
+                placeholder: "agency-owner@example.com",
+                required: true,
+                class: "shadow-sm focus:ring-gray-700 focus:border-gray-700 block w-full sm:text-sm border-gray-300 rounded-md" %>
+          </div>
+          <p class="mt-2 text-sm text-gray-500">
+            The user must be registered as an agency owner on the platform.
+          </p>
+        </div>
+
+        <!-- Info Box -->
+        <div class="rounded-md bg-blue-50 p-4">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="ml-3 flex-1">
+              <h3 class="text-sm font-medium text-blue-800">What happens next?</h3>
+              <div class="mt-2 text-sm text-blue-700">
+                <ul class="list-disc space-y-1 pl-5">
+                  <li>The agency owner will receive an invitation email</li>
+                  <li>They must accept the invitation to gain access</li>
+                  <li>Once accepted, the agency gets admin-level access to manage your campaigns</li>
+                  <li>The agency owner can assign specific team members to your account</li>
+                  <li>You can revoke access at any time</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3">
+          <%= link_to "Cancel", settings_agencies_path(@advertiser.slug), class: "px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700" %>
+          <%= f.submit "Send Invitation", class: "inline-flex justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gray-950 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+

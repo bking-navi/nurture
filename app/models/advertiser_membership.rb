@@ -33,6 +33,18 @@ class AdvertiserMembership < ApplicationRecord
   def viewer?
     role == 'viewer'
   end
+  
+  def accepted?
+    status == 'accepted'
+  end
+  
+  def pending?
+    status == 'pending'
+  end
+  
+  def declined?
+    status == 'declined'
+  end
 
   def can_manage_team?
     owner? || admin?

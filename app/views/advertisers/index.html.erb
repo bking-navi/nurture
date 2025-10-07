@@ -79,7 +79,17 @@
       <div class="bg-white shadow overflow-hidden sm:rounded-md">
         <ul role="list" class="divide-y divide-gray-200">
           <% @advertisers.each do |advertiser| %>
-            <% membership = current_user.advertiser_memberships.find_by(advertiser: advertiser) %>
+            <% 
+              membership = current_user.advertiser_memberships.find_by(advertiser: advertiser)
+              # Check if this is agency access
+              agency_assignment = nil
+              unless membership
+                agency_assignment = AgencyClientAssignment.joins(:agency_membership, :advertiser_agency_access)
+                                                          .where(agency_memberships: { user: current_user })
+                                                          .where(advertiser_agency_accesses: { advertiser: advertiser, status: 'accepted' })
+                                                          .first
+              end
+            %>
             <li>
               <%= link_to advertiser_dashboard_path(advertiser.slug), class: "block hover:bg-gray-50 transition-colors duration-150" do %>
                 <div class="px-4 py-4 sm:px-6">
@@ -100,13 +110,24 @@
                               <%= advertiser.website_url %>
                             </p>
                           <% end %>
+                          <% if agency_assignment %>
+                            <p class="text-xs text-gray-500 mt-1">
+                              via <%= agency_assignment.agency.name %>
+                            </p>
+                          <% end %>
                         </div>
                       </div>
                     </div>
                     <div class="flex items-center space-x-4">
-                      <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full <%= membership.role == 'owner' ? 'bg-purple-100 text-purple-800' : membership.role == 'admin' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' %>">
-                        <%= membership.role.capitalize %>
-                      </span>
+                      <% if membership %>
+                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full <%= membership.role == 'owner' ? 'bg-purple-100 text-purple-800' : membership.role == 'admin' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' %>">
+                          <%= membership.role.capitalize %>
+                        </span>
+                      <% elsif agency_assignment %>
+                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                          Agency <%= agency_assignment.role.capitalize %>
+                        </span>
+                      <% end %>
                       <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
                       </svg>

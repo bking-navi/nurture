@@ -7,6 +7,16 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   root "home#index"
+  
+  # Platform Admin Routes (protected by platform_admin_required)
+  namespace :platform do
+    namespace :admin do
+      get 'dashboard', to: 'dashboard#index', as: 'dashboard'
+      resources :advertisers, only: [:index, :show]
+      resources :agencies, only: [:index, :show, :new, :create]
+      resources :users, only: [:index, :show]
+    end
+  end
 
   # Devise routes with custom controllers
   devise_for :users, controllers: {
@@ -41,7 +51,33 @@ Rails.application.routes.draw do
       post 'team/invitations', to: 'team/invitations#create', as: :team_invitations
       post 'team/invitations/:id/resend', to: 'team/invitations#resend', as: :team_resend_invitation
       delete 'team/invitations/:id', to: 'team/invitations#destroy', as: :team_invitation
+      
+      # Agency management
+      get 'agencies', to: 'agencies#index', as: :agencies
+      get 'agencies/new', to: 'agencies#new', as: :new_agency
+      post 'agencies', to: 'agencies#create', as: :create_agency
+      delete 'agencies/:id', to: 'agencies#destroy', as: :agency
     end
+  end
+  
+  # Agency invitation acceptance (public, not scoped)
+  get 'agency_invitations/:token/accept', to: 'agency_invitations#show', as: :accept_agency_invitation
+  post 'agency_invitations/:token/accept', to: 'agency_invitations#accept', as: :process_agency_invitation
+  
+  # Agency team invitation acceptance (public)
+  get 'agencies/invitations/:token/accept', to: 'agencies/invitations#accept', as: :accept_agency_team_invitation
+  post 'agencies/invitations/:token/accept', to: 'agencies/invitations#process_acceptance', as: :process_agency_team_invitation
+  
+  # Agency routes
+  scope '/agencies/:slug' do
+    get 'dashboard', to: 'agencies/dashboard#index', as: :agency_dashboard
+    resources :clients, only: [:index], path: 'clients', controller: 'agencies/clients' do
+      resources :assignments, only: [:index, :create, :destroy], controller: 'agencies/client_assignments'
+    end
+    get 'team', to: 'agencies/team#index', as: :agency_team
+    get 'team/invitations/invite', to: 'agencies/team/invitations#new', as: :new_agency_team_invitation
+    post 'team/invitations', to: 'agencies/team/invitations#create', as: :agency_team_invitations
+    delete 'team/invitations/:id', to: 'agencies/team/invitations#destroy', as: :agency_team_invitation
   end
   
   # Invitation acceptance (public, not scoped to advertiser)

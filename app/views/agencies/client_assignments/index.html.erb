@@ -1,0 +1,129 @@
+<% content_for :breadcrumb do %>
+  <%= link_to 'Dashboard', agency_dashboard_path(@agency.slug), class: 'hover:text-neutral-900' %> / 
+  <%= link_to 'Clients', clients_path(@agency.slug), class: 'hover:text-neutral-900' %> / 
+  <span class="text-neutral-900"><%= @client_access.advertiser.name %> Access</span>
+<% end %>
+
+<div class="mb-6">
+  <h2 class="text-2xl font-bold text-gray-900">Manage Client Access</h2>
+  <p class="mt-1 text-sm text-gray-600">
+    Control which team members can access <%= @client_access.advertiser.name %>
+  </p>
+</div>
+
+<!-- Client Info Card -->
+<div class="bg-white shadow rounded-lg mb-6 p-6">
+  <div class="flex items-start gap-4">
+    <div class="flex-shrink-0">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-lg bg-indigo-100 text-indigo-700 font-bold text-2xl">
+        <%= @client_access.advertiser.name.first.upcase %>
+      </div>
+    </div>
+    <div class="flex-1">
+      <h3 class="text-lg font-medium text-gray-900"><%= @client_access.advertiser.name %></h3>
+      <p class="text-sm text-gray-500"><%= @client_access.advertiser.website_url %></p>
+      <p class="text-xs text-gray-500 mt-2">
+        Access granted <%= time_ago_in_words(@client_access.accepted_at) %> ago
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Assigned Team Members -->
+<div class="bg-white shadow rounded-lg mb-6">
+  <div class="px-6 py-5 border-b border-gray-200">
+    <h3 class="text-lg leading-6 font-medium text-gray-900">Assigned Team Members</h3>
+    <p class="mt-1 text-sm text-gray-500">Users who can access this client</p>
+  </div>
+  
+  <% if @assignments.any? %>
+    <ul role="list" class="divide-y divide-gray-200">
+      <% @assignments.each do |assignment| %>
+        <li class="px-6 py-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <div class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 text-sm font-bold">
+                  <%= assignment.user.initials %>
+                </div>
+              </div>
+              <div class="ml-4">
+                <div class="text-sm font-medium text-gray-900">
+                  <%= assignment.user.display_name %>
+                </div>
+                <div class="text-sm text-gray-500"><%= assignment.user.email %></div>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <%= 
+                case assignment.role
+                when 'admin' then 'bg-blue-100 text-blue-800'
+                when 'manager' then 'bg-green-100 text-green-800'
+                else 'bg-gray-100 text-gray-800'
+                end %>">
+                <%= assignment.role.titleize %>
+              </span>
+              <%= button_to "Remove", client_assignment_path(@agency.slug, @client_access.id, assignment),
+                  method: :delete,
+                  data: { confirm: "Remove #{assignment.user.display_name} from this client?" },
+                  class: "text-sm text-red-600 hover:text-red-900" %>
+            </div>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <div class="px-6 py-12 text-center">
+      <p class="text-sm text-gray-500">No team members assigned yet</p>
+    </div>
+  <% end %>
+</div>
+
+<!-- Available Team Members -->
+<% if @available_members.any? %>
+  <div class="bg-white shadow rounded-lg">
+    <div class="px-6 py-5 border-b border-gray-200">
+      <h3 class="text-lg leading-6 font-medium text-gray-900">Add Team Members</h3>
+      <p class="mt-1 text-sm text-gray-500">Assign additional team members to this client</p>
+    </div>
+    
+    <ul role="list" class="divide-y divide-gray-200">
+      <% @available_members.each do |membership| %>
+        <li class="px-6 py-4">
+          <%= form_with url: client_assignments_path(@agency.slug, @client_access.id), method: :post, class: "flex items-center justify-between" do |f| %>
+            <%= f.hidden_field :agency_membership_id, value: membership.id %>
+            
+            <div class="flex items-center flex-1">
+              <div class="flex-shrink-0">
+                <div class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 text-gray-700 text-sm font-bold">
+                  <%= membership.user.initials %>
+                </div>
+              </div>
+              <div class="ml-4 flex-1">
+                <div class="text-sm font-medium text-gray-900">
+                  <%= membership.user.display_name %>
+                </div>
+                <div class="text-sm text-gray-500"><%= membership.user.email %></div>
+              </div>
+            </div>
+            
+            <div class="flex items-center gap-3">
+              <%= f.select :role, 
+                  options_for_select([['Viewer', 'viewer'], ['Manager', 'manager'], ['Admin', 'admin']], 'viewer'),
+                  {},
+                  class: "rounded-md border-gray-300 text-sm focus:border-gray-700 focus:ring-gray-700" %>
+              <%= f.submit "Assign", class: "inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-gray-950 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700" %>
+            </div>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+<% else %>
+  <div class="bg-white shadow rounded-lg">
+    <div class="px-6 py-12 text-center">
+      <p class="text-sm text-gray-500">All team members have been assigned to this client</p>
+    </div>
+  </div>
+<% end %>
+

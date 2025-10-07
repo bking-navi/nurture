@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_06_231951) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_07_120532) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -42,6 +42,21 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_06_231951) do
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
+  create_table "advertiser_agency_accesses", force: :cascade do |t|
+    t.bigint "advertiser_id", null: false
+    t.bigint "agency_id", null: false
+    t.string "status", default: "pending", null: false
+    t.datetime "invited_at"
+    t.datetime "accepted_at"
+    t.datetime "revoked_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["advertiser_id", "agency_id"], name: "index_adv_agency_access_unique", unique: true
+    t.index ["advertiser_id"], name: "index_advertiser_agency_accesses_on_advertiser_id"
+    t.index ["agency_id"], name: "index_advertiser_agency_accesses_on_agency_id"
+    t.index ["status"], name: "index_advertiser_agency_accesses_on_status"
+  end
+
   create_table "advertiser_memberships", force: :cascade do |t|
     t.integer "user_id", null: false
     t.integer "advertiser_id", null: false
@@ -69,6 +84,66 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_06_231951) do
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_advertisers_on_name"
     t.index ["slug"], name: "index_advertisers_on_slug", unique: true
+  end
+
+  create_table "agencies", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "slug", null: false
+    t.string "street_address", null: false
+    t.string "city", null: false
+    t.string "state", null: false
+    t.string "postal_code", null: false
+    t.string "country", default: "US", null: false
+    t.string "website_url", null: false
+    t.text "settings"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_agencies_on_name"
+    t.index ["slug"], name: "index_agencies_on_slug", unique: true
+  end
+
+  create_table "agency_client_assignments", force: :cascade do |t|
+    t.bigint "agency_membership_id", null: false
+    t.bigint "advertiser_agency_access_id", null: false
+    t.string "role", default: "viewer", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["advertiser_agency_access_id"], name: "index_agency_client_assignments_on_advertiser_agency_access_id"
+    t.index ["agency_membership_id", "advertiser_agency_access_id"], name: "index_agency_client_assignments_unique", unique: true
+    t.index ["agency_membership_id"], name: "index_agency_client_assignments_on_agency_membership_id"
+  end
+
+  create_table "agency_invitations", force: :cascade do |t|
+    t.bigint "agency_id", null: false
+    t.bigint "invited_by_id", null: false
+    t.string "email", null: false
+    t.string "role", default: "viewer", null: false
+    t.string "status", default: "pending", null: false
+    t.string "token", null: false
+    t.datetime "expires_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["agency_id", "email"], name: "index_agency_invitations_on_agency_id_and_email"
+    t.index ["agency_id"], name: "index_agency_invitations_on_agency_id"
+    t.index ["invited_by_id"], name: "index_agency_invitations_on_invited_by_id"
+    t.index ["status"], name: "index_agency_invitations_on_status"
+    t.index ["token"], name: "index_agency_invitations_on_token", unique: true
+  end
+
+  create_table "agency_memberships", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "agency_id", null: false
+    t.string "role", default: "viewer", null: false
+    t.string "status", default: "accepted", null: false
+    t.datetime "invited_at"
+    t.datetime "accepted_at"
+    t.datetime "declined_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["agency_id"], name: "index_agency_memberships_on_agency_id"
+    t.index ["status"], name: "index_agency_memberships_on_status"
+    t.index ["user_id", "agency_id"], name: "index_agency_memberships_on_user_id_and_agency_id", unique: true
+    t.index ["user_id"], name: "index_agency_memberships_on_user_id"
   end
 
   create_table "campaign_contacts", force: :cascade do |t|
@@ -532,15 +607,25 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_06_231951) do
     t.datetime "email_verified_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "platform_role"
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["platform_role"], name: "index_users_on_platform_role"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "advertiser_agency_accesses", "advertisers"
+  add_foreign_key "advertiser_agency_accesses", "agencies"
   add_foreign_key "advertiser_memberships", "advertisers"
   add_foreign_key "advertiser_memberships", "users"
+  add_foreign_key "agency_client_assignments", "advertiser_agency_accesses"
+  add_foreign_key "agency_client_assignments", "agency_memberships"
+  add_foreign_key "agency_invitations", "agencies"
+  add_foreign_key "agency_invitations", "users", column: "invited_by_id"
+  add_foreign_key "agency_memberships", "agencies"
+  add_foreign_key "agency_memberships", "users"
   add_foreign_key "campaign_contacts", "campaigns"
   add_foreign_key "campaign_contacts", "contacts"
   add_foreign_key "campaigns", "advertisers"

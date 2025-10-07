@@ -1,0 +1,186 @@
+<% content_for :page_title, 'Create Agency' %>
+
+<!-- Back Link -->
+<div class="mb-4">
+  <%= link_to platform_admin_agencies_path, class: "inline-flex items-center text-sm text-gray-600 hover:text-gray-900" do %>
+    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+    </svg>
+    Back to agencies
+  <% end %>
+</div>
+
+<div class="max-w-3xl">
+  <div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-900">Create New Agency</h2>
+    <p class="mt-1 text-sm text-gray-600">Add a new agency partner to the platform</p>
+  </div>
+
+  <div class="bg-white shadow sm:rounded-lg">
+    <div class="px-6 py-5">
+      <%= form_with model: @agency, url: platform_admin_agencies_path, method: :post, class: "space-y-6" do |f| %>
+        <% if @agency.errors.any? %>
+          <div class="rounded-md bg-red-50 p-4">
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <div class="ml-3">
+                <h3 class="text-sm font-medium text-red-800">
+                  <%= pluralize(@agency.errors.count, "error") %> prohibited this agency from being saved:
+                </h3>
+                <div class="mt-2 text-sm text-red-700">
+                  <ul class="list-disc list-inside space-y-1">
+                    <% @agency.errors.full_messages.each do |message| %>
+                      <li><%= message %></li>
+                    <% end %>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% end %>
+
+        <!-- Agency Owner -->
+        <div>
+          <label for="agency_owner_email" class="block text-sm font-medium text-gray-700">
+            Agency Owner Email <span class="text-red-500">*</span>
+          </label>
+          <div class="mt-1">
+            <%= text_field_tag 'agency[owner_email]', params.dig(:agency, :owner_email),
+                placeholder: "owner@agency.com",
+                required: true,
+                class: "shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" %>
+          </div>
+          <p class="mt-2 text-sm text-gray-500">
+            This user will be created as the agency owner. The user must already exist in the system.
+          </p>
+        </div>
+
+        <!-- Agency Name -->
+        <div>
+          <label for="agency_name" class="block text-sm font-medium text-gray-700">
+            Agency Name <span class="text-red-500">*</span>
+          </label>
+          <div class="mt-1">
+            <%= f.text_field :name,
+                placeholder: "Agency Partners Inc",
+                required: true,
+                class: "shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" %>
+          </div>
+        </div>
+
+        <!-- Address Fields -->
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <div class="sm:col-span-2">
+            <label for="agency_street_address" class="block text-sm font-medium text-gray-700">
+              Street Address <span class="text-red-500">*</span>
+            </label>
+            <div class="mt-1">
+              <%= f.text_field :street_address,
+                  placeholder: "123 Main Street",
+                  required: true,
+                  class: "shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" %>
+            </div>
+          </div>
+
+          <div>
+            <label for="agency_city" class="block text-sm font-medium text-gray-700">
+              City <span class="text-red-500">*</span>
+            </label>
+            <div class="mt-1">
+              <%= f.text_field :city,
+                  placeholder: "San Francisco",
+                  required: true,
+                  class: "shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" %>
+            </div>
+          </div>
+
+          <div>
+            <label for="agency_state" class="block text-sm font-medium text-gray-700">
+              State <span class="text-red-500">*</span>
+            </label>
+            <div class="mt-1">
+              <%= f.text_field :state,
+                  placeholder: "CA",
+                  required: true,
+                  maxlength: 2,
+                  class: "shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md uppercase" %>
+            </div>
+            <p class="mt-1 text-xs text-gray-500">2-letter state code</p>
+          </div>
+
+          <div>
+            <label for="agency_postal_code" class="block text-sm font-medium text-gray-700">
+              Postal Code <span class="text-red-500">*</span>
+            </label>
+            <div class="mt-1">
+              <%= f.text_field :postal_code,
+                  placeholder: "94102",
+                  required: true,
+                  class: "shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" %>
+            </div>
+          </div>
+
+          <div>
+            <label for="agency_country" class="block text-sm font-medium text-gray-700">
+              Country <span class="text-red-500">*</span>
+            </label>
+            <div class="mt-1">
+              <%= f.select :country,
+                  options_for_select([['United States', 'US'], ['Canada', 'CA']], 'US'),
+                  {},
+                  class: "shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Website URL -->
+        <div>
+          <label for="agency_website_url" class="block text-sm font-medium text-gray-700">
+            Website URL <span class="text-red-500">*</span>
+          </label>
+          <div class="mt-1">
+            <%= f.url_field :website_url,
+                placeholder: "https://agencypartners.com",
+                required: true,
+                class: "shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" %>
+          </div>
+        </div>
+
+        <!-- Info Box -->
+        <div class="rounded-md bg-blue-50 p-4">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="ml-3 flex-1">
+              <h3 class="text-sm font-medium text-blue-800">What happens next?</h3>
+              <div class="mt-2 text-sm text-blue-700">
+                <ul class="list-disc space-y-1 pl-5">
+                  <li>The specified user will become the agency owner</li>
+                  <li>The agency will be created with an auto-generated slug</li>
+                  <li>The owner can then invite team members</li>
+                  <li>Advertisers can invite this agency to manage their campaigns</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+          <%= link_to "Cancel", platform_admin_agencies_path, 
+              class: "px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+          <%= f.submit "Create Agency", 
+              class: "inline-flex justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+

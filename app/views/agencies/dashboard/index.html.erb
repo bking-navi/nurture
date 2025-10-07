@@ -1,0 +1,146 @@
+<% content_for :breadcrumb do %>
+  <span class="text-neutral-900">Dashboard</span>
+<% end %>
+
+<!-- Header -->
+<div class="mb-8">
+  <h1 class="text-3xl font-bold text-gray-900"><%= @agency.name %></h1>
+  <p class="mt-2 text-sm text-gray-600">Manage your clients and team members</p>
+</div>
+
+<!-- Stats -->
+<div class="grid grid-cols-1 gap-5 sm:grid-cols-2 mb-8">
+  <div class="bg-white overflow-hidden shadow rounded-lg">
+    <div class="p-5">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <svg class="h-8 w-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+          </svg>
+        </div>
+        <div class="ml-5 w-0 flex-1">
+          <dl>
+            <dt class="text-sm font-medium text-gray-500 truncate">Active Clients</dt>
+            <dd class="text-3xl font-semibold text-gray-900"><%= @client_accesses.count %></dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+    <div class="bg-gray-50 px-5 py-3">
+      <%= link_to clients_path(@agency.slug), class: "text-sm font-medium text-indigo-600 hover:text-indigo-500" do %>
+        View all →
+      <% end %>
+    </div>
+  </div>
+
+  <div class="bg-white overflow-hidden shadow rounded-lg">
+    <div class="p-5">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+          </svg>
+        </div>
+        <div class="ml-5 w-0 flex-1">
+          <dl>
+            <dt class="text-sm font-medium text-gray-500 truncate">Team Members</dt>
+            <dd class="text-3xl font-semibold text-gray-900"><%= @agency.users.count %></dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+    <div class="bg-gray-50 px-5 py-3">
+      <%= link_to agency_team_path(@agency.slug), class: "text-sm font-medium text-green-600 hover:text-green-500" do %>
+        View team →
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<!-- Pending Invitations -->
+<% if @pending_invitations.any? %>
+  <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+    <div class="flex">
+      <div class="flex-shrink-0">
+        <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+        </svg>
+      </div>
+      <div class="ml-3 flex-1">
+        <h3 class="text-sm font-medium text-yellow-800">
+          <%= pluralize(@pending_invitations.count, 'Pending Invitation') %>
+        </h3>
+        <div class="mt-2 text-sm text-yellow-700">
+          <% @pending_invitations.each do |access| %>
+            <p>• <%= access.advertiser.name %> (invited <%= time_ago_in_words(access.invited_at) %> ago)</p>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<!-- Active Clients -->
+<div class="bg-white shadow rounded-lg">
+  <div class="px-6 py-5 border-b border-gray-200">
+    <h3 class="text-lg leading-6 font-medium text-gray-900">Your Clients</h3>
+    <p class="mt-1 text-sm text-gray-500">Clients you have access to manage</p>
+  </div>
+  
+  <% if @client_accesses.any? %>
+    <ul role="list" class="divide-y divide-gray-200">
+      <% @client_accesses.each do |access| %>
+        <% advertiser = access.advertiser %>
+        <li>
+          <%= link_to advertiser_dashboard_path(advertiser.slug), class: "block hover:bg-gray-50 transition-colors" do %>
+            <div class="px-6 py-5">
+              <div class="flex items-center justify-between">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-4">
+                    <div class="flex-shrink-0">
+                      <div class="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-indigo-100 text-indigo-700 font-bold text-lg">
+                        <%= advertiser.name.first.upcase %>
+                      </div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-base font-medium text-gray-900 truncate">
+                        <%= advertiser.name %>
+                      </p>
+                      <p class="text-sm text-gray-500 truncate">
+                        <%= advertiser.website_url %>
+                      </p>
+                      <p class="text-xs text-gray-500 mt-1">
+                        Access granted <%= time_ago_in_words(access.accepted_at) %> ago
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-4">
+                  <% if Current.membership.role.in?(['owner', 'admin']) %>
+                    <%= link_to client_assignments_path(@agency.slug, access.id), 
+                        class: "text-sm text-indigo-600 hover:text-indigo-900",
+                        onclick: "event.stopPropagation(); event.preventDefault(); window.location='#{client_assignments_path(@agency.slug, access.id)}'; return false;" do %>
+                      Manage Access
+                    <% end %>
+                  <% end %>
+                  <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <div class="px-6 py-12 text-center">
+      <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+      </svg>
+      <h3 class="mt-2 text-sm font-medium text-gray-900">No clients yet</h3>
+      <p class="mt-1 text-sm text-gray-500">Wait for clients to invite your agency to manage their campaigns.</p>
+    </div>
+  <% end %>
+</div>
+

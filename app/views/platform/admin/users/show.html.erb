@@ -1,0 +1,183 @@
+<% content_for :page_title, @user.display_name %>
+
+<!-- Back Link -->
+<div class="mb-4">
+  <%= link_to platform_admin_users_path, class: "inline-flex items-center text-sm text-gray-600 hover:text-gray-900" do %>
+    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+    </svg>
+    Back to users
+  <% end %>
+</div>
+
+<!-- User Header -->
+<div class="bg-white shadow rounded-lg mb-6">
+  <div class="px-6 py-5">
+    <div class="flex items-start gap-4">
+      <div class="flex-shrink-0">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-100 text-indigo-700 font-bold text-2xl">
+          <%= @user.initials %>
+        </div>
+      </div>
+      <div class="flex-1">
+        <div class="flex items-center gap-3">
+          <h2 class="text-2xl font-bold text-gray-900"><%= @user.display_name %></h2>
+          <% if @user.platform_admin? %>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
+              Platform Admin
+            </span>
+          <% end %>
+        </div>
+        <p class="mt-1 text-sm text-gray-600"><%= @user.email %></p>
+        <div class="mt-3 flex items-center gap-6 text-sm text-gray-500">
+          <span class="flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            Joined <%= time_ago_in_words(@user.created_at) %> ago
+          </span>
+          <% if @user.email_verified %>
+            <span class="flex items-center gap-1 text-green-600">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              Email verified
+            </span>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Stats Grid -->
+<div class="grid grid-cols-1 gap-5 sm:grid-cols-2 mb-6">
+  <div class="bg-white overflow-hidden shadow rounded-lg">
+    <div class="p-5">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+          </svg>
+        </div>
+        <div class="ml-5 w-0 flex-1">
+          <dl>
+            <dt class="text-sm font-medium text-gray-500 truncate">Advertiser Memberships</dt>
+            <dd class="text-2xl font-semibold text-gray-900"><%= @advertiser_memberships.count %></dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white overflow-hidden shadow rounded-lg">
+    <div class="p-5">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+          </svg>
+        </div>
+        <div class="ml-5 w-0 flex-1">
+          <dl>
+            <dt class="text-sm font-medium text-gray-500 truncate">Agency Memberships</dt>
+            <dd class="text-2xl font-semibold text-gray-900"><%= @agency_memberships.count %></dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Advertiser Memberships -->
+<% if @advertiser_memberships.any? %>
+  <div class="bg-white shadow rounded-lg mb-6">
+    <div class="px-6 py-5 border-b border-gray-200">
+      <h3 class="text-lg leading-6 font-medium text-gray-900">Advertiser Memberships</h3>
+      <p class="mt-1 text-sm text-gray-500">Advertisers this user has access to</p>
+    </div>
+    
+    <ul role="list" class="divide-y divide-gray-200">
+      <% @advertiser_memberships.each do |membership| %>
+        <li class="px-6 py-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="flex-shrink-0">
+                <div class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-indigo-100 text-indigo-700 text-sm font-bold">
+                  <%= membership.advertiser.name.first.upcase %>
+                </div>
+              </div>
+              <div>
+                <div class="text-sm font-medium text-gray-900">
+                  <%= membership.advertiser.name %>
+                </div>
+                <div class="text-sm text-gray-500"><%= membership.advertiser.website_url %></div>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <%= 
+                case membership.role
+                when 'owner' then 'bg-purple-100 text-purple-800'
+                when 'admin' then 'bg-blue-100 text-blue-800'
+                when 'manager' then 'bg-green-100 text-green-800'
+                else 'bg-gray-100 text-gray-800'
+                end %>">
+                <%= membership.role.titleize %>
+              </span>
+              <span class="text-xs text-gray-500">
+                Joined <%= time_ago_in_words(membership.created_at) %> ago
+              </span>
+            </div>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+
+<!-- Agency Memberships -->
+<% if @agency_memberships.any? %>
+  <div class="bg-white shadow rounded-lg">
+    <div class="px-6 py-5 border-b border-gray-200">
+      <h3 class="text-lg leading-6 font-medium text-gray-900">Agency Memberships</h3>
+      <p class="mt-1 text-sm text-gray-500">Agencies this user belongs to</p>
+    </div>
+    
+    <ul role="list" class="divide-y divide-gray-200">
+      <% @agency_memberships.each do |membership| %>
+        <li class="px-6 py-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="flex-shrink-0">
+                <div class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-green-100 text-green-700 text-sm font-bold">
+                  <%= membership.agency.name.first.upcase %>
+                </div>
+              </div>
+              <div>
+                <div class="text-sm font-medium text-gray-900">
+                  <%= membership.agency.name %>
+                </div>
+                <div class="text-sm text-gray-500"><%= membership.agency.website_url %></div>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <%= 
+                case membership.role
+                when 'owner' then 'bg-purple-100 text-purple-800'
+                when 'admin' then 'bg-blue-100 text-blue-800'
+                when 'manager' then 'bg-green-100 text-green-800'
+                else 'bg-gray-100 text-gray-800'
+                end %>">
+                <%= membership.role.titleize %>
+              </span>
+              <span class="text-xs text-gray-500">
+                Joined <%= time_ago_in_words(membership.created_at) %> ago
+              </span>
+            </div>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+

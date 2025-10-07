@@ -78,24 +78,49 @@ class CampaignsController < ApplicationController
   
   def update
     if @campaign.update(campaign_params)
-      # If saving from design tab with save & continue, go to review
-      if params[:tab] == 'design' && params[:commit] == 'Save & Continue'
-        redirect_to edit_campaign_path(@advertiser.slug, @campaign, tab: 'review'), 
-                    notice: 'Design saved!'
-      else
-        redirect_to edit_campaign_path(@advertiser.slug, @campaign, tab: params[:tab]), 
-                    notice: 'Campaign updated.'
+      respond_to do |format|
+        format.html do
+          # If saving from design tab with save & continue, go to review
+          if params[:tab] == 'design' && params[:commit] == 'Save & Continue'
+            redirect_to edit_campaign_path(@advertiser.slug, @campaign, tab: 'review'), 
+                        notice: 'Design saved!'
+          else
+            redirect_to edit_campaign_path(@advertiser.slug, @campaign, tab: params[:tab]), 
+                        notice: 'Campaign updated.'
+          end
+        end
+        format.json do
+          render json: { 
+            success: true, 
+            message: 'Campaign updated successfully',
+            campaign: {
+              id: @campaign.id,
+              front_pdf_attached: @campaign.front_pdf.attached?,
+              back_pdf_attached: @campaign.back_pdf.attached?
+            }
+          }
+        end
       end
     else
-      @current_tab = params[:tab] || 'recipients'
-      
-      # Reload templates and palettes if on design tab
-      if @current_tab == 'design'
-        @templates = PostcardTemplate.active.by_sort_order
-        @color_palettes = ColorPalette.available_for(@advertiser)
+      respond_to do |format|
+        format.html do
+          @current_tab = params[:tab] || 'recipients'
+          
+          # Reload templates and palettes if on design tab
+          if @current_tab == 'design'
+            @templates = PostcardTemplate.active.by_sort_order
+            @color_palettes = ColorPalette.available_for(@advertiser)
+          end
+          
+          render :edit, status: :unprocessable_entity
+        end
+        format.json do
+          render json: { 
+            success: false, 
+            errors: @campaign.errors.full_messages 
+          }, status: :unprocessable_entity
+        end
       end
-      
-      render :edit, status: :unprocessable_entity
     end
   end
   

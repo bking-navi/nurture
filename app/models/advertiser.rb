@@ -14,6 +14,10 @@ class Advertiser < ApplicationRecord
   has_many :sync_jobs, dependent: :destroy
   has_many :segments, dependent: :destroy
   has_many :creatives, dependent: :destroy
+  
+  # Agency relationships
+  has_many :advertiser_agency_accesses, dependent: :destroy
+  has_many :agencies, through: :advertiser_agency_accesses
 
   # Serialize settings as JSON for SQLite (PostgreSQL will use jsonb)
   serialize :settings, coder: JSON

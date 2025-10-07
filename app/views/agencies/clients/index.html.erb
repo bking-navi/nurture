@@ -1,0 +1,66 @@
+<% content_for :breadcrumb do %>
+  <%= link_to 'Dashboard', agency_dashboard_path(@agency.slug), class: 'hover:text-neutral-900' %> / 
+  <span class="text-neutral-900">Clients</span>
+<% end %>
+
+<div class="mb-6">
+  <h2 class="text-2xl font-bold text-gray-900">All Clients</h2>
+  <p class="mt-1 text-sm text-gray-600">Manage all clients your agency has access to</p>
+</div>
+
+<% if @client_accesses.any? %>
+  <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+    <ul role="list" class="divide-y divide-gray-200">
+      <% @client_accesses.each do |access| %>
+        <% advertiser = access.advertiser %>
+        <li>
+          <div class="px-6 py-5">
+            <div class="flex items-center justify-between">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-4">
+                  <div class="flex-shrink-0">
+                    <div class="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-indigo-100 text-indigo-700 font-bold text-lg">
+                      <%= advertiser.name.first.upcase %>
+                    </div>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-base font-medium text-gray-900 truncate">
+                      <%= advertiser.name %>
+                    </p>
+                    <p class="text-sm text-gray-500 truncate">
+                      <%= advertiser.website_url %>
+                    </p>
+                    <div class="mt-1 flex items-center gap-4 text-xs text-gray-500">
+                      <span><%= advertiser.city %>, <%= advertiser.state %></span>
+                      <span>•</span>
+                      <span>Access granted <%= time_ago_in_words(access.accepted_at) %> ago</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <%= link_to "View Dashboard", advertiser_dashboard_path(advertiser.slug),
+                    class: "inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-gray-950 hover:bg-gray-900" %>
+                <% if Current.membership.role.in?(['owner', 'admin']) %>
+                  <%= link_to "Manage Access", client_assignments_path(@agency.slug, access.id),
+                      class: "inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50" %>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+<% else %>
+  <div class="bg-white shadow sm:rounded-lg">
+    <div class="px-4 py-12 text-center">
+      <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+      </svg>
+      <h3 class="mt-2 text-sm font-medium text-gray-900">No clients yet</h3>
+      <p class="mt-1 text-sm text-gray-500">Wait for clients to invite your agency to manage their campaigns.</p>
+    </div>
+  </div>
+<% end %>
+

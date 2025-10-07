@@ -29,18 +29,27 @@
       <!-- Sidebar -->
       <aside data-sidebar-target="sidebar"
              class="fixed inset-y-0 left-0 z-50 flex flex-col w-64 bg-gray-100 transform transition-transform duration-300 ease-in-out">
-        <!-- Advertiser Switcher -->
+        <!-- Context Switcher -->
         <div class="p-4 relative" data-controller="dropdown">
           <% advertiser = Current.advertiser || @advertiser %>
-          <% if advertiser %>
+          <% agency = Current.agency || @agency %>
+          <% current_context = advertiser || agency %>
+          
+          <% if current_context %>
             <button type="button" 
                     data-action="click->dropdown#toggle click@window->dropdown#hide"
                     class="w-full flex items-center gap-1.5 px-3 py-2 bg-gray-50 border border-gray-300 rounded-md hover:bg-white transition-colors">
-              <div class="flex items-center justify-center w-5 h-5 rounded-full bg-neutral-700 text-white text-[10px] font-semibold">
-                <%= advertiser.name[0].upcase %>
-              </div>
+              <% if agency %>
+                <div class="flex items-center justify-center w-5 h-5 rounded-full bg-green-600 text-white text-[10px] font-semibold">
+                  <%= agency.name[0].upcase %>
+                </div>
+              <% else %>
+                <div class="flex items-center justify-center w-5 h-5 rounded-full bg-neutral-700 text-white text-[10px] font-semibold">
+                  <%= advertiser.name[0].upcase %>
+                </div>
+              <% end %>
               <span class="flex-1 text-left text-[13.33px] text-neutral-900 truncate">
-                <%= advertiser.name %>
+                <%= current_context.name %>
               </span>
               <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -50,20 +59,78 @@
             <!-- Dropdown Menu -->
             <div data-dropdown-target="menu" 
                  class="hidden absolute top-[85%] left-4 right-4 bg-white border border-slate-200 rounded-md shadow-lg z-50">
-              <!-- Advertisers List -->
-              <div class="border-b border-slate-200 p-1">
-                <% current_user.advertisers.order(:name).each do |adv| %>
-                  <%= link_to advertiser_dashboard_path(adv.slug),
-                      class: "flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-50 transition-colors #{adv.id == advertiser.id ? 'bg-gray-50' : ''}" do %>
-                    <div class="flex items-center justify-center w-5 h-5 rounded-full bg-slate-100 text-slate-600 text-[11px] font-medium">
-                      <%= adv.name[0..1].upcase %>
+              <!-- Platform Admin Option -->
+              <% if current_user.platform_admin? %>
+                <div class="border-b border-slate-200 p-1">
+                  <%= link_to platform_admin_dashboard_path,
+                      class: "flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-50 transition-colors #{Current.platform_mode? ? 'bg-indigo-50' : ''}" do %>
+                    <div class="flex items-center justify-center w-5 h-5 rounded-full bg-indigo-600 text-white text-[10px] font-bold">
+                      P
                     </div>
-                    <span class="text-sm text-neutral-700 truncate">
-                      <%= adv.name %>
-                    </span>
+                    <span class="text-sm font-medium text-neutral-700">Platform Admin</span>
                   <% end %>
-                <% end %>
-              </div>
+                </div>
+              <% end %>
+              
+              <!-- Advertisers List (Direct Memberships) -->
+              <% if current_user.advertisers.any? %>
+                <div class="border-b border-slate-200 p-1">
+                  <% current_user.advertisers.order(:name).each do |adv| %>
+                    <%= link_to advertiser_dashboard_path(adv.slug),
+                        class: "flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-50 transition-colors #{advertiser && adv.id == advertiser.id ? 'bg-gray-50' : ''}" do %>
+                      <div class="flex items-center justify-center w-5 h-5 rounded-full bg-slate-100 text-slate-600 text-[11px] font-medium">
+                        <%= adv.name[0..1].upcase %>
+                      </div>
+                      <span class="text-sm text-neutral-700 truncate">
+                        <%= adv.name %>
+                      </span>
+                    <% end %>
+                  <% end %>
+                </div>
+              <% end %>
+              
+              <!-- Agency Clients (via Agency Assignments) -->
+              <% 
+                agency_clients = Advertiser.joins(advertiser_agency_accesses: { agency_client_assignments: :agency_membership })
+                                          .where(advertiser_agency_accesses: { status: 'accepted' })
+                                          .where(agency_client_assignments: { agency_membership: current_user.agency_memberships.accepted })
+                                          .where.not(id: current_user.advertiser_ids)
+                                          .distinct
+                                          .order(:name)
+              %>
+              <% if agency_clients.any? %>
+                <div class="border-b border-slate-200 p-1">
+                  <% agency_clients.each do |client| %>
+                    <%= link_to advertiser_dashboard_path(client.slug),
+                        class: "flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-50 transition-colors #{advertiser && client.id == advertiser.id ? 'bg-gray-50' : ''}" do %>
+                      <div class="flex items-center justify-center w-5 h-5 rounded-full bg-green-50 text-green-600 text-[11px] font-medium">
+                        <%= client.name[0..1].upcase %>
+                      </div>
+                      <span class="text-sm text-neutral-700 truncate">
+                        <%= client.name %>
+                      </span>
+                      <span class="ml-auto text-[10px] text-green-600 font-medium">Agency</span>
+                    <% end %>
+                  <% end %>
+                </div>
+              <% end %>
+              
+              <!-- Agencies List -->
+              <% if current_user.agencies.any? %>
+                <div class="border-b border-slate-200 p-1">
+                  <% current_user.agencies.order(:name).each do |agn| %>
+                    <%= link_to agency_dashboard_path(agn.slug),
+                        class: "flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-50 transition-colors #{agency && agn.id == agency.id ? 'bg-gray-50' : ''}" do %>
+                      <div class="flex items-center justify-center w-5 h-5 rounded-full bg-green-100 text-green-700 text-[11px] font-medium">
+                        <%= agn.name[0..1].upcase %>
+                      </div>
+                      <span class="text-sm text-neutral-700 truncate">
+                        <%= agn.name %>
+                      </span>
+                    <% end %>
+                  <% end %>
+                </div>
+              <% end %>
 
               <!-- Actions -->
               <div class="p-1">
@@ -90,7 +157,36 @@
         <!-- Navigation Menu -->
         <nav class="flex-1 px-3.5 py-2 space-y-1 overflow-y-auto">
           <% advertiser = Current.advertiser || @advertiser %>
-          <% if advertiser %>
+          <% agency = Current.agency || @agency %>
+          
+          <% if agency %>
+            <!-- Agency Navigation -->
+            <%= link_to agency_dashboard_path(agency.slug), 
+                class: "flex items-center gap-2 px-1.5 py-1 rounded text-[13px] font-medium tracking-tight transition-colors #{controller_path == 'agencies/dashboard' ? 'bg-neutral-200 text-neutral-900' : 'text-neutral-700 hover:bg-gray-50'}" do %>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+              </svg>
+              <span>Dashboard</span>
+            <% end %>
+            
+            <%= link_to clients_path(agency.slug), 
+                class: "flex items-center gap-2 px-1.5 py-1 rounded text-[13px] font-medium tracking-tight transition-colors #{controller_path == 'agencies/clients' ? 'bg-neutral-200 text-neutral-900' : 'text-neutral-700 hover:bg-gray-50'}" do %>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+              </svg>
+              <span>Clients</span>
+            <% end %>
+            
+            <%= link_to agency_team_path(agency.slug), 
+                class: "flex items-center gap-2 px-1.5 py-1 rounded text-[13px] font-medium tracking-tight transition-colors #{controller_path == 'agencies/team' ? 'bg-neutral-200 text-neutral-900' : 'text-neutral-700 hover:bg-gray-50'}" do %>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+              </svg>
+              <span>Team</span>
+            <% end %>
+            
+          <% elsif advertiser %>
+            <!-- Advertiser Navigation -->
             <%= link_to advertiser_dashboard_path(advertiser.slug), 
                 class: "flex items-center gap-2 px-1.5 py-1 rounded text-[13px] font-medium tracking-tight transition-colors #{controller_name == 'advertisers' && action_name == 'show' ? 'bg-neutral-200 text-neutral-900' : 'text-neutral-700 hover:bg-gray-50'}" do %>
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -101,50 +197,50 @@
 
             <%= link_to campaigns_path(advertiser_slug: advertiser.slug), 
                 class: "flex items-center gap-2 px-1.5 py-1 rounded text-[13px] font-medium tracking-tight transition-colors #{controller_name == 'campaigns' ? 'bg-neutral-200 text-neutral-900' : 'text-neutral-700 hover:bg-gray-50'}" do %>
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
-            </svg>
-            <span>Campaigns</span>
-          <% end %>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
+              </svg>
+              <span>Campaigns</span>
+            <% end %>
 
-          <%= link_to audience_path(advertiser.slug), 
-              class: "flex items-center gap-2 px-1.5 py-1 rounded text-[13px] font-medium tracking-tight transition-colors #{controller_name == 'contacts' ? 'bg-neutral-200 text-neutral-900' : 'text-neutral-700 hover:bg-gray-50'}" do %>
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-            </svg>
-            <span>Audience</span>
-          <% end %>
+            <%= link_to audience_path(advertiser.slug), 
+                class: "flex items-center gap-2 px-1.5 py-1 rounded text-[13px] font-medium tracking-tight transition-colors #{controller_name == 'contacts' ? 'bg-neutral-200 text-neutral-900' : 'text-neutral-700 hover:bg-gray-50'}" do %>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+              </svg>
+              <span>Audience</span>
+            <% end %>
 
-          <%= link_to segments_path(advertiser.slug), 
-              class: "flex items-center gap-2 px-1.5 py-1 rounded text-[13px] font-medium tracking-tight transition-colors #{controller_name == 'segments' ? 'bg-neutral-200 text-neutral-900' : 'text-neutral-700 hover:bg-gray-50'}" do %>
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-            </svg>
-            <span>Segments</span>
-          <% end %>
+            <%= link_to segments_path(advertiser.slug), 
+                class: "flex items-center gap-2 px-1.5 py-1 rounded text-[13px] font-medium tracking-tight transition-colors #{controller_name == 'segments' ? 'bg-neutral-200 text-neutral-900' : 'text-neutral-700 hover:bg-gray-50'}" do %>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+              </svg>
+              <span>Segments</span>
+            <% end %>
 
-          <%= link_to creatives_path(advertiser.slug), 
-              class: "flex items-center gap-2 px-1.5 py-1 rounded text-[13px] font-medium tracking-tight transition-colors #{controller_name == 'creatives' ? 'bg-neutral-200 text-neutral-900' : 'text-neutral-700 hover:bg-gray-50'}" do %>
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-            </svg>
-            <span>Creative Library</span>
-          <% end %>
+            <%= link_to creatives_path(advertiser.slug), 
+                class: "flex items-center gap-2 px-1.5 py-1 rounded text-[13px] font-medium tracking-tight transition-colors #{controller_name == 'creatives' ? 'bg-neutral-200 text-neutral-900' : 'text-neutral-700 hover:bg-gray-50'}" do %>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+              <span>Creative Library</span>
+            <% end %>
 
-          <a href="#" class="flex items-center gap-2 px-1.5 py-1 rounded text-[13px] font-medium tracking-tight text-neutral-700 hover:bg-gray-50 transition-colors">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-            </svg>
-            <span>Analytics</span>
-          </a>
+            <a href="#" class="flex items-center gap-2 px-1.5 py-1 rounded text-[13px] font-medium tracking-tight text-neutral-700 hover:bg-gray-50 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+              </svg>
+              <span>Analytics</span>
+            </a>
 
-          <%= link_to integrations_path(advertiser.slug), 
-              class: "flex items-center gap-2 px-1.5 py-1 rounded text-[13px] font-medium tracking-tight transition-colors #{controller_name == 'integrations' || controller_path == 'integrations/shopify' ? 'bg-neutral-200 text-neutral-900' : 'text-neutral-700 hover:bg-gray-50'}" do %>
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"></path>
-            </svg>
-            <span>Integrations</span>
-          <% end %>
+            <%= link_to integrations_path(advertiser.slug), 
+                class: "flex items-center gap-2 px-1.5 py-1 rounded text-[13px] font-medium tracking-tight transition-colors #{controller_name == 'integrations' || controller_path == 'integrations/shopify' ? 'bg-neutral-200 text-neutral-900' : 'text-neutral-700 hover:bg-gray-50'}" do %>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"></path>
+              </svg>
+              <span>Integrations</span>
+            <% end %>
           <% end %>
         </nav>
 

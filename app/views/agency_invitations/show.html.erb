@@ -1,0 +1,61 @@
+<div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+  <div class="sm:mx-auto sm:w-full sm:max-w-md">
+    <h2 class="text-center text-3xl font-extrabold text-gray-900">
+      Client Invitation
+    </h2>
+    <p class="mt-2 text-center text-sm text-gray-600">
+      You've been invited to manage a new client
+    </p>
+  </div>
+
+  <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+    <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+      <!-- Agency Info -->
+      <div class="text-center mb-6">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-700 font-bold text-2xl mb-3">
+          <%= @advertiser.name.first.upcase %>
+        </div>
+        <h3 class="text-lg font-medium text-gray-900"><%= @advertiser.name %></h3>
+        <p class="text-sm text-gray-500"><%= @advertiser.website_url %></p>
+      </div>
+
+      <!-- Invitation Details -->
+      <div class="bg-gray-50 rounded-lg p-4 mb-6">
+        <dl class="space-y-2">
+          <div class="flex justify-between text-sm">
+            <dt class="text-gray-500">Your Agency:</dt>
+            <dd class="font-medium text-gray-900"><%= @agency.name %></dd>
+          </div>
+          <div class="flex justify-between text-sm">
+            <dt class="text-gray-500">Access Level:</dt>
+            <dd class="font-medium text-gray-900">Admin</dd>
+          </div>
+          <div class="flex justify-between text-sm">
+            <dt class="text-gray-500">Invited:</dt>
+            <dd class="font-medium text-gray-900"><%= time_ago_in_words(@access.invited_at) %> ago</dd>
+          </div>
+        </dl>
+      </div>
+
+      <!-- What This Means -->
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <h4 class="text-sm font-medium text-blue-900 mb-2">What this means:</h4>
+        <ul class="text-sm text-blue-800 space-y-1">
+          <li>✓ Your agency will have admin access to this client</li>
+          <li>✓ You can assign team members to manage their campaigns</li>
+          <li>✓ The client can revoke access at any time</li>
+        </ul>
+      </div>
+
+      <!-- Accept Button -->
+      <%= form_with url: process_agency_invitation_path(params[:token]), method: :post do |f| %>
+        <div class="space-y-3">
+          <%= f.submit "Accept Invitation", class: "w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-950 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700" %>
+          
+          <%= link_to "Decline", advertisers_path, class: "w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+

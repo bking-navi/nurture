@@ -1,0 +1,19 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user: one
+  agency: one
+  role: MyString
+  status: MyString
+  invited_at: 2025-10-07 07:35:25
+  accepted_at: 2025-10-07 07:35:25
+  declined_at: 2025-10-07 07:35:25
+
+two:
+  user: two
+  agency: two
+  role: MyString
+  status: MyString
+  invited_at: 2025-10-07 07:35:25
+  accepted_at: 2025-10-07 07:35:25
+  declined_at: 2025-10-07 07:35:25

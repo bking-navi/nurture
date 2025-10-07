@@ -1,0 +1,30 @@
+<% content_for :title, 'Invalid Invitation' %>
+
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-md w-full text-center">
+    <div class="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-red-100">
+      <svg class="h-10 w-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+      </svg>
+    </div>
+    
+    <h2 class="mt-6 text-3xl font-bold text-gray-900">
+      Invalid Invitation
+    </h2>
+    
+    <p class="mt-2 text-sm text-gray-600">
+      This invitation link is no longer valid. It may have expired, been cancelled, or already been used.
+    </p>
+    
+    <div class="mt-8">
+      <%= link_to root_path, class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" do %>
+        Go to Homepage
+      <% end %>
+    </div>
+    
+    <p class="mt-6 text-xs text-gray-500">
+      If you believe this is an error, please contact the person who invited you.
+    </p>
+  </div>
+</div>
+

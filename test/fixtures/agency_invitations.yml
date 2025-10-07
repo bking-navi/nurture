@@ -1,0 +1,19 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  agency: one
+  invited_by: one
+  email: MyString
+  role: MyString
+  status: MyString
+  token: MyString
+  expires_at: 2025-10-07 08:05:32
+
+two:
+  agency: two
+  invited_by: two
+  email: MyString
+  role: MyString
+  status: MyString
+  token: MyString
+  expires_at: 2025-10-07 08:05:32

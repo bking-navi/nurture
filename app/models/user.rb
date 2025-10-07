@@ -1,4 +1,6 @@
 class User < ApplicationRecord
+  include PlatformRole
+  
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
   devise :database_authenticatable, :registerable,
@@ -13,6 +15,9 @@ class User < ApplicationRecord
   # Associations
   has_many :advertiser_memberships, dependent: :destroy
   has_many :advertisers, through: :advertiser_memberships
+  has_many :agency_memberships, dependent: :destroy
+  has_many :agencies, through: :agency_memberships
+  has_many :agency_client_assignments, through: :agency_memberships
   has_many :created_campaigns, class_name: 'Campaign', foreign_key: 'created_by_user_id', dependent: :nullify
 
   # Custom methods
@@ -25,22 +30,72 @@ class User < ApplicationRecord
   end
 
   def admin_of?(advertiser)
-    membership = advertiser_memberships.find_by(advertiser: advertiser)
+    # Only direct members can be admins
+    # Agency users should not have admin privileges on advertiser settings/billing
+    membership = advertiser_memberships.find_by(advertiser: advertiser, status: 'accepted')
     membership&.role&.in?(['owner', 'admin'])
   end
 
   def can_manage_team?(advertiser)
-    membership = advertiser_memberships.find_by(advertiser: advertiser)
+    # Only direct members can manage the advertiser's team
+    # Agency users should not be able to add/remove advertiser team members
+    membership = advertiser_memberships.find_by(advertiser: advertiser, status: 'accepted')
     membership&.role&.in?(['owner', 'admin'])
   end
 
   def has_access_to?(advertiser)
-    advertiser_memberships.exists?(advertiser: advertiser, status: 'accepted')
+    # Check direct membership
+    return true if advertiser_memberships.exists?(advertiser: advertiser, status: 'accepted')
+    
+    # Check agency access
+    agency_client_assignments.joins(:advertiser_agency_access)
+                             .where(advertiser_agency_accesses: { advertiser: advertiser, status: 'accepted' })
+                             .exists?
   end
   
   def can_manage_campaigns?(advertiser)
-    membership = advertiser_memberships.find_by(advertiser: advertiser)
-    membership&.role&.in?(['owner', 'admin', 'manager'])
+    # Check direct membership first
+    membership = advertiser_memberships.find_by(advertiser: advertiser, status: 'accepted')
+    return true if membership&.role&.in?(['owner', 'admin', 'manager'])
+    
+    # Check agency access - manager and admin can manage campaigns
+    assignment = agency_client_assignments.joins(:advertiser_agency_access)
+                                          .where(advertiser_agency_accesses: { advertiser: advertiser, status: 'accepted' })
+                                          .first
+    
+    assignment&.role&.in?(['manager', 'admin'])
+  end
+  
+  def role_for_advertiser(advertiser)
+    # Return direct membership role if exists
+    membership = advertiser_memberships.find_by(advertiser: advertiser, status: 'accepted')
+    return membership.role if membership
+    
+    # Return agency assignment role
+    assignment = agency_client_assignments.joins(:advertiser_agency_access)
+                                          .where(advertiser_agency_accesses: { advertiser: advertiser, status: 'accepted' })
+                                          .first
+    
+    "agency_#{assignment.role}" if assignment
+  end
+  
+  def owner_of_agency?(agency)
+    agency_memberships.find_by(agency: agency, role: 'owner').present?
+  end
+  
+  def all_contexts
+    contexts = []
+    contexts << { type: :platform, label: 'Platform Admin' } if platform_admin?
+    contexts += advertisers.map { |a| { type: :advertiser, entity: a } }
+    contexts += agencies.map { |a| { type: :agency, entity: a } }
+    contexts
+  end
+  
+  def default_context_after_login
+    return { type: :platform } if platform_admin? && advertisers.empty? && agencies.empty?
+    return { type: :advertiser, slug: advertisers.first.slug } if advertisers.any?
+    return { type: :agency, slug: agencies.first.slug } if agencies.any?
+    nil
   end
 
   # Override Devise's password validation for invitation flow
