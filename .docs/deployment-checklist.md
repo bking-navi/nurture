@@ -1,93 +1,73 @@
-# Deployment Checklist for Render
+# Deployment Checklist - Suppression & Webhooks
 
-## Environment Variables to Set in Render
+This document outlines the steps needed after deploying the suppression system and webhook features.
 
-Add these in your Render dashboard under "Environment":
+## Pre-Deployment
 
-1. **LOOPS_API_KEY** - Your Loops.so API key
-2. **APP_HOST** - Your Render domain (e.g., `nurture.onrender.com`)
-3. **RAILS_MASTER_KEY** - Copy from `config/master.key` (for encrypted credentials)
-4. **SECRET_KEY_BASE** - Rails will generate this automatically, or run `rails secret`
+### 1. Environment Variables
 
-## Loops.so Template Configuration
+Add to your production environment:
 
-Make sure you've created these transactional email templates in Loops:
+```bash
+APP_URL=https://yourdomain.com
+```
 
-### Template 1: Email Verification
-- **Transactional ID**: Copy from your Loops dashboard
-- **Required Variables**: 
-  - `first_name` - User's first name
-  - `verification_url` - Full URL with confirmation token
-- **Add the Template ID to Rails Credentials**:
-  ```bash
-  rails credentials:edit
-  ```
-  Add:
-  ```yaml
-  loops:
-    templates:
-      email_verification: YOUR_TEMPLATE_ID_HERE
-  ```
+This is required for Shopify webhooks to work correctly.
 
-### Template 2: Password Reset (for future use)
-- **Transactional ID**: Copy from your Loops dashboard
-- **Required Variables**:
-  - `first_name` - User's first name
-  - `reset_url` - Full URL with reset token
-- **Add to credentials**:
-  ```yaml
-  loops:
-    templates:
-      password_reset: YOUR_TEMPLATE_ID_HERE
-  ```
+## Deployment Steps
 
-## Database Configuration
+### 1. Deploy Code
+```bash
+git push production main
+```
 
-Rails 8 uses SQLite by default for all environments. For production on Render:
+### 2. Run Migrations
+```bash
+rails db:migrate
+```
 
-### Option 1: Use PostgreSQL (Recommended)
-1. Add PostgreSQL database in Render
-2. Update `config/database.yml` production section to use PostgreSQL
-3. Add `pg` gem to Gemfile
+### 3. Register Webhooks for Existing Stores
 
-### Option 2: Keep SQLite (Simpler, but data is ephemeral)
-- Current setup - works out of the box
-- **Note**: Data will be lost on redeploys with free tier
+```bash
+# Get store IDs
+rails runner "ShopifyStore.all.each { |s| puts s.id }"
 
-## Pre-Deployment Steps
+# Register webhooks for each store
+rails "shopify:register_webhooks[STORE_ID]"
 
-- [ ] Commit all changes
-- [ ] Push to GitHub/GitLab
-- [ ] Verify `.env` is in `.gitignore` (it should be)
-- [ ] Make sure `config/master.key` is NOT committed (add to `.gitignore`)
+# Verify registration
+rails "shopify:list_webhooks[STORE_ID]"
+```
 
-## Post-Deployment Steps
+## Post-Deployment Verification
 
-- [ ] Run migrations: `rails db:migrate` (Render does this automatically)
-- [ ] Test signup flow
-- [ ] Test email verification
-- [ ] Check logs for any errors
+### 1. Check Webhooks
+```bash
+rails "shopify:list_webhooks[STORE_ID]"
+```
 
-## Testing in Production
+### 2. Test Webhook
+Create a test order in Shopify and check logs for webhook processing.
 
-1. Sign up with a real email address
-2. Check that you receive the verification email from Loops
-3. Click the verification link
-4. Verify you can sign in
-5. Check Render logs for any errors
+### 3. Verify Suppression Settings
+Visit /advertisers/:slug/settings/suppression
+
+### 4. Test Campaign Suppression
+Create campaign, import contacts, verify suppressed contacts show correctly.
 
 ## Troubleshooting
 
-### Email not sending
-- Check `LOOPS_API_KEY` is set correctly in Render
-- Check Loops dashboard for API errors
-- Check Render logs for error messages
+### Webhooks Not Firing
+1. Verify APP_URL is set
+2. Check webhook registration
+3. Re-register if needed
 
-### Verification links not working
-- Check `APP_HOST` environment variable
-- Make sure it's set to your actual Render domain (without `https://`)
+### Suppression Not Working
+1. Verify migrations ran
+2. Check last_order_at is updating
+3. Verify settings configured
 
-### Database errors
-- Make sure migrations ran successfully
-- Check Render deployment logs
+## Additional Resources
 
+- Feature documentation: .docs/SUPPRESSION-SYSTEM-COMPLETE.md
+- Webhook guide: .docs/webhooks.md
