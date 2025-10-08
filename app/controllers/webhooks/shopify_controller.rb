@@ -2,7 +2,7 @@ module Webhooks
   class ShopifyController < ApplicationController
     # Skip CSRF verification for webhooks
     skip_before_action :verify_authenticity_token
-    skip_before_action :authenticate_user!
+    skip_before_action :authenticate_user!, raise: false
     
     before_action :verify_webhook
     
