@@ -74,6 +74,14 @@ Rails.application.routes.draw do
       get 'agencies/new', to: 'agencies#new', as: :new_agency
       post 'agencies', to: 'agencies#create', as: :create_agency
       delete 'agencies/:id', to: 'agencies#destroy', as: :agency
+      
+      # Suppression settings
+      get 'suppression', to: 'suppression#show', as: :suppression
+      patch 'suppression', to: 'suppression#update', as: :update_suppression
+      post 'suppression/import_dnm', to: 'suppression#import_dnm', as: :import_dnm
+      post 'suppression/entries', to: 'suppression#create_entry', as: :create_suppression_entry
+      delete 'suppression/entries/:id', to: 'suppression#destroy_entry', as: :destroy_suppression_entry
+      get 'suppression/download_sample', to: 'suppression#download_sample', as: :download_dnm_sample
     end
   end
   
@@ -110,11 +118,22 @@ Rails.application.routes.draw do
       get 'shopify/connect', to: 'shopify#connect', as: :shopify_connect
       post 'shopify/:id/disconnect', to: 'shopify#disconnect', as: :shopify_disconnect
       post 'shopify/:id/sync', to: 'shopify#sync_now', as: :shopify_sync_now
+      get 'shopify/orders', to: 'shopify#orders', as: :shopify_orders
     end
   end
   
   # OAuth callback (not scoped to advertiser)
   get 'auth/shopify/callback', to: 'integrations/shopify#callback', as: :auth_shopify_callback
+  
+  # Shopify Webhooks (not scoped to advertiser)
+  namespace :webhooks do
+    namespace :shopify do
+      post 'orders_create', to: 'shopify#orders_create'
+      post 'orders_updated', to: 'shopify#orders_updated'
+      post 'customers_create', to: 'shopify#customers_create'
+      post 'customers_update', to: 'shopify#customers_update'
+    end
+  end
   
   # Campaigns
   scope 'advertisers/:advertiser_slug' do
@@ -160,6 +179,7 @@ Rails.application.routes.draw do
           get :preview_contacts
           post :import_contacts
           post :import_segment
+          post :update_suppression_override
         end
       end
     end

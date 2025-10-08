@@ -14,6 +14,7 @@ class Advertiser < ApplicationRecord
   has_many :sync_jobs, dependent: :destroy
   has_many :segments, dependent: :destroy
   has_many :creatives, dependent: :destroy
+  has_many :suppression_list_entries, dependent: :destroy
   
   # Agency relationships
   has_many :advertiser_agency_accesses, dependent: :destroy

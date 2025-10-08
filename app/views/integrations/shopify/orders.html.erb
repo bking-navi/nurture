@@ -1,0 +1,247 @@
+<div class="max-w-7xl mx-auto">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">Shopify Orders</h1>
+    <p class="mt-2 text-sm text-gray-600">View and manage orders synced from Shopify</p>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-1 gap-5 sm:grid-cols-4 mb-6">
+    <div class="bg-white overflow-hidden shadow rounded-lg">
+      <div class="p-5">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+            </svg>
+          </div>
+          <div class="ml-5 w-0 flex-1">
+            <dl>
+              <dt class="text-sm font-medium text-gray-500 truncate">Total Orders</dt>
+              <dd class="text-lg font-semibold text-gray-900"><%= @advertiser.orders.count %></dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white overflow-hidden shadow rounded-lg">
+      <div class="p-5">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <svg class="h-6 w-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <div class="ml-5 w-0 flex-1">
+            <dl>
+              <dt class="text-sm font-medium text-gray-500 truncate">Paid Orders</dt>
+              <dd class="text-lg font-semibold text-green-600"><%= @advertiser.orders.paid_orders.count %></dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white overflow-hidden shadow rounded-lg">
+      <div class="p-5">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <svg class="h-6 w-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+            </svg>
+          </div>
+          <div class="ml-5 w-0 flex-1">
+            <dl>
+              <dt class="text-sm font-medium text-gray-500 truncate">Fulfilled</dt>
+              <dd class="text-lg font-semibold text-blue-600"><%= @advertiser.orders.where(fulfillment_status: :fulfilled).count %></dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white overflow-hidden shadow rounded-lg">
+      <div class="p-5">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <div class="ml-5 w-0 flex-1">
+            <dl>
+              <dt class="text-sm font-medium text-gray-500 truncate">Revenue</dt>
+              <dd class="text-lg font-semibold text-gray-900">
+                <%= number_to_currency(@advertiser.orders.paid_orders.sum(:total_price)) %>
+              </dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-white shadow rounded-lg p-4 mb-6">
+    <%= form_with url: integrations_shopify_orders_path(@advertiser.slug), method: :get, class: "space-y-4 sm:space-y-0 sm:flex sm:items-end sm:space-x-4" do |f| %>
+      <div class="flex-1">
+        <%= f.text_field :search, 
+            value: params[:search], 
+            placeholder: "Search by order number or email...", 
+            class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" %>
+      </div>
+      
+      <div>
+        <%= f.select :financial_status,
+            options_for_select([
+              ['All Statuses', ''],
+              ['Paid', 'paid'],
+              ['Pending', 'pending'],
+              ['Refunded', 'refunded'],
+              ['Partially Refunded', 'partially_refunded']
+            ], params[:financial_status]),
+            {},
+            class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" %>
+      </div>
+      
+      <div>
+        <%= f.select :fulfillment_status,
+            options_for_select([
+              ['All Fulfillments', ''],
+              ['Fulfilled', 'fulfilled'],
+              ['Unfulfilled', 'unfulfilled'],
+              ['Partial', 'partial']
+            ], params[:fulfillment_status]),
+            {},
+            class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" %>
+      </div>
+      
+      <div class="flex space-x-2">
+        <%= f.submit "Filter", class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+        <% if params[:search].present? || params[:financial_status].present? || params[:fulfillment_status].present? %>
+          <%= link_to "Clear", integrations_shopify_orders_path(@advertiser.slug), class: "inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Orders Table -->
+  <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+    <% if @orders.any? %>
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Order
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Customer
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Date
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Status
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Total
+            </th>
+            <th scope="col" class="relative px-6 py-3">
+              <span class="sr-only">Actions</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <% @orders.each do |order| %>
+            <tr class="hover:bg-gray-50">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900">
+                  #<%= order.order_number || order.external_id %>
+                </div>
+                <% if order.from_shopify? %>
+                  <div class="text-xs text-gray-500">
+                    <svg class="inline h-3 w-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M13.6 3.3c-.1-.1-.2-.1-.3-.1h-.2c0-.1-.1-.1-.1-.2 0 0-.1-.1-.2-.1l-7.1 1.3c-.1 0-.2.1-.3.2l-2.6 2.6c-.1.1-.1.3-.1.4l1.8 13.1c0 .2.2.4.4.4h11.4c.2 0 .4-.2.4-.4l.9-16.8c0-.2 0-.3-.1-.4l-3.9-.1zm-8.6 1.8l6.5-1.2-1.5 1.5-5 .9V5.1zm7.5-.9l1.5-1.5 2.9.1-.7 12.6-3.7-11.2zm-5.5 13.9l-1.6-11.6 4.6-.8 3.4 10.3-6.4 2.1z"></path>
+                    </svg>
+                    Shopify
+                  </div>
+                <% end %>
+              </td>
+              <td class="px-6 py-4">
+                <div class="text-sm text-gray-900"><%= order.customer_name %></div>
+                <% if order.email.present? %>
+                  <div class="text-sm text-gray-500"><%= order.email %></div>
+                <% end %>
+                <% if order.contact %>
+                  <%= link_to "View Contact →", audience_path(@advertiser.slug, search: order.contact.email), class: "text-xs text-indigo-600 hover:text-indigo-900" %>
+                <% end %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900"><%= order.ordered_at.strftime('%b %d, %Y') %></div>
+                <div class="text-xs text-gray-500"><%= order.ordered_at.strftime('%I:%M %p') %></div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex flex-col space-y-1">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <%= 
+                    case order.financial_status
+                    when 'paid' then 'bg-green-100 text-green-800'
+                    when 'refunded' then 'bg-red-100 text-red-800'
+                    when 'partially_refunded' then 'bg-yellow-100 text-yellow-800'
+                    else 'bg-gray-100 text-gray-800'
+                    end
+                  %>">
+                    <%= order.financial_status.to_s.titleize %>
+                  </span>
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <%= 
+                    case order.fulfillment_status
+                    when 'fulfilled' then 'bg-blue-100 text-blue-800'
+                    when 'partial' then 'bg-yellow-100 text-yellow-800'
+                    else 'bg-gray-100 text-gray-800'
+                    end
+                  %>">
+                    <%= order.fulfillment_status.to_s.titleize %>
+                  </span>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900">
+                  <%= number_to_currency(order.total_price, unit: order.currency == 'USD' ? '$' : order.currency) %>
+                </div>
+                <% if order.line_items.present? %>
+                  <div class="text-xs text-gray-500"><%= order.line_items.length %> items</div>
+                <% end %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <% if order.shopify_url %>
+                  <%= link_to "View in Shopify →", order.shopify_url, target: "_blank", class: "text-indigo-600 hover:text-indigo-900" %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+      
+      <!-- Pagination -->
+      <% if @orders.total_pages > 1 %>
+        <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+          <%= paginate @orders %>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="text-center py-12">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">No orders found</h3>
+        <p class="mt-1 text-sm text-gray-500">
+          <% if params[:search].present? || params[:financial_status].present? || params[:fulfillment_status].present? %>
+            Try adjusting your filters
+          <% else %>
+            Orders will appear here after syncing from Shopify
+          <% end %>
+        </p>
+      </div>
+    <% end %>
+  </div>
+</div>
+

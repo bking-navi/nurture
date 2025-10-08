@@ -74,6 +74,34 @@
     </div>
   <% end %>
 
+  <!-- Suppression Settings Card -->
+  <%= link_to settings_suppression_path(@advertiser.slug), class: "block group" do %>
+    <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow">
+      <div class="p-6">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <svg class="h-8 w-8 text-gray-400 group-hover:text-gray-950 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
+            </svg>
+          </div>
+          <div class="ml-4 flex-1">
+            <h3 class="text-lg font-medium text-gray-900 group-hover:text-gray-950 transition-colors">
+              Suppression
+            </h3>
+            <p class="mt-1 text-sm text-gray-500">
+              Manage mailing frequency and Do Not Mail list
+            </p>
+          </div>
+          <div class="ml-4">
+            <svg class="h-5 w-5 text-gray-400 group-hover:text-gray-950 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
   <!-- Account Settings Card (Coming Soon) -->
   <div class="block group opacity-50 cursor-not-allowed">
     <div class="bg-white overflow-hidden shadow rounded-lg">

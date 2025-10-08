@@ -7,9 +7,6 @@ class ContactsController < ApplicationController
   
   def index
     @contacts = @advertiser.contacts
-                           .order(created_at: :desc)
-                           .page(params[:page])
-                           .per(50)
     
     # Set current advertiser context
     set_current_advertiser(@advertiser)
@@ -32,6 +29,26 @@ class ContactsController < ApplicationController
         search_term, search_term, search_term
       )
     end
+    
+    # Filter by suppression status if provided (before pagination)
+    if params[:suppressed] == 'true'
+      # Show contacts on DNM list - check each contact
+      # Note: This loads all matching contacts into memory, so may be slow for large lists
+      suppressed_contact_ids = []
+      
+      @contacts.find_each do |contact|
+        if contact.on_suppression_list?
+          suppressed_contact_ids << contact.id
+        end
+      end
+      
+      @contacts = @advertiser.contacts.where(id: suppressed_contact_ids)
+    end
+    
+    # Apply pagination and ordering last
+    @contacts = @contacts.order(created_at: :desc)
+                         .page(params[:page])
+                         .per(50)
   end
   
   def new

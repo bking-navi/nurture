@@ -13,6 +13,15 @@ class CampaignContactsController < ApplicationController
   def create
     @contact = @campaign.campaign_contacts.build(contact_params)
     
+    # Check suppression if linked to a Contact
+    if @contact.contact.present?
+      suppression_result = @campaign.check_suppression(@contact.contact)
+      if suppression_result[:suppressed]
+        @contact.suppressed = true
+        @contact.suppression_reason = suppression_result[:reason]
+      end
+    end
+    
     if @contact.save
       # Optionally validate address with Lob
       if params[:validate_address] == '1'
@@ -232,6 +241,13 @@ class CampaignContactsController < ApplicationController
         address_zip: address['zip']
       )
       
+      # Check suppression
+      suppression_result = @campaign.check_suppression(contact)
+      if suppression_result[:suppressed]
+        campaign_contact.suppressed = true
+        campaign_contact.suppression_reason = suppression_result[:reason]
+      end
+      
       if campaign_contact.save
         imported_count += 1
       else
@@ -340,6 +356,13 @@ class CampaignContactsController < ApplicationController
         address_zip: address['zip']
       )
       
+      # Check suppression
+      suppression_result = @campaign.check_suppression(contact)
+      if suppression_result[:suppressed]
+        campaign_contact.suppressed = true
+        campaign_contact.suppression_reason = suppression_result[:reason]
+      end
+      
       if campaign_contact.save
         imported_count += 1
       else
@@ -358,6 +381,24 @@ class CampaignContactsController < ApplicationController
     else
       redirect_to edit_campaign_path(@advertiser.slug, @campaign, tab: 'recipients'),
                   alert: "No contacts found matching your criteria."
+    end
+  end
+  
+  def update_suppression_override
+    # Handle both boolean and string values
+    override = ActiveModel::Type::Boolean.new.cast(params[:override_suppression])
+    
+    if @campaign.update(override_suppression: override)
+      render json: { 
+        success: true, 
+        override: override,
+        message: override ? 'Suppression override enabled' : 'Suppression override disabled'
+      }
+    else
+      render json: { 
+        success: false, 
+        errors: @campaign.errors.full_messages 
+      }, status: :unprocessable_entity
     end
   end
   
@@ -391,6 +432,13 @@ class CampaignContactsController < ApplicationController
         address_state: address['state'],
         address_zip: address['zip']
       )
+      
+      # Check suppression
+      suppression_result = @campaign.check_suppression(contact)
+      if suppression_result[:suppressed]
+        campaign_contact.suppressed = true
+        campaign_contact.suppression_reason = suppression_result[:reason]
+      end
       
       if campaign_contact.save
         imported_count += 1

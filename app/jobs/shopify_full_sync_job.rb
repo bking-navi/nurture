@@ -150,6 +150,18 @@ class ShopifyFullSyncJob < ApplicationJob
         )
 
         if contact.save
+          # Update last_order_at and first_order_at from our Order records
+          # This is more reliable than Shopify's customer last_order_date field
+          most_recent_order = contact.orders.order(created_at: :desc).first
+          oldest_order = contact.orders.order(created_at: :asc).first
+          
+          if most_recent_order
+            contact.update_columns(
+              last_order_at: most_recent_order.created_at,
+              first_order_at: oldest_order&.created_at
+            )
+          end
+          
           counts[:processed] += 1
           was_new ? counts[:created] += 1 : counts[:updated] += 1
         else

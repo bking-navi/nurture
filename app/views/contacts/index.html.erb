@@ -123,9 +123,16 @@
           class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-gray-700 focus:ring-gray-700 sm:text-sm" %>
     </div>
     
+    <div class="mt-3 sm:mt-0 flex items-center">
+      <label class="flex items-center text-sm text-gray-700">
+        <%= check_box_tag :suppressed, 'true', params[:suppressed] == 'true', class: "rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mr-2" %>
+        On DNM List
+      </label>
+    </div>
+    
     <div class="mt-3 sm:mt-0 flex space-x-2">
       <%= f.submit "Search", class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gray-950 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700" %>
-      <% if params[:search].present? || params[:source].present? %>
+      <% if params[:search].present? || params[:source].present? || params[:suppressed].present? %>
         <%= link_to "Clear", audience_path(@advertiser.slug), class: "inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700" %>
       <% end %>
     </div>
@@ -139,7 +146,7 @@
       <div class="text-sm text-gray-500">
         <span class="font-medium text-gray-900"><%= @contacts.total_count %></span> 
         <%= "contact".pluralize(@contacts.total_count) %>
-        <% if params[:search].present? || params[:source].present? %>
+        <% if params[:search].present? || params[:source].present? || params[:suppressed].present? %>
           <span class="ml-2 text-gray-400">(filtered)</span>
         <% end %>
       </div>

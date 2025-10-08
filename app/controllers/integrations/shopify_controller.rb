@@ -77,6 +77,16 @@ module Integrations
         )
 
         if store.save
+          # Register webhooks for real-time updates
+          webhook_service = ShopifyWebhookService.new(store)
+          webhook_result = webhook_service.register_all_webhooks
+          
+          if webhook_result[:success]
+            Rails.logger.info "[Shopify] Webhooks registered for #{store.shop_domain}"
+          else
+            Rails.logger.warn "[Shopify] Some webhooks failed to register for #{store.shop_domain}"
+          end
+          
           # Trigger initial sync
           sync_job = SyncJob.create!(
             advertiser: @advertiser,
@@ -108,6 +118,15 @@ module Integrations
     end
 
     def disconnect
+      # Unregister webhooks first
+      begin
+        webhook_service = ShopifyWebhookService.new(@shopify_store)
+        webhook_service.unregister_all_webhooks
+        Rails.logger.info "[Shopify] Webhooks unregistered for #{@shopify_store.shop_domain}"
+      rescue => e
+        Rails.logger.error "[Shopify] Failed to unregister webhooks: #{e.message}"
+      end
+      
       if @shopify_store.disconnect!
         redirect_to integrations_shopify_path(@advertiser.slug), 
                     notice: "#{@shopify_store.display_name} disconnected"
@@ -137,6 +156,40 @@ module Integrations
 
       redirect_to integrations_shopify_path(@advertiser.slug), 
                   notice: "Sync started for #{@shopify_store.display_name}"
+    end
+
+    def orders
+      @orders = @advertiser.orders
+                          .includes(:contact, :source)
+                          .recent
+                          .page(params[:page])
+                          .per(50)
+      
+      # Filter by source
+      if params[:source_id].present?
+        @orders = @orders.where(source_id: params[:source_id], source_type: 'ShopifyStore')
+      end
+      
+      # Filter by financial status
+      if params[:financial_status].present?
+        @orders = @orders.where(financial_status: params[:financial_status])
+      end
+      
+      # Filter by fulfillment status
+      if params[:fulfillment_status].present?
+        @orders = @orders.where(fulfillment_status: params[:fulfillment_status])
+      end
+      
+      # Search by order number or email
+      if params[:search].present?
+        search_term = "%#{params[:search]}%"
+        @orders = @orders.where(
+          "order_number ILIKE ? OR email ILIKE ?",
+          search_term, search_term
+        )
+      end
+      
+      set_current_advertiser(@advertiser)
     end
 
     private

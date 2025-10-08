@@ -67,7 +67,7 @@
     <% end %>
 
     <!-- Stats Cards -->
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-<%= @campaign.suppressed_count > 0 ? '5' : '4' %> mb-8">
       <div class="bg-white overflow-hidden shadow rounded-lg">
         <div class="p-5">
           <div class="flex items-center">
@@ -139,6 +139,26 @@
           </div>
         </div>
       </div>
+
+      <% if @campaign.suppressed_count > 0 %>
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+          <div class="p-5">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <svg class="h-6 w-6 text-orange-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                </svg>
+              </div>
+              <div class="ml-5 w-0 flex-1">
+                <dl>
+                  <dt class="text-sm font-medium text-gray-500 truncate">Suppressed</dt>
+                  <dd class="text-lg font-semibold text-orange-600"><%= @campaign.suppressed_count %></dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
     </div>
 
     <!-- Recipients List -->
@@ -180,6 +200,10 @@
                       <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                         Returned
                       </span>
+                    <% elsif contact.suppressed? && contact.pending? %>
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                        Suppressed
+                      </span>
                     <% else %>
                       <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                         <%= contact.status.titleize %>
@@ -190,6 +214,15 @@
                   <p class="mt-1 text-sm text-gray-500">
                     <%= contact.address_formatted.gsub("\n", ", ") %>
                   </p>
+                  
+                  <% if contact.suppressed? && contact.pending? && contact.suppression_reason.present? %>
+                    <p class="mt-1 text-xs text-orange-700">
+                      <svg class="inline h-3 w-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                      </svg>
+                      <%= contact.suppression_reason %>
+                    </p>
+                  <% end %>
                   
                   <div class="mt-2 flex items-center text-sm text-gray-500 space-x-4">
                     <% if contact.delivered_at %>

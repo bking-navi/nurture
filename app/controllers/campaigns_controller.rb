@@ -284,6 +284,9 @@ class CampaignsController < ApplicationController
       :postcard_template_id, :color_palette_id,
       :creative_id,
       :front_pdf, :back_pdf,
+      :override_suppression,
+      :recent_order_suppression_days,
+      :recent_mail_suppression_days,
       template_data: {}
     )
   end

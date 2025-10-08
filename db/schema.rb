@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_07_194445) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_08_132823) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -96,6 +96,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_07_194445) do
     t.integer "auto_recharge_amount_cents", default: 10000
     t.datetime "last_auto_recharge_at"
     t.integer "pending_balance_cents", default: 0, null: false
+    t.integer "recent_order_suppression_days", default: 0, null: false
+    t.integer "recent_mail_suppression_days", default: 0, null: false
+    t.boolean "dnm_enabled", default: true, null: false
     t.index ["balance_cents"], name: "index_advertisers_on_balance_cents"
     t.index ["name"], name: "index_advertisers_on_name"
     t.index ["slug"], name: "index_advertisers_on_slug", unique: true
@@ -219,8 +222,11 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_07_194445) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "contact_id"
+    t.boolean "suppressed", default: false, null: false
+    t.text "suppression_reason"
     t.index ["campaign_id", "created_at"], name: "index_campaign_contacts_on_campaign_id_and_created_at"
     t.index ["campaign_id", "status"], name: "index_campaign_contacts_on_campaign_id_and_status"
+    t.index ["campaign_id", "suppressed"], name: "index_campaign_contacts_on_campaign_id_and_suppressed"
     t.index ["campaign_id"], name: "index_campaign_contacts_on_campaign_id"
     t.index ["contact_id"], name: "index_campaign_contacts_on_contact_id"
     t.index ["lob_postcard_id"], name: "index_campaign_contacts_on_lob_postcard_id", unique: true
@@ -254,6 +260,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_07_194445) do
     t.integer "color_palette_id"
     t.bigint "creative_id"
     t.datetime "charged_at"
+    t.integer "recent_order_suppression_days"
+    t.integer "recent_mail_suppression_days"
+    t.boolean "override_suppression", default: false, null: false
     t.index ["advertiser_id", "created_at"], name: "index_campaigns_on_advertiser_id_and_created_at"
     t.index ["advertiser_id", "status"], name: "index_campaigns_on_advertiser_id_and_status"
     t.index ["advertiser_id"], name: "index_campaigns_on_advertiser_id"
@@ -307,7 +316,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_07_194445) do
     t.integer "rfm_frequency_score", default: 0
     t.integer "rfm_monetary_score", default: 0
     t.string "rfm_segment"
+    t.datetime "last_mailed_at"
     t.index ["advertiser_id", "email"], name: "index_contacts_on_advertiser_id_and_email"
+    t.index ["advertiser_id", "last_mailed_at"], name: "index_contacts_on_advertiser_id_and_last_mailed_at"
     t.index ["advertiser_id", "last_order_at"], name: "index_contacts_on_advertiser_id_and_last_order_at"
     t.index ["advertiser_id", "rfm_frequency_score"], name: "index_contacts_on_advertiser_id_and_rfm_frequency_score"
     t.index ["advertiser_id", "rfm_monetary_score"], name: "index_contacts_on_advertiser_id_and_rfm_monetary_score"
@@ -631,6 +642,23 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_07_194445) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
+  create_table "suppression_list_entries", force: :cascade do |t|
+    t.bigint "advertiser_id", null: false
+    t.string "email", null: false
+    t.string "first_name"
+    t.string "last_name"
+    t.text "reason"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "address_line1"
+    t.string "address_line2"
+    t.string "address_city"
+    t.string "address_state"
+    t.string "address_zip"
+    t.index ["advertiser_id", "address_line1", "address_city", "address_state", "address_zip"], name: "idx_suppression_on_address"
+    t.index ["advertiser_id"], name: "index_suppression_list_entries_on_advertiser_id"
+  end
+
   create_table "sync_jobs", force: :cascade do |t|
     t.bigint "advertiser_id", null: false
     t.bigint "shopify_store_id", null: false
@@ -729,6 +757,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_07_194445) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "suppression_list_entries", "advertisers"
   add_foreign_key "sync_jobs", "advertisers"
   add_foreign_key "sync_jobs", "shopify_stores"
   add_foreign_key "sync_jobs", "users", column: "triggered_by_user_id"

@@ -3,6 +3,7 @@ class Contact < ApplicationRecord
   belongs_to :source, polymorphic: true
   has_many :orders, dependent: :nullify
   has_many :campaign_contacts, dependent: :nullify
+  has_many :suppression_list_entries, through: :advertiser
 
   # Enums
   enum :state, {
@@ -46,6 +47,10 @@ class Contact < ApplicationRecord
   scope :high_value, -> { where("rfm_monetary_score >= ?", 4) }
   scope :recent_buyers, -> { where("rfm_recency_score >= ?", 4) }
   scope :frequent_buyers, -> { where("rfm_frequency_score >= ?", 4) }
+  
+  # Suppression scopes
+  scope :mailed_within, ->(days) { where("last_mailed_at >= ?", days.days.ago) }
+  scope :ordered_within, ->(days) { where("last_order_at >= ?", days.days.ago) }
 
   # Instance methods
   def display_name
@@ -75,6 +80,15 @@ class Contact < ApplicationRecord
 
   def primary_address
     default_address || addresses&.first
+  end
+  
+  # Suppression methods
+  def update_last_mailed!
+    update_column(:last_mailed_at, Time.current)
+  end
+  
+  def on_suppression_list?
+    SuppressionListEntry.contact_on_list?(advertiser, self)
   end
 
   # RFM Calculations

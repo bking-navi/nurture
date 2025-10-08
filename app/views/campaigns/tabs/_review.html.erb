@@ -11,7 +11,14 @@
       
       <div>
         <dt class="text-sm font-medium text-gray-500">Recipients</dt>
-        <dd class="mt-1 text-sm text-gray-900"><%= campaign.recipient_count %> postcards</dd>
+        <dd class="mt-1 text-sm text-gray-900">
+          <% if campaign.suppressed_count > 0 && !campaign.override_suppression %>
+            <%= campaign.sendable_count %> will be sent
+            <span class="text-gray-500">(<%= campaign.suppressed_count %> suppressed)</span>
+          <% else %>
+            <%= campaign.recipient_count %> postcards
+          <% end %>
+        </dd>
       </div>
       
       <div>
@@ -41,14 +48,23 @@
     <% if campaign.estimated_cost_cents > 0 %>
       <div class="space-y-3">
         <div class="flex justify-between text-sm">
-          <span class="text-gray-600"><%= campaign.recipient_count %> postcards × <%= number_to_currency(1.05) %></span>
-          <span class="font-medium text-gray-900"><%= number_to_currency(campaign.estimated_cost_dollars) %></span>
+          <span class="text-gray-600">
+            <% sendable = campaign.override_suppression ? campaign.recipient_count : campaign.sendable_count %>
+            <%= sendable %> postcards × <%= number_to_currency(1.05) %>
+          </span>
+          <span class="font-medium text-gray-900"><%= number_to_currency(sendable * 1.05) %></span>
         </div>
+        <% if campaign.suppressed_count > 0 && !campaign.override_suppression %>
+          <p class="text-xs text-gray-500">
+            <%= campaign.suppressed_count %> <%= 'contact'.pluralize(campaign.suppressed_count) %> suppressed (not included in cost)
+          </p>
+        <% end %>
         
         <div class="border-t border-gray-200 pt-3">
           <div class="flex justify-between">
             <span class="text-base font-medium text-gray-900">Total</span>
-            <span class="text-base font-bold text-gray-900"><%= number_to_currency(campaign.estimated_cost_dollars) %></span>
+            <% sendable = campaign.override_suppression ? campaign.recipient_count : campaign.sendable_count %>
+            <span class="text-base font-bold text-gray-900"><%= number_to_currency(sendable * 1.05) %></span>
           </div>
         </div>
         
@@ -70,16 +86,28 @@
     
     <div class="space-y-3">
       <div class="flex items-center">
-        <% if campaign.recipient_count > 0 %>
+        <% sendable = campaign.override_suppression ? campaign.recipient_count : campaign.sendable_count %>
+        <% if sendable > 0 %>
           <svg class="h-5 w-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
           </svg>
-          <span class="text-sm text-gray-700">Recipients added (<%= campaign.recipient_count %>)</span>
+          <span class="text-sm text-gray-700">
+            <%= sendable %> <%= 'recipient'.pluralize(sendable) %> ready to send
+            <% if campaign.suppressed_count > 0 && !campaign.override_suppression %>
+              <span class="text-gray-500">(+ <%= campaign.suppressed_count %> suppressed)</span>
+            <% end %>
+          </span>
         <% else %>
           <svg class="h-5 w-5 text-gray-400 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
           </svg>
-          <span class="text-sm text-gray-500">No recipients added</span>
+          <span class="text-sm text-gray-500">
+            <% if campaign.recipient_count > 0 %>
+              All <%= campaign.recipient_count %> recipients are suppressed
+            <% else %>
+              No recipients added
+            <% end %>
+          </span>
         <% end %>
       </div>
       
@@ -98,11 +126,12 @@
       </div>
     </div>
     
-    <% if campaign.sendable? %>
+    <% sendable = campaign.override_suppression ? campaign.recipient_count : campaign.sendable_count %>
+    <% if campaign.sendable? && sendable > 0 %>
       <div class="mt-6">
         <%= button_to "Send Campaign Now", send_now_campaign_path(advertiser.slug, campaign), 
             method: :post,
-            data: { turbo_confirm: "Send #{campaign.recipient_count} postcards for #{number_to_currency(campaign.estimated_cost_dollars)}? This action cannot be undone." },
+            data: { turbo_confirm: "Send #{sendable} postcards for #{number_to_currency(sendable * 1.05)}? This action cannot be undone." },
             class: "w-full inline-flex justify-center items-center px-6 py-3 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-gray-950 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700" %>
       </div>
     <% else %>
@@ -111,8 +140,13 @@
           Campaign Not Ready
         </button>
         <p class="mt-2 text-sm text-gray-500 text-center">
-          <% if campaign.recipient_count == 0 %>
-            Add recipients to continue
+          <% sendable = campaign.override_suppression ? campaign.recipient_count : campaign.sendable_count %>
+          <% if sendable == 0 %>
+            <% if campaign.recipient_count > 0 %>
+              All recipients are suppressed. Enable override on Recipients tab to send.
+            <% else %>
+              Add recipients to continue
+            <% end %>
           <% elsif !campaign.has_design? %>
             Complete the design tab to continue
           <% else %>
@@ -136,7 +170,8 @@
         <div class="mt-2 text-sm text-yellow-700">
           <ul class="list-disc pl-5 space-y-1">
             <li>Once sent, campaigns cannot be cancelled or modified</li>
-            <li>Your account will be charged <%= number_to_currency(campaign.estimated_cost_dollars) %></li>
+            <% sendable = campaign.override_suppression ? campaign.recipient_count : campaign.sendable_count %>
+            <li>Your account will be charged <%= number_to_currency(sendable * 1.05) %></li>
             <li>Postcards typically arrive in 5-7 business days</li>
             <li>You'll receive an email when sending is complete</li>
           </ul>

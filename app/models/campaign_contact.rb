@@ -28,6 +28,11 @@ class CampaignContact < ApplicationRecord
   
   scope :ready_to_send, -> { where(status: :pending) }
   scope :successfully_sent, -> { where(status: [:sent, :in_transit, :delivered]) }
+  scope :suppressed, -> { where(suppressed: true) }
+  scope :not_suppressed, -> { where(suppressed: false) }
+  scope :sendable, ->(override_suppression = false) { 
+    override_suppression ? where(status: :pending) : where(status: :pending, suppressed: false) 
+  }
   
   def full_name
     "#{first_name} #{last_name}".strip

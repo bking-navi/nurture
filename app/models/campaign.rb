@@ -5,6 +5,7 @@ class Campaign < ApplicationRecord
   belongs_to :color_palette, optional: true
   belongs_to :creative, optional: true
   has_many :campaign_contacts, dependent: :destroy
+  has_many :suppressed_contacts, -> { where(suppressed: true) }, class_name: 'CampaignContact'
   
   # Active Storage for PDF uploads
   has_one_attached :front_pdf
@@ -130,11 +131,62 @@ class Campaign < ApplicationRecord
     )
   end
   
+  def suppressed_count
+    # Only count contacts that are suppressed AND still pending (not sent)
+    campaign_contacts.where(suppressed: true, status: :pending).count
+  end
+  
+  def sendable_count
+    # If override is on, send to all pending contacts
+    # If override is off, only send to non-suppressed pending contacts
+    campaign_contacts.sendable(override_suppression).count
+  end
+  
   def completion_percentage
     return 0 if recipient_count.zero?
     
     completed = sent_count + failed_count
     (completed.to_f / recipient_count * 100).round
+  end
+  
+  # Suppression settings (campaign overrides or advertiser defaults)
+  def suppression_settings
+    {
+      recent_order_days: recent_order_suppression_days || advertiser.recent_order_suppression_days,
+      recent_mail_days: recent_mail_suppression_days || advertiser.recent_mail_suppression_days,
+      dnm_enabled: advertiser.dnm_enabled
+    }
+  end
+  
+  def check_suppression(contact)
+    settings = suppression_settings
+    reasons = []
+    
+    # Check DNM list
+    if settings[:dnm_enabled] && contact.on_suppression_list?
+      reasons << "On Do Not Mail list"
+    end
+    
+    # Check recent orders
+    if settings[:recent_order_days] > 0 && contact.last_order_at.present?
+      days_since_order = ((Time.current - contact.last_order_at) / 1.day).to_i
+      if days_since_order < settings[:recent_order_days]
+        reasons << "Ordered #{days_since_order} days ago (suppressing orders within #{settings[:recent_order_days]} days)"
+      end
+    end
+    
+    # Check recent mail
+    if settings[:recent_mail_days] > 0 && contact.last_mailed_at.present?
+      days_since_mail = ((Time.current - contact.last_mailed_at) / 1.day).to_i
+      if days_since_mail < settings[:recent_mail_days]
+        reasons << "Mailed #{days_since_mail} days ago (suppressing mail within #{settings[:recent_mail_days]} days)"
+      end
+    end
+    
+    {
+      suppressed: reasons.any?,
+      reason: reasons.join("; ")
+    }
   end
   
   # Template rendering methods

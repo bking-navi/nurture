@@ -19,9 +19,19 @@ class SendCampaignJob < ApplicationJob
     
     sent_count = 0
     failed_count = 0
+    suppressed_count = 0
     total_cost = 0
     
-    campaign.campaign_contacts.ready_to_send.find_each do |contact|
+    # Debug logging
+    Rails.logger.info "[SendCampaign] Campaign #{campaign.id}: override_suppression=#{campaign.override_suppression}"
+    Rails.logger.info "[SendCampaign] Total contacts: #{campaign.campaign_contacts.count}"
+    Rails.logger.info "[SendCampaign] Pending contacts: #{campaign.campaign_contacts.where(status: :pending).count}"
+    Rails.logger.info "[SendCampaign] Suppressed contacts: #{campaign.campaign_contacts.where(suppressed: true).count}"
+    sendable_contacts = campaign.campaign_contacts.sendable(campaign.override_suppression)
+    Rails.logger.info "[SendCampaign] Sendable contacts: #{sendable_contacts.count}"
+    
+    # Use sendable scope which respects suppression settings
+    sendable_contacts.find_each do |contact|
       begin
         contact.update!(status: :sending)
         
@@ -50,6 +60,11 @@ class SendCampaignJob < ApplicationJob
           lob_response: lob_data
         )
         
+        # Update last_mailed_at on the linked Contact
+        if contact.contact.present?
+          contact.contact.update_last_mailed!
+        end
+        
         sent_count += 1
         total_cost += contact.actual_cost_cents
         
@@ -72,6 +87,11 @@ class SendCampaignJob < ApplicationJob
       sleep 0.1
     end
     
+    # Count suppressed contacts that were skipped
+    if !campaign.override_suppression
+      suppressed_count = campaign.campaign_contacts.where(suppressed: true, status: :pending).count
+    end
+    
     # Determine final status based on results
     total_contacts = campaign.recipient_count
     final_status = if sent_count == 0
@@ -91,7 +111,10 @@ class SendCampaignJob < ApplicationJob
       actual_cost_cents: total_cost
     )
     
-    Rails.logger.info "Completed campaign #{campaign.id} with status '#{final_status}': #{sent_count} sent, #{failed_count} failed, $#{total_cost/100.0} total"
+    log_message = "Completed campaign #{campaign.id} with status '#{final_status}': #{sent_count} sent, #{failed_count} failed"
+    log_message += ", #{suppressed_count} suppressed" if suppressed_count > 0
+    log_message += ", $#{total_cost/100.0} total"
+    Rails.logger.info log_message
     
     # Charge advertiser's balance if campaign sent any postcards
     if sent_count > 0 && total_cost > 0 && !campaign.charged?
