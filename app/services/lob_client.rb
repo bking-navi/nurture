@@ -232,6 +232,130 @@ class LobClient
       postcards_api.get(lob_postcard_id)
     end
     
+    # Validate creative by creating a test postcard and getting proof URL
+    def validate_creative(creative:, advertiser:)
+      postcards_api = Lob::PostcardsApi.new(api_client)
+      
+      # Check if PDFs are attached
+      unless creative.front_pdf.attached?
+        return {
+          success: false,
+          error: 'Front PDF is required'
+        }
+      end
+      
+      # Generate publicly accessible URLs for the PDFs
+      host_url = ENV['APP_URL'] || ENV['NGROK_URL'] || 'http://localhost:3000'
+      
+      # Check if we're using localhost (which Lob can't access)
+      if Rails.env.development? && host_url.include?('localhost')
+        return {
+          success: false,
+          error: "PDF validation requires a publicly accessible URL. Please set up ngrok or use production."
+        }
+      end
+      
+      begin
+        front_url = Rails.application.routes.url_helpers.rails_blob_url(
+          creative.front_pdf,
+          host: host_url
+        )
+        
+        back_url = if creative.back_pdf.attached?
+          Rails.application.routes.url_helpers.rails_blob_url(
+            creative.back_pdf,
+            host: host_url
+          )
+        elsif creative.postcard_template&.default_back_pdf&.attached?
+          Rails.application.routes.url_helpers.rails_blob_url(
+            creative.postcard_template.default_back_pdf,
+            host: host_url
+          )
+        else
+          # Use a simple default back if no back is provided
+          front_url # Use front as back for validation purposes
+        end
+        
+        # Use Lob's test address for validation
+        to_address = format_address_editable(
+          name: 'Test Validation',
+          address_line1: '185 BERRY ST STE 6100',
+          address_city: 'SAN FRANCISCO',
+          address_state: 'CA',
+          address_zip: '94107'
+        )
+        
+        from_address = format_address_editable(
+          name: advertiser.name,
+          address_line1: advertiser.address_line1 || '123 Main St',
+          address_city: advertiser.city || 'New York',
+          address_state: advertiser.state || 'NY',
+          address_zip: advertiser.zip || '10001'
+        )
+        
+        # Create a test postcard to validate the design and get proof
+        postcard_editable = Lob::PostcardEditable.new(
+          description: "Proof validation for creative: #{creative.name}",
+          to: to_address,
+          from: from_address,
+          front: front_url,
+          back: back_url,
+          size: '6x9',
+          mail_type: 'usps_first_class',
+          metadata: {
+            creative_id: creative.id.to_s,
+            advertiser_id: advertiser.id.to_s,
+            validation: 'true'
+          }
+        )
+        
+        # Create the test postcard with logging
+        postcard = log_api_call(
+          advertiser: advertiser,
+          campaign: nil,
+          endpoint: '/v1/postcards',
+          method: 'POST',
+          request_body: postcard_editable
+        ) do
+          postcards_api.create(postcard_editable)
+        end
+        
+        # Extract proof URL and response data
+        {
+          success: true,
+          proof_url: postcard.url,
+          lob_postcard_id: postcard.id,
+          lob_response: {
+            id: postcard.id,
+            url: postcard.url,
+            thumbnails: postcard.try(:thumbnails),
+            expected_delivery_date: postcard.try(:expected_delivery_date),
+            date_created: postcard.try(:date_created)
+          }.compact
+        }
+        
+      rescue => e
+        Rails.logger.error "Creative validation failed: #{e.message}"
+        Rails.logger.error e.backtrace.join("\n")
+        
+        # Extract user-friendly error message
+        error_message = if e.respond_to?(:response_body)
+          begin
+            JSON.parse(e.response_body)['error']['message'] rescue e.message
+          rescue
+            e.message
+          end
+        else
+          e.message
+        end
+        
+        {
+          success: false,
+          error: error_message
+        }
+      end
+    end
+    
     # List available templates
     def list_templates(limit: 50)
       templates_api = Lob::TemplatesApi.new(api_client)

@@ -2,7 +2,7 @@ class CreativesController < ApplicationController
   before_action :authenticate_user!
   before_action :set_advertiser
   before_action :verify_access!
-  before_action :set_creative, only: [:show, :edit, :update, :destroy]
+  before_action :set_creative, only: [:show, :edit, :update, :destroy, :approve, :reject, :regenerate_proof]
   
   layout "sidebar"
 
@@ -55,7 +55,7 @@ class CreativesController < ApplicationController
     
     if @creative.save
       redirect_to creative_path(@advertiser.slug, @creative), 
-                  notice: 'Creative saved to library! Thumbnail will be generated shortly.'
+                  notice: 'Creative saved! Generating proof for approval...'
     else
       @postcard_templates = PostcardTemplate.all
       set_current_advertiser(@advertiser)
@@ -89,6 +89,25 @@ class CreativesController < ApplicationController
     @creative.destroy
     redirect_to creatives_path(@advertiser.slug), 
                 notice: 'Creative deleted successfully.'
+  end
+  
+  def approve
+    @creative.approve!(current_user)
+    redirect_to creative_path(@advertiser.slug, @creative),
+                notice: 'Creative approved! It can now be used in campaigns.'
+  end
+  
+  def reject
+    reason = params[:reason].presence || 'No reason provided'
+    @creative.reject!(current_user, reason)
+    redirect_to creative_path(@advertiser.slug, @creative),
+                notice: 'Creative rejected.'
+  end
+  
+  def regenerate_proof
+    @creative.regenerate_proof!
+    redirect_to creative_path(@advertiser.slug, @creative),
+                notice: 'Regenerating proof...'
   end
 
   private

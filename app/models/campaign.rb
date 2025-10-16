@@ -4,6 +4,7 @@ class Campaign < ApplicationRecord
   belongs_to :postcard_template, optional: true
   belongs_to :color_palette, optional: true
   belongs_to :creative, optional: true
+  belongs_to :pdf_approved_by_user, class_name: 'User', optional: true
   has_many :campaign_contacts, dependent: :destroy
   has_many :suppressed_contacts, -> { where(suppressed: true) }, class_name: 'CampaignContact'
   
@@ -69,7 +70,7 @@ class Campaign < ApplicationRecord
   
   # State checks
   def sendable?
-    draft? && recipient_count > 0 && has_design?
+    draft? && recipient_count > 0 && has_design? && design_approved?
   end
   
   def has_design?
@@ -238,6 +239,39 @@ class Campaign < ApplicationRecord
   
   def using_creative?
     creative_id.present?
+  end
+  
+  # Check if design is approved and ready to send
+  def design_approved?
+    if using_creative?
+      # Using creative from library - check creative approval
+      creative&.approved?
+    elsif front_pdf.attached? && back_pdf.attached?
+      # Using direct PDF uploads - check campaign PDF approval
+      pdf_approval_status == 'approved'
+    else
+      # Using templates - no approval needed
+      true
+    end
+  end
+  
+  # Check if using an unapproved creative
+  def using_unapproved_creative?
+    using_creative? && !creative&.approved?
+  end
+  
+  # Check if campaign PDFs need approval
+  def pdf_needs_approval?
+    front_pdf.attached? && back_pdf.attached? && pdf_approval_status != 'approved'
+  end
+  
+  # Approve campaign PDFs
+  def approve_pdf!(user)
+    update!(
+      pdf_approval_status: 'approved',
+      pdf_approved_at: Time.current,
+      pdf_approved_by_user: user
+    )
   end
   
   private

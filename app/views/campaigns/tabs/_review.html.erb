@@ -1,4 +1,112 @@
 <div class="space-y-6">
+  <!-- Design Approval Section -->
+  <% if campaign.using_creative? %>
+    <!-- Using creative from library -->
+    <div class="bg-white border border-gray-200 rounded-lg p-6">
+      <h3 class="text-lg font-medium text-gray-900 mb-4">Design Approval</h3>
+      
+      <% if campaign.creative.approved? %>
+        <div class="flex items-start">
+          <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+          </svg>
+          <div>
+            <p class="text-sm font-medium text-gray-900">Design approved</p>
+            <p class="text-sm text-gray-600 mt-1">Using creative: <%= campaign.creative.name %></p>
+          </div>
+        </div>
+      <% else %>
+        <div class="rounded-md bg-red-50 p-4">
+          <div class="flex">
+            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+            <div class="ml-3">
+              <h3 class="text-sm font-medium text-red-800">Creative needs approval</h3>
+              <div class="mt-2 text-sm text-red-700">
+                <p>The creative "<%= campaign.creative.name %>" must be approved before you can send this campaign.</p>
+              </div>
+              <div class="mt-4">
+                <%= link_to "Review Creative", creative_path(advertiser.slug, campaign.creative),
+                    class: "inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200",
+                    target: "_blank" %>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+    
+  <% elsif campaign.front_pdf.attached? && campaign.back_pdf.attached? %>
+    <!-- Using direct PDF uploads -->
+    <div class="bg-white border border-gray-200 rounded-lg p-6">
+      <h3 class="text-lg font-medium text-gray-900 mb-4">Design Approval</h3>
+      
+      <% if campaign.pdf_approval_status == 'approved' %>
+        <div class="flex items-start">
+          <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+          </svg>
+          <div>
+            <p class="text-sm font-medium text-gray-900">PDFs approved</p>
+            <p class="text-sm text-gray-600 mt-1">
+              Approved by <%= campaign.pdf_approved_by_user&.first_name %> <%= campaign.pdf_approved_by_user&.last_name %>
+              on <%= campaign.pdf_approved_at.strftime("%B %d, %Y") %>
+            </p>
+          </div>
+        </div>
+      <% else %>
+        <!-- Need to approve PDFs -->
+        <div class="space-y-4">
+          <div class="rounded-md bg-yellow-50 p-4">
+            <div class="flex">
+              <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+              </svg>
+              <div class="ml-3">
+                <h3 class="text-sm font-medium text-yellow-800">PDF approval required</h3>
+                <div class="mt-2 text-sm text-yellow-700">
+                  <p>Review the uploaded PDFs below and approve them to continue.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Show PDF previews -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h4 class="text-sm font-medium text-gray-700 mb-2">Front PDF</h4>
+              <div class="border border-gray-300 rounded-lg overflow-hidden bg-gray-50">
+                <embed src="<%= rails_blob_path(campaign.front_pdf) %>" type="application/pdf" class="w-full h-64" />
+              </div>
+              <p class="mt-1 text-xs text-gray-500">
+                <%= campaign.front_pdf.filename %> (<%= number_to_human_size(campaign.front_pdf.byte_size) %>)
+              </p>
+            </div>
+            
+            <div>
+              <h4 class="text-sm font-medium text-gray-700 mb-2">Back PDF</h4>
+              <div class="border border-gray-300 rounded-lg overflow-hidden bg-gray-50">
+                <embed src="<%= rails_blob_path(campaign.back_pdf) %>" type="application/pdf" class="w-full h-64" />
+              </div>
+              <p class="mt-1 text-xs text-gray-500">
+                <%= campaign.back_pdf.filename %> (<%= number_to_human_size(campaign.back_pdf.byte_size) %>)
+              </p>
+            </div>
+          </div>
+          
+          <!-- Approve button -->
+          <div class="flex items-center justify-end pt-4 border-t">
+            <%= button_to "Approve PDFs", approve_pdf_campaign_path(advertiser.slug, campaign),
+                method: :post,
+                class: "inline-flex items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500",
+                data: { confirm: "Have you reviewed both PDFs and confirmed they meet all requirements?" } %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
   <!-- Campaign Summary -->
   <div class="bg-white border border-gray-200 rounded-lg p-6">
     <h3 class="text-lg font-medium text-gray-900 mb-4">Campaign Summary</h3>
@@ -112,11 +220,16 @@
       </div>
       
       <div class="flex items-center">
-        <% if campaign.has_design? %>
+        <% if campaign.has_design? && campaign.design_approved? %>
           <svg class="h-5 w-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
           </svg>
-          <span class="text-sm text-gray-700">Design complete</span>
+          <span class="text-sm text-gray-700">Design complete and approved</span>
+        <% elsif campaign.has_design? && !campaign.design_approved? %>
+          <svg class="h-5 w-5 text-yellow-400 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+          </svg>
+          <span class="text-sm text-yellow-700">Design needs approval</span>
         <% else %>
           <svg class="h-5 w-5 text-gray-400 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
@@ -149,6 +262,8 @@
             <% end %>
           <% elsif !campaign.has_design? %>
             Complete the design tab to continue
+          <% elsif !campaign.design_approved? %>
+            Design approval required. See Design Approval section above.
           <% else %>
             Campaign not ready
           <% end %>

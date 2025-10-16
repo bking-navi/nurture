@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_08_132823) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_16_163738) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -165,6 +165,27 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_08_132823) do
     t.index ["user_id"], name: "index_agency_memberships_on_user_id"
   end
 
+  create_table "anonymous_visitors", force: :cascade do |t|
+    t.bigint "advertiser_id", null: false
+    t.bigint "shopify_store_id", null: false
+    t.string "visitor_id", null: false
+    t.string "device_fingerprint"
+    t.string "cookie_id"
+    t.datetime "first_seen_at", null: false
+    t.datetime "last_seen_at", null: false
+    t.integer "session_count", default: 0, null: false
+    t.integer "event_count", default: 0, null: false
+    t.datetime "identified_at"
+    t.bigint "identified_as_contact_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["advertiser_id", "visitor_id"], name: "index_anonymous_visitors_on_advertiser_id_and_visitor_id"
+    t.index ["device_fingerprint"], name: "index_anonymous_visitors_on_device_fingerprint"
+    t.index ["identified_as_contact_id"], name: "index_anonymous_visitors_on_identified_as_contact_id"
+    t.index ["shopify_store_id", "visitor_id"], name: "index_anonymous_visitors_on_shopify_store_id_and_visitor_id"
+    t.index ["visitor_id"], name: "index_anonymous_visitors_on_visitor_id", unique: true
+  end
+
   create_table "balance_transactions", force: :cascade do |t|
     t.bigint "advertiser_id", null: false
     t.string "transaction_type", null: false
@@ -263,12 +284,17 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_08_132823) do
     t.integer "recent_order_suppression_days"
     t.integer "recent_mail_suppression_days"
     t.boolean "override_suppression", default: false, null: false
+    t.string "pdf_approval_status"
+    t.string "pdf_proof_url"
+    t.datetime "pdf_approved_at"
+    t.bigint "pdf_approved_by_user_id"
     t.index ["advertiser_id", "created_at"], name: "index_campaigns_on_advertiser_id_and_created_at"
     t.index ["advertiser_id", "status"], name: "index_campaigns_on_advertiser_id_and_status"
     t.index ["advertiser_id"], name: "index_campaigns_on_advertiser_id"
     t.index ["color_palette_id"], name: "index_campaigns_on_color_palette_id"
     t.index ["created_by_user_id"], name: "index_campaigns_on_created_by_user_id"
     t.index ["creative_id"], name: "index_campaigns_on_creative_id"
+    t.index ["pdf_approved_by_user_id"], name: "index_campaigns_on_pdf_approved_by_user_id"
     t.index ["postcard_template_id"], name: "index_campaigns_on_postcard_template_id"
   end
 
@@ -343,8 +369,16 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_08_132823) do
     t.string "status", default: "active"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "approval_status", default: "pending"
+    t.string "lob_proof_url"
+    t.text "lob_validation_response"
+    t.datetime "approved_at"
+    t.bigint "approved_by_user_id"
+    t.text "rejection_reason"
     t.index ["advertiser_id", "status"], name: "index_creatives_on_advertiser_id_and_status"
     t.index ["advertiser_id"], name: "index_creatives_on_advertiser_id"
+    t.index ["approval_status"], name: "index_creatives_on_approval_status"
+    t.index ["approved_by_user_id"], name: "index_creatives_on_approved_by_user_id"
     t.index ["created_by_user_id"], name: "index_creatives_on_created_by_user_id"
     t.index ["created_from_campaign_id"], name: "index_creatives_on_created_from_campaign_id"
     t.index ["postcard_template_id"], name: "index_creatives_on_postcard_template_id"
@@ -714,6 +748,77 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_08_132823) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  create_table "web_events", force: :cascade do |t|
+    t.bigint "advertiser_id", null: false
+    t.bigint "shopify_store_id", null: false
+    t.bigint "web_session_id", null: false
+    t.bigint "contact_id"
+    t.bigint "anonymous_visitor_id"
+    t.integer "event_type", null: false
+    t.string "event_name"
+    t.datetime "event_timestamp", null: false
+    t.text "page_url"
+    t.string "page_title"
+    t.string "page_type"
+    t.string "product_id"
+    t.string "product_title"
+    t.string "product_variant_id"
+    t.decimal "product_price", precision: 10, scale: 2
+    t.string "collection_id"
+    t.string "collection_title"
+    t.decimal "cart_total", precision: 10, scale: 2
+    t.string "search_query"
+    t.jsonb "event_data", default: {}
+    t.string "client_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["advertiser_id", "event_timestamp"], name: "index_web_events_on_advertiser_id_and_event_timestamp"
+    t.index ["anonymous_visitor_id"], name: "index_web_events_on_anonymous_visitor_id"
+    t.index ["contact_id"], name: "index_web_events_on_contact_id"
+    t.index ["event_data"], name: "index_web_events_on_event_data", using: :gin
+    t.index ["event_type", "event_timestamp"], name: "index_web_events_on_event_type_and_event_timestamp"
+    t.index ["product_id"], name: "index_web_events_on_product_id"
+    t.index ["shopify_store_id", "event_timestamp"], name: "index_web_events_on_shopify_store_id_and_event_timestamp"
+    t.index ["web_session_id"], name: "index_web_events_on_web_session_id"
+  end
+
+  create_table "web_sessions", force: :cascade do |t|
+    t.bigint "advertiser_id", null: false
+    t.bigint "shopify_store_id", null: false
+    t.string "session_id", null: false
+    t.bigint "contact_id"
+    t.bigint "anonymous_visitor_id"
+    t.string "device_fingerprint"
+    t.text "user_agent"
+    t.string "ip_address"
+    t.string "browser"
+    t.string "os"
+    t.string "device_type"
+    t.string "country"
+    t.string "region"
+    t.string "city"
+    t.string "utm_source"
+    t.string "utm_medium"
+    t.string "utm_campaign"
+    t.string "utm_term"
+    t.string "utm_content"
+    t.text "referrer_url"
+    t.text "landing_page"
+    t.datetime "started_at", null: false
+    t.datetime "last_activity_at", null: false
+    t.datetime "ended_at"
+    t.integer "event_count", default: 0, null: false
+    t.integer "page_view_count", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["advertiser_id", "started_at"], name: "index_web_sessions_on_advertiser_id_and_started_at"
+    t.index ["anonymous_visitor_id"], name: "index_web_sessions_on_anonymous_visitor_id"
+    t.index ["contact_id"], name: "index_web_sessions_on_contact_id"
+    t.index ["device_fingerprint"], name: "index_web_sessions_on_device_fingerprint"
+    t.index ["session_id"], name: "index_web_sessions_on_session_id", unique: true
+    t.index ["shopify_store_id", "started_at"], name: "index_web_sessions_on_shopify_store_id_and_started_at"
+  end
+
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "advertiser_agency_accesses", "advertisers"
@@ -726,6 +831,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_08_132823) do
   add_foreign_key "agency_invitations", "users", column: "invited_by_id"
   add_foreign_key "agency_memberships", "agencies"
   add_foreign_key "agency_memberships", "users"
+  add_foreign_key "anonymous_visitors", "advertisers"
+  add_foreign_key "anonymous_visitors", "contacts", column: "identified_as_contact_id"
+  add_foreign_key "anonymous_visitors", "shopify_stores"
   add_foreign_key "balance_transactions", "advertisers"
   add_foreign_key "balance_transactions", "campaigns"
   add_foreign_key "balance_transactions", "users", column: "processed_by_id"
@@ -761,4 +869,13 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_08_132823) do
   add_foreign_key "sync_jobs", "advertisers"
   add_foreign_key "sync_jobs", "shopify_stores"
   add_foreign_key "sync_jobs", "users", column: "triggered_by_user_id"
+  add_foreign_key "web_events", "advertisers"
+  add_foreign_key "web_events", "anonymous_visitors"
+  add_foreign_key "web_events", "contacts"
+  add_foreign_key "web_events", "shopify_stores"
+  add_foreign_key "web_events", "web_sessions"
+  add_foreign_key "web_sessions", "advertisers"
+  add_foreign_key "web_sessions", "anonymous_visitors"
+  add_foreign_key "web_sessions", "contacts"
+  add_foreign_key "web_sessions", "shopify_stores"
 end

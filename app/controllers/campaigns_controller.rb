@@ -2,7 +2,7 @@ class CampaignsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_advertiser
   before_action :verify_campaign_access!
-  before_action :set_campaign, only: [:show, :edit, :update, :destroy, :send_now, :calculate_cost, :preview, :preview_live]
+  before_action :set_campaign, only: [:show, :edit, :update, :destroy, :send_now, :calculate_cost, :preview, :preview_live, :approve_pdf, :regenerate_campaign_proof]
   before_action :verify_editable!, only: [:edit, :update, :destroy, :send_now]
   
   layout "sidebar"
@@ -156,8 +156,16 @@ class CampaignsController < ApplicationController
   
   def send_now
     unless @campaign.sendable?
-      redirect_to edit_campaign_path(@advertiser.slug, @campaign),
-                  alert: 'Campaign not ready to send. Add recipients and select a template.'
+      error_message = if @campaign.using_unapproved_creative?
+        'Campaign cannot be sent. The selected creative needs approval first.'
+      elsif @campaign.pdf_needs_approval?
+        'Campaign cannot be sent. PDFs need approval first.'
+      else
+        'Campaign not ready to send. Add recipients and select a template.'
+      end
+      
+      redirect_to edit_campaign_path(@advertiser.slug, @campaign, tab: 'review'),
+                  alert: error_message
       return
     end
     
@@ -244,6 +252,20 @@ class CampaignsController < ApplicationController
     end
     
     render html: html.html_safe, layout: false
+  end
+  
+  def approve_pdf
+    @campaign.approve_pdf!(current_user)
+    redirect_to edit_campaign_path(@advertiser.slug, @campaign, tab: 'review'),
+                notice: 'PDFs approved! Campaign is ready to send.'
+  end
+  
+  def regenerate_campaign_proof
+    # Similar to creative proof generation but for campaign PDFs
+    # For now, just redirect back with a notice
+    # In the future, we could implement a similar job for campaign PDFs
+    redirect_to edit_campaign_path(@advertiser.slug, @campaign, tab: 'review'),
+                notice: 'Proof regeneration for campaign PDFs not yet implemented. Please re-upload files.'
   end
   
   private

@@ -5,6 +5,10 @@
       <%= link_to "← Back to Library", creatives_path(@advertiser.slug), class: "text-sm text-gray-600 hover:text-gray-900" %>
     </div>
     <p class="text-gray-600">Upload a postcard design to your creative library for reuse across campaigns.</p>
+    
+    <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+      <p><strong>Note:</strong> After uploading, your PDFs will be validated with Lob and a digital proof will be generated for your approval. The creative can only be used in campaigns once approved.</p>
+    </div>
   </div>
 
   <%= form_with model: @creative, url: creatives_path(@advertiser.slug), local: true, class: "space-y-6" do |f| %>

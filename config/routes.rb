@@ -154,6 +154,12 @@ Rails.application.routes.draw do
     
     # Creative Library
     resources :creatives, path: 'creative-library' do
+      member do
+        post :approve
+        post :reject
+        post :regenerate_proof
+      end
+      
       collection do
         get :search
       end
@@ -165,6 +171,8 @@ Rails.application.routes.draw do
         post :calculate_cost
         get :preview
         post :preview_live
+        post :approve_pdf
+        post :regenerate_campaign_proof
       end
       
       resources :campaign_contacts, only: [:new, :create, :destroy], path: 'recipients' do
