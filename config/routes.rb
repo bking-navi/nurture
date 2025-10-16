@@ -78,6 +78,7 @@ Rails.application.routes.draw do
       # Suppression settings
       get 'suppression', to: 'suppression#show', as: :suppression
       patch 'suppression', to: 'suppression#update', as: :update_suppression
+      get 'suppression/preview_impact', to: 'suppression#preview_impact', as: :preview_suppression_impact
       post 'suppression/import_dnm', to: 'suppression#import_dnm', as: :import_dnm
       post 'suppression/entries', to: 'suppression#create_entry', as: :create_suppression_entry
       delete 'suppression/entries/:id', to: 'suppression#destroy_entry', as: :destroy_suppression_entry

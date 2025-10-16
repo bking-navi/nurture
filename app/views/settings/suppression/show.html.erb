@@ -1,324 +1,406 @@
-<div class="max-w-6xl">
-  <!-- Flash Messages -->
-  <% if notice %>
-    <div class="mb-6 bg-green-50 border border-green-200 rounded-md p-4">
-      <p class="text-sm text-green-800"><%= notice %></p>
-    </div>
-  <% end %>
-  <% if alert %>
-    <div class="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
-      <p class="text-sm text-red-800"><%= alert %></p>
-    </div>
-  <% end %>
-
-  <!-- Header -->
-  <div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-900">Suppression Settings</h1>
-    <p class="mt-1 text-sm text-gray-500">Control when and how often contacts receive postcards</p>
+<% content_for :breadcrumb do %>
+  <div class="flex items-center gap-1.5">
+    <%= link_to "Settings", advertiser_settings_path(@advertiser.slug), class: "text-neutral-500 hover:text-neutral-700" %>
+    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+    </svg>
+    <span class="text-neutral-600 font-medium">Suppression</span>
   </div>
+<% end %>
 
-  <!-- Suppression Rules Card -->
-  <div class="bg-white shadow rounded-lg p-6 mb-8">
-    <h2 class="text-lg font-semibold text-gray-900 mb-4">Suppression Rules</h2>
-    <p class="text-sm text-gray-600 mb-6">Contacts matching these rules will be automatically suppressed when you add them to campaigns. You can override suppressions before sending.</p>
-    
-    <%= form_with model: @advertiser, url: settings_update_suppression_path(@advertiser.slug), method: :patch, class: "space-y-8" do |f| %>
-      
-      <!-- Recent Order Suppression -->
-      <div class="border-b border-gray-200 pb-6">
-        <div class="flex items-start justify-between mb-4">
-          <div>
-            <h3 class="text-sm font-medium text-gray-900">Recent Order Suppression</h3>
-            <p class="text-xs text-gray-500 mt-1">Don't mail contacts who recently placed an order</p>
-          </div>
-          <div class="text-right">
-            <span id="recent-order-value" class="text-2xl font-bold text-gray-900"><%= @advertiser.recent_order_suppression_days %></span>
-            <span class="text-sm text-gray-600 ml-1">days</span>
-          </div>
-        </div>
-        
-        <div class="relative">
-          <%= f.range_field :recent_order_suppression_days, 
-                            min: 0, 
-                            max: 365, 
-                            value: @advertiser.recent_order_suppression_days,
-                            class: "w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600",
-                            oninput: "document.getElementById('recent-order-value').textContent = this.value; updatePreview();" %>
-          <div class="flex justify-between text-xs text-gray-400 mt-1">
-            <span>0</span>
-            <span>30</span>
-            <span>90</span>
-            <span>180</span>
-            <span>365</span>
-          </div>
-        </div>
-        
-        <p class="text-xs text-gray-500 mt-3">
-          <span id="recent-order-description">
-            <% if @advertiser.recent_order_suppression_days == 0 %>
-              Disabled - contacts will not be suppressed based on recent orders
-            <% else %>
-              Contacts who made a purchase in the last <%= @advertiser.recent_order_suppression_days %> days will be suppressed
-            <% end %>
-          </span>
-        </p>
-      </div>
-
-      <!-- Recent Mail Suppression -->
-      <div class="border-b border-gray-200 pb-6">
-        <div class="flex items-start justify-between mb-4">
-          <div>
-            <h3 class="text-sm font-medium text-gray-900">Recent Mail Suppression</h3>
-            <p class="text-xs text-gray-500 mt-1">Don't mail contacts who were recently sent a postcard</p>
-          </div>
-          <div class="text-right">
-            <span id="recent-mail-value" class="text-2xl font-bold text-gray-900"><%= @advertiser.recent_mail_suppression_days %></span>
-            <span class="text-sm text-gray-600 ml-1">days</span>
-          </div>
-        </div>
-        
-        <div class="relative">
-          <%= f.range_field :recent_mail_suppression_days, 
-                            min: 0, 
-                            max: 365, 
-                            value: @advertiser.recent_mail_suppression_days,
-                            class: "w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600",
-                            oninput: "document.getElementById('recent-mail-value').textContent = this.value; updatePreview();" %>
-          <div class="flex justify-between text-xs text-gray-400 mt-1">
-            <span>0</span>
-            <span>30</span>
-            <span>90</span>
-            <span>180</span>
-            <span>365</span>
-          </div>
-        </div>
-        
-        <p class="text-xs text-gray-500 mt-3">
-          <span id="recent-mail-description">
-            <% if @advertiser.recent_mail_suppression_days == 0 %>
-              Disabled - contacts will not be suppressed based on recent mailings
-            <% else %>
-              Contacts who received a postcard in the last <%= @advertiser.recent_mail_suppression_days %> days will be suppressed
-            <% end %>
-          </span>
-        </p>
-      </div>
-
-      <!-- DNM Enabled Toggle -->
-      <div>
-        <div class="flex items-center justify-between">
-          <div class="flex-1">
-            <h3 class="text-sm font-medium text-gray-900">Do Not Mail List</h3>
-            <p class="text-xs text-gray-500 mt-1">Suppress contacts on your Do Not Mail list</p>
-          </div>
-          <div class="ml-4">
-            <%= f.check_box :dnm_enabled, 
-                            checked: @advertiser.dnm_enabled, 
-                            class: "h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" %>
-          </div>
-        </div>
-      </div>
-
-      <!-- Submit Button -->
-      <div class="flex justify-end pt-6 border-t border-gray-200">
-        <%= f.submit "Save Settings", class: "inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer" %>
-      </div>
-    <% end %>
+<!-- Flash Messages -->
+<% if notice %>
+  <div class="mb-6 bg-green-50 border border-green-200 rounded-md p-4">
+    <p class="text-sm text-green-800"><%= notice %></p>
   </div>
+<% end %>
+<% if alert %>
+  <div class="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
+    <p class="text-sm text-red-800"><%= alert %></p>
+  </div>
+<% end %>
 
-  <!-- Do Not Mail List Card -->
-  <div class="bg-white shadow rounded-lg p-6">
-    <div class="flex items-center justify-between mb-6">
+<%= form_with model: @advertiser, url: settings_update_suppression_path(@advertiser.slug), method: :patch, id: "suppression-form" do |f| %>
+  <!-- Header with Actions -->
+  <div class="mb-6">
+    <div class="flex items-start justify-between mb-8">
       <div>
-        <h2 class="text-lg font-semibold text-gray-900">Do Not Mail List</h2>
-        <p class="text-sm text-gray-500 mt-1"><%= @dnm_entries.total_count %> contacts on list</p>
+        <h1 class="text-xl font-semibold text-gray-700 tracking-tight">Suppression</h1>
+        <p class="text-sm text-gray-600 mt-1">You can override these settings on your campaigns.</p>
       </div>
-      <div class="flex space-x-3">
-        <%= link_to settings_download_dnm_sample_path(@advertiser.slug), class: "inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" do %>
-          <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-          </svg>
-          Download Sample CSV
-        <% end %>
-        <button type="button" onclick="document.getElementById('csv-upload-form').classList.toggle('hidden')" class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
-          <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-          </svg>
-          Upload CSV
+      <div class="flex items-center gap-2">
+        <button type="button" class="px-2.5 py-1.5 border border-gray-300 text-sm font-medium text-gray-700 bg-gray-50 rounded-md hover:bg-gray-100">
+          History
         </button>
+        <%= f.submit "Save Settings", class: "px-2.5 py-1.5 text-sm font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 cursor-pointer" %>
       </div>
     </div>
 
-    <!-- CSV Upload Form (Hidden by default) -->
-    <div id="csv-upload-form" class="hidden bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
-      <%= form_with url: settings_import_dnm_path(@advertiser.slug), method: :post, multipart: true, class: "space-y-4" do |f| %>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Select CSV File</label>
-          <%= f.file_field :csv_file, accept: ".csv", class: "block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" %>
-          <p class="text-xs text-gray-500 mt-1">CSV should include: email, first_name, last_name, address_line1, address_line2, address_city, address_state, address_zip, reason</p>
-          <p class="text-xs text-gray-500 mt-1">Each row must have either email OR complete address (line1, city, state, zip)</p>
-        </div>
-        <div class="flex justify-end space-x-3">
-          <button type="button" onclick="document.getElementById('csv-upload-form').classList.add('hidden')" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-            Cancel
-          </button>
-          <%= f.submit "Upload", class: "px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 cursor-pointer" %>
-        </div>
-      <% end %>
-    </div>
-
-    <!-- Manual Add Form -->
-    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
-      <h3 class="text-sm font-medium text-gray-900 mb-3">Add Individual Entry</h3>
-      <p class="text-xs text-gray-600 mb-4">Provide email, address, or both to suppress from mailings</p>
-      <%= form_with model: SuppressionListEntry.new, url: settings_create_suppression_entry_path(@advertiser.slug), method: :post, class: "space-y-4" do |f| %>
-        <!-- Contact Info Row -->
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div>
-            <%= f.label :email, "Email", class: "block text-xs font-medium text-gray-700 mb-1" %>
-            <%= f.email_field :email, class: "block w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
-          </div>
-          <div>
-            <%= f.label :first_name, "First Name", class: "block text-xs font-medium text-gray-700 mb-1" %>
-            <%= f.text_field :first_name, class: "block w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
-          </div>
-          <div>
-            <%= f.label :last_name, "Last Name", class: "block text-xs font-medium text-gray-700 mb-1" %>
-            <%= f.text_field :last_name, class: "block w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
-          </div>
-        </div>
-        
-        <!-- Address Row -->
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <%= f.label :address_line1, "Address Line 1", class: "block text-xs font-medium text-gray-700 mb-1" %>
-            <%= f.text_field :address_line1, placeholder: "123 Main St", class: "block w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
-          </div>
-          <div>
-            <%= f.label :address_line2, "Address Line 2", class: "block text-xs font-medium text-gray-700 mb-1" %>
-            <%= f.text_field :address_line2, placeholder: "Apt 4B (optional)", class: "block w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
-          </div>
-        </div>
-        
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div>
-            <%= f.label :address_city, "City", class: "block text-xs font-medium text-gray-700 mb-1" %>
-            <%= f.text_field :address_city, class: "block w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
-          </div>
-          <div>
-            <%= f.label :address_state, "State", class: "block text-xs font-medium text-gray-700 mb-1" %>
-            <%= f.text_field :address_state, placeholder: "CA", maxlength: 2, class: "block w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
-          </div>
-          <div>
-            <%= f.label :address_zip, "ZIP Code", class: "block text-xs font-medium text-gray-700 mb-1" %>
-            <%= f.text_field :address_zip, placeholder: "94102", class: "block w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
-          </div>
-        </div>
-        
-        <!-- Reason -->
-        <div>
-          <%= f.label :reason, "Reason (optional)", class: "block text-xs font-medium text-gray-700 mb-1" %>
-          <%= f.text_field :reason, placeholder: "e.g., Customer request, deceased, moved", class: "block w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
-        </div>
-        
-        <div>
-          <%= f.submit "Add to List", class: "inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 cursor-pointer" %>
-        </div>
-      <% end %>
-    </div>
-
-    <!-- DNM List Table -->
-    <% if @dnm_entries.any? %>
-      <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
-            <tr>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Added</th>
-              <th scope="col" class="relative px-6 py-3">
-                <span class="sr-only">Actions</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            <% @dnm_entries.each do |entry| %>
-              <tr>
-                <td class="px-6 py-4 text-sm">
-                  <% if entry.has_email? %>
-                    <div class="font-medium text-gray-900"><%= entry.email %></div>
-                  <% end %>
-                  <% if entry.first_name.present? || entry.last_name.present? %>
-                    <div class="text-gray-500"><%= [entry.first_name, entry.last_name].compact.join(' ') %></div>
-                  <% end %>
-                  <% unless entry.has_email? || entry.first_name.present? || entry.last_name.present? %>
-                    <span class="text-gray-400 italic">No contact info</span>
-                  <% end %>
-                </td>
-                <td class="px-6 py-4 text-sm text-gray-500">
-                  <% if entry.has_address? %>
-                    <div><%= entry.address_line1 %></div>
-                    <% if entry.address_line2.present? %>
-                      <div><%= entry.address_line2 %></div>
-                    <% end %>
-                    <div><%= entry.address_city %>, <%= entry.address_state %> <%= entry.address_zip %></div>
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-3 gap-5">
+        <!-- Left Column - Suppression Cards -->
+        <div class="col-span-2 space-y-5">
+          
+          <!-- Recent Orders Card -->
+          <div class="bg-white border border-gray-200 rounded-lg p-4">
+            <div class="flex items-start justify-between mb-4">
+              <div class="flex items-center gap-2.5">
+                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                </svg>
+                <h3 class="text-base font-semibold text-gray-700">Recent Orders</h3>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <%= f.check_box :recent_order_enabled, 
+                                checked: (@advertiser.recent_order_suppression_days > 0), 
+                                class: "sr-only peer",
+                                onchange: "toggleRecentOrders(this.checked)" %>
+                <div class="w-8 h-[18px] bg-gray-900 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-gray-900"></div>
+              </label>
+            </div>
+            <p class="text-xs text-gray-500 mb-6">Improve your campaign efficiency by removing customers with recent purchases from your eligible mailing list.</p>
+            
+            <div class="space-y-4">
+              <div class="flex items-baseline justify-between">
+                <span class="text-sm font-semibold text-gray-700">Duration</span>
+                <span id="recent-order-value" class="text-sm font-semibold text-gray-600"><%= @advertiser.recent_order_suppression_days %> days</span>
+              </div>
+              
+              <div class="flex items-center gap-3">
+                <span class="text-xs text-gray-700">7 days</span>
+                <%= f.range_field :recent_order_suppression_days, 
+                                  min: 7, 
+                                  max: 90, 
+                                  value: @advertiser.recent_order_suppression_days,
+                                  class: "flex-1 h-2 bg-gray-200 rounded-full appearance-none cursor-pointer slider-dark",
+                                  oninput: "updateOrderValue(this.value)" %>
+                <span class="text-xs text-gray-700">90 days</span>
+              </div>
+              
+              <div class="bg-gray-100 border border-gray-200 rounded p-3">
+                <p id="recent-order-description" class="text-xs text-gray-500">
+                  <% if @advertiser.recent_order_suppression_days >= 60 %>
+                    Very conservative - Best for infrequent purchase categories
+                  <% elsif @advertiser.recent_order_suppression_days >= 30 %>
+                    Balanced - Best for products that are purchased every 1-2 months
                   <% else %>
-                    <span class="text-gray-400 italic">-</span>
+                    Aggressive - Best for frequently purchased products
                   <% end %>
-                </td>
-                <td class="px-6 py-4 text-sm text-gray-500">
-                  <%= entry.reason.present? ? truncate(entry.reason, length: 50) : '-' %>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <%= entry.created_at.strftime('%b %d, %Y') %>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <%= button_to "Remove", settings_destroy_suppression_entry_path(@advertiser.slug, entry), 
-                                method: :delete, 
-                                data: { turbo_confirm: "Remove this entry from suppression list?" },
-                                class: "text-red-600 hover:text-red-900" %>
-                </td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
+                </p>
+              </div>
+            </div>
+          </div>
 
-      <!-- Pagination -->
-      <div class="mt-4">
-        <%= paginate @dnm_entries %>
-      </div>
-    <% else %>
-      <div class="text-center py-8">
-        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-        </svg>
-        <p class="mt-2 text-sm text-gray-500">No entries on Do Not Mail list</p>
-        <p class="text-xs text-gray-400 mt-1">Add entries manually or upload a CSV file</p>
-      </div>
-    <% end %>
+          <!-- Mailing Frequency Card -->
+          <div class="bg-white border border-gray-200 rounded-lg p-4">
+            <div class="flex items-start justify-between mb-4">
+              <div class="flex items-center gap-2.5">
+                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <h3 class="text-base font-semibold text-gray-700">Mailing Frequency</h3>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <%= f.check_box :recent_mail_enabled, 
+                                checked: (@advertiser.recent_mail_suppression_days > 0), 
+                                class: "sr-only peer",
+                                onchange: "toggleRecentMail(this.checked)" %>
+                <div class="w-8 h-[18px] bg-gray-900 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-gray-900"></div>
+              </label>
+            </div>
+            <p class="text-xs text-gray-500 mb-6">Prevent fatigue by limiting how often your customers can receive your post cards.</p>
+            
+            <div class="space-y-4">
+              <div class="flex items-baseline justify-between">
+                <span class="text-sm font-semibold text-gray-700">Frequency</span>
+                <span id="recent-mail-value" class="text-sm font-semibold text-gray-600"><%= @advertiser.recent_mail_suppression_days %> days</span>
+              </div>
+              
+              <div class="flex items-center gap-3">
+                <span class="text-xs text-gray-700">7 days</span>
+                <%= f.range_field :recent_mail_suppression_days, 
+                                  min: 7, 
+                                  max: 90, 
+                                  value: @advertiser.recent_mail_suppression_days,
+                                  class: "flex-1 h-2 bg-gray-200 rounded-full appearance-none cursor-pointer slider-dark",
+                                  oninput: "updateMailValue(this.value)" %>
+                <span class="text-xs text-gray-700">90 days</span>
+              </div>
+              
+              <div class="bg-gray-100 border border-gray-200 rounded p-3">
+                <p id="recent-mail-description" class="text-xs text-gray-500">
+                  <% if @advertiser.recent_mail_suppression_days >= 60 %>
+                    Very conservative - Best for infrequent campaigns
+                  <% elsif @advertiser.recent_mail_suppression_days >= 30 %>
+                    Balanced - Best for products that are purchased every 1-2 months
+                  <% else %>
+                    Aggressive - Best for high-frequency campaigns
+                  <% end %>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Suppression Lists Card -->
+          <div class="bg-white border border-gray-200 rounded-lg p-4">
+            <div class="flex items-start justify-between mb-4">
+              <div class="flex items-center gap-2.5">
+                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
+                </svg>
+                <h3 class="text-base font-semibold text-gray-700">Suppression Lists</h3>
+              </div>
+              <button type="button" onclick="document.getElementById('csv-upload-input').click()" class="px-2.5 py-1.5 border border-gray-300 text-xs font-medium text-gray-700 bg-gray-50 rounded-md hover:bg-gray-100 flex items-center gap-1.5">
+                Import
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>
+              </button>
+            </div>
+            <p class="text-xs text-gray-500 mb-4">Manage your own suppression files to ensure certain groups never receive post cards.</p>
+            
+            <!-- File Upload Area -->
+            <div class="bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg p-8">
+              <div class="flex flex-col items-center text-center">
+                <svg class="w-6 h-6 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>
+                <p class="text-sm font-medium text-gray-600 mb-1">Upload a Suppression File</p>
+                <p class="text-xs text-gray-500">Click to upload or drag and drop your CSV file</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column - Recent Impact -->
+        <div class="col-span-1">
+          <div class="bg-white border border-gray-200 rounded-lg p-4 sticky top-8">
+            <h3 class="text-base font-semibold text-gray-700 mb-4">Recent Impact</h3>
+            
+            <div class="mb-4">
+              <div class="text-2xl font-bold text-gray-900"><%= number_with_delimiter(@suppression_stats[:total_suppressed]) %></div>
+              <div class="text-xs text-gray-600"><%= @suppression_stats[:percentage_suppressed] %>% of total addressables</div>
+            </div>
+            
+            <div class="space-y-0 border-t border-gray-200">
+              <% if @advertiser.recent_order_suppression_days > 0 %>
+                <div class="flex items-center justify-between py-1.5 border-b border-gray-200">
+                  <span class="text-xs text-gray-700">Recent orders (<%= @advertiser.recent_order_suppression_days %> days)</span>
+                  <span class="text-xs font-semibold text-gray-700"><%= number_with_delimiter(@suppression_stats[:recent_orders_count]) %></span>
+                </div>
+              <% end %>
+              
+              <% if @advertiser.recent_mail_suppression_days > 0 %>
+                <div class="flex items-center justify-between py-1.5 border-b border-gray-200">
+                  <span class="text-xs text-gray-700">Recently mailed (<%= @advertiser.recent_mail_suppression_days %> days)</span>
+                  <span class="text-xs font-semibold text-gray-700"><%= number_with_delimiter(@suppression_stats[:recent_mail_count]) %></span>
+                </div>
+              <% end %>
+              
+              <% if @advertiser.dnm_enabled && @suppression_stats[:suppression_list_count] > 0 %>
+                <div class="flex items-center justify-between py-1.5 border-b border-gray-200">
+                  <span class="text-xs text-gray-700">Suppression List</span>
+                  <span class="text-xs font-semibold text-gray-700"><%= number_with_delimiter(@suppression_stats[:suppression_list_count]) %></span>
+                </div>
+              <% end %>
+              
+              <% if @suppression_stats[:total_suppressed] == 0 %>
+                <div class="py-4 text-center">
+                  <p class="text-xs text-gray-500">No contacts currently suppressed</p>
+                </div>
+              <% end %>
+            </div>
+            
+            <div class="mt-4 bg-gray-100 border border-gray-200 rounded p-2">
+              <p class="text-xs text-gray-500 text-center">Impact based on current suppression rules applied to <%= number_with_delimiter(@suppression_stats[:total_contacts]) %> total contacts.</p>
+            </div>
+          </div>
+        </div>
+    </div>
   </div>
-</div>
+<% end %>
+
+<!-- Hidden file input for CSV upload -->
+<%= form_with url: settings_import_dnm_path(@advertiser.slug), method: :post, multipart: true, class: "hidden" do |f| %>
+  <%= f.file_field :csv_file, accept: ".csv", id: "csv-upload-input", onchange: "this.form.submit()" %>
+<% end %>
+
+<style>
+.slider-dark::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  border: 1px solid #171717;
+  cursor: pointer;
+}
+
+.slider-dark::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  border: 1px solid #171717;
+  cursor: pointer;
+}
+
+.slider-dark::-webkit-slider-runnable-track {
+  background: linear-gradient(to right, #171717 0%, #171717 var(--value), #e5e7eb var(--value), #e5e7eb 100%);
+  height: 8px;
+  border-radius: 999px;
+}
+
+.slider-dark::-moz-range-track {
+  background: #e5e7eb;
+  height: 8px;
+  border-radius: 999px;
+}
+
+.slider-dark::-moz-range-progress {
+  background: #171717;
+  height: 8px;
+  border-radius: 999px;
+}
+</style>
 
 <script>
-function updatePreview() {
+let impactUpdateTimeout = null;
+
+function updateOrderValue(value) {
+  document.getElementById('recent-order-value').textContent = value + ' days';
+  updateOrderDescription(value);
+  updateSliderProgress(event.target, value, 7, 90);
+  debouncedUpdateImpact();
+}
+
+function updateMailValue(value) {
+  document.getElementById('recent-mail-value').textContent = value + ' days';
+  updateMailDescription(value);
+  updateSliderProgress(event.target, value, 7, 90);
+  debouncedUpdateImpact();
+}
+
+function updateOrderDescription(days) {
+  const desc = document.getElementById('recent-order-description');
+  if (days >= 60) {
+    desc.textContent = 'Very conservative - Best for infrequent purchase categories';
+  } else if (days >= 30) {
+    desc.textContent = 'Balanced - Best for products that are purchased every 1-2 months';
+  } else {
+    desc.textContent = 'Aggressive - Best for frequently purchased products';
+  }
+}
+
+function updateMailDescription(days) {
+  const desc = document.getElementById('recent-mail-description');
+  if (days >= 60) {
+    desc.textContent = 'Very conservative - Best for infrequent campaigns';
+  } else if (days >= 30) {
+    desc.textContent = 'Balanced - Best for products that are purchased every 1-2 months';
+  } else {
+    desc.textContent = 'Aggressive - Best for high-frequency campaigns';
+  }
+}
+
+function updateSliderProgress(slider, value, min, max) {
+  const percentage = ((value - min) / (max - min)) * 100;
+  slider.style.setProperty('--value', percentage + '%');
+}
+
+function toggleRecentOrders(enabled) {
+  const slider = document.querySelector('input[name="advertiser[recent_order_suppression_days]"]');
+  if (!enabled) {
+    slider.value = 0;
+    updateOrderValue(0);
+  } else if (slider.value == 0) {
+    slider.value = 30;
+    updateOrderValue(30);
+  }
+  debouncedUpdateImpact();
+}
+
+function toggleRecentMail(enabled) {
+  const slider = document.querySelector('input[name="advertiser[recent_mail_suppression_days]"]');
+  if (!enabled) {
+    slider.value = 0;
+    updateMailValue(0);
+  } else if (slider.value == 0) {
+    slider.value = 14;
+    updateMailValue(14);
+  }
+  debouncedUpdateImpact();
+}
+
+// Debounced function to update impact stats
+function debouncedUpdateImpact() {
+  clearTimeout(impactUpdateTimeout);
+  impactUpdateTimeout = setTimeout(updateImpactStats, 300);
+}
+
+// Fetch and update impact statistics from server
+function updateImpactStats() {
   const orderDays = parseInt(document.querySelector('input[name="advertiser[recent_order_suppression_days]"]').value);
   const mailDays = parseInt(document.querySelector('input[name="advertiser[recent_mail_suppression_days]"]').value);
   
-  const orderDesc = document.getElementById('recent-order-description');
-  if (orderDays === 0) {
-    orderDesc.textContent = 'Disabled - contacts will not be suppressed based on recent orders';
-  } else {
-    orderDesc.textContent = `Contacts who made a purchase in the last ${orderDays} days will be suppressed`;
+  const url = '<%= settings_preview_suppression_impact_path(@advertiser.slug) %>';
+  const params = new URLSearchParams({
+    recent_order_days: orderDays,
+    recent_mail_days: mailDays
+  });
+  
+  fetch(`${url}?${params}`)
+    .then(response => response.json())
+    .then(data => {
+      // Update total suppressed
+      const totalElement = document.querySelector('.text-2xl.font-bold.text-gray-900');
+      if (totalElement) {
+        totalElement.textContent = data.total_suppressed.toLocaleString();
+      }
+      
+      // Update percentage
+      const percentageElement = document.querySelector('.text-xs.text-gray-600');
+      if (percentageElement) {
+        percentageElement.textContent = `${data.percentage_suppressed}% of total addressables`;
+      }
+      
+      // Update breakdown items
+      updateBreakdownItem('Recent orders', orderDays, data.recent_orders_count);
+      updateBreakdownItem('Recently mailed', mailDays, data.recent_mail_count);
+    })
+    .catch(error => {
+      console.error('Error updating impact stats:', error);
+    });
+}
+
+function updateBreakdownItem(label, days, count) {
+  const items = document.querySelectorAll('.space-y-0 .flex.items-center.justify-between');
+  
+  items.forEach(item => {
+    const labelElement = item.querySelector('.text-xs.text-gray-700');
+    if (labelElement && labelElement.textContent.includes(label)) {
+      const countElement = item.querySelector('.text-xs.font-semibold.text-gray-700');
+      if (countElement) {
+        countElement.textContent = count.toLocaleString();
+      }
+      // Update the days in the label
+      labelElement.textContent = `${label} (${days} days)`;
+    }
+  });
+}
+
+// Initialize slider progress on page load
+document.addEventListener('DOMContentLoaded', function() {
+  const orderSlider = document.querySelector('input[name="advertiser[recent_order_suppression_days]"]');
+  const mailSlider = document.querySelector('input[name="advertiser[recent_mail_suppression_days]"]');
+  
+  if (orderSlider) {
+    updateSliderProgress(orderSlider, orderSlider.value, 7, 90);
   }
   
-  const mailDesc = document.getElementById('recent-mail-description');
-  if (mailDays === 0) {
-    mailDesc.textContent = 'Disabled - contacts will not be suppressed based on recent mailings';
-  } else {
-    mailDesc.textContent = `Contacts who received a postcard in the last ${mailDays} days will be suppressed`;
+  if (mailSlider) {
+    updateSliderProgress(mailSlider, mailSlider.value, 7, 90);
   }
-}
+});
 </script>
 

@@ -296,6 +296,74 @@ class Advertiser < ApplicationRecord
   def payment_method_on_file?
     stripe_customer_id.present? && payment_method_last4.present?
   end
+  
+  # Calculate suppression impact statistics
+  def suppression_impact_stats(lookback_days: 30)
+    stats = {
+      total_contacts: 0,
+      recent_orders_count: 0,
+      recent_mail_count: 0,
+      suppression_list_count: 0,
+      total_suppressed: 0,
+      percentage_suppressed: 0
+    }
+    
+    # Get total addressable contacts (those with valid addresses or email)
+    stats[:total_contacts] = contacts.count
+    
+    return stats if stats[:total_contacts].zero?
+    
+    # Count contacts who would be suppressed by recent orders rule
+    if recent_order_suppression_days > 0
+      stats[:recent_orders_count] = contacts
+        .where("last_order_at >= ?", recent_order_suppression_days.days.ago)
+        .count
+    end
+    
+    # Count contacts who would be suppressed by recent mail rule
+    if recent_mail_suppression_days > 0
+      stats[:recent_mail_count] = contacts
+        .where("last_mailed_at >= ?", recent_mail_suppression_days.days.ago)
+        .count
+    end
+    
+    # Count contacts on suppression list
+    if dnm_enabled
+      stats[:suppression_list_count] = suppression_list_entries.count
+    end
+    
+    # Calculate total unique suppressed contacts
+    # We need to account for overlaps, so let's get unique contacts
+    suppressed_contact_ids = Set.new
+    
+    if recent_order_suppression_days > 0
+      suppressed_contact_ids.merge(
+        contacts.where("last_order_at >= ?", recent_order_suppression_days.days.ago).pluck(:id)
+      )
+    end
+    
+    if recent_mail_suppression_days > 0
+      suppressed_contact_ids.merge(
+        contacts.where("last_mailed_at >= ?", recent_mail_suppression_days.days.ago).pluck(:id)
+      )
+    end
+    
+    if dnm_enabled
+      # Find contacts whose email matches suppression list
+      suppressed_emails = suppression_list_entries.where.not(email: nil).pluck(:email)
+      if suppressed_emails.any?
+        suppressed_contact_ids.merge(
+          contacts.where(email: suppressed_emails).pluck(:id)
+        )
+      end
+    end
+    
+    stats[:total_suppressed] = suppressed_contact_ids.size
+    stats[:percentage_suppressed] = stats[:total_contacts] > 0 ? 
+      ((stats[:total_suppressed].to_f / stats[:total_contacts]) * 100).round : 0
+    
+    stats
+  end
 
   private
 
