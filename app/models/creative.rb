@@ -1,6 +1,6 @@
 class Creative < ApplicationRecord
   belongs_to :advertiser
-  belongs_to :postcard_template
+  belongs_to :postcard_template, optional: true
   belongs_to :created_by_user, class_name: 'User', optional: true
   belongs_to :created_from_campaign, class_name: 'Campaign', optional: true
   belongs_to :approved_by_user, class_name: 'User', optional: true
