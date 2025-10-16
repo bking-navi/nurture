@@ -1,3 +1,5 @@
+<%= turbo_stream_from "creative_#{@creative.id}_proof" %>
+
 <div class="px-4 sm:px-6 lg:px-8 py-8">
   <div class="mb-6">
     <div class="flex items-center justify-between mb-2">
@@ -62,7 +64,9 @@
     <!-- Preview Column -->
     <div class="lg:col-span-2 space-y-6">
       <!-- Proof Approval Section -->
-      <%= render 'proof_approval', creative: @creative, advertiser: @advertiser %>
+      <div id="proof-approval-section">
+        <%= render 'proof_approval', creative: @creative, advertiser: @advertiser %>
+      </div>
       
       <!-- Thumbnail/Preview -->
       <div class="bg-white shadow sm:rounded-lg p-6">

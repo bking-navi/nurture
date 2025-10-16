@@ -302,6 +302,7 @@ class LobClient
           back: back_url,
           size: '6x9',
           mail_type: 'usps_first_class',
+          use_type: 'marketing',
           metadata: {
             creative_id: creative.id.to_s,
             advertiser_id: advertiser.id.to_s,

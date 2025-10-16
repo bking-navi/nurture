@@ -24,6 +24,9 @@ class GenerateCreativeProofJob < ApplicationJob
       
       Rails.logger.info "Successfully generated proof for creative #{creative.id}"
       
+      # Broadcast update to the creative show page via Turbo Stream
+      broadcast_proof_ready(creative, advertiser)
+      
       # TODO: Send notification email to user that proof is ready
       # UserMailer.creative_proof_ready(creative).deliver_later
       
@@ -58,6 +61,18 @@ class GenerateCreativeProofJob < ApplicationJob
     end
     
     raise e
+  end
+  
+  private
+  
+  def broadcast_proof_ready(creative, advertiser)
+    # Broadcast Turbo Stream update to replace the proof approval section
+    Turbo::StreamsChannel.broadcast_replace_to(
+      "creative_#{creative.id}_proof",
+      target: "proof-approval-section",
+      partial: "creatives/proof_approval",
+      locals: { creative: creative, advertiser: advertiser }
+    )
   end
 end
 
