@@ -14,6 +14,7 @@ class Campaign < ApplicationRecord
   
   # Callbacks
   after_create :increment_creative_usage, if: :creative_id?
+  after_commit :convert_pdfs_to_creative, if: :should_convert_pdfs_to_creative?
   
   # Serialize JSON fields for SQLite compatibility
   serialize :merge_variables, coder: JSON
@@ -279,6 +280,50 @@ class Campaign < ApplicationRecord
   def increment_creative_usage
     creative.increment!(:usage_count)
     creative.touch(:last_used_at)
+  end
+  
+  # Check if we should convert uploaded PDFs to a Creative
+  def should_convert_pdfs_to_creative?
+    # Only convert if:
+    # 1. PDFs are attached directly to campaign
+    # 2. No creative_id is set yet
+    # 3. Front PDF is attached (back is optional)
+    front_pdf.attached? && creative_id.nil?
+  end
+  
+  # Convert uploaded PDFs to a Creative and link it
+  def convert_pdfs_to_creative
+    return unless front_pdf.attached?
+    
+    Rails.logger.info "Converting campaign #{id} PDFs to Creative"
+    
+    # Create a new Creative with the campaign's PDFs
+    new_creative = advertiser.creatives.create!(
+      name: "#{name} - Creative",
+      postcard_template: postcard_template,
+      created_by_user: created_by_user
+    )
+    
+    # Transfer PDFs from campaign to creative (reuses the same blobs)
+    if front_pdf.attached?
+      new_creative.front_pdf.attach(front_pdf.blob)
+    end
+    
+    if back_pdf.attached?
+      new_creative.back_pdf.attach(back_pdf.blob)
+    end
+    
+    # Link campaign to the new creative (without triggering callbacks)
+    update_column(:creative_id, new_creative.id)
+    
+    # Detach PDFs from campaign (but don't purge - creative is using the same blobs)
+    front_pdf.detach if front_pdf.attached?
+    back_pdf.detach if back_pdf.attached?
+    
+    Rails.logger.info "Successfully converted campaign #{id} PDFs to Creative #{new_creative.id}"
+  rescue => e
+    Rails.logger.error "Failed to convert campaign #{id} PDFs to Creative: #{e.message}"
+    Rails.logger.error e.backtrace.join("\n")
   end
 end
 
