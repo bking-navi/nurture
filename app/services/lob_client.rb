@@ -287,10 +287,10 @@ class LobClient
         
         from_address = format_address_editable(
           name: advertiser.name,
-          address_line1: advertiser.address_line1 || '123 Main St',
-          address_city: advertiser.city || 'New York',
-          address_state: advertiser.state || 'NY',
-          address_zip: advertiser.zip || '10001'
+          address_line1: advertiser.street_address,
+          address_city: advertiser.city,
+          address_state: advertiser.state,
+          address_zip: advertiser.postal_code
         )
         
         # Create a test postcard to validate the design and get proof
